@@ -3,9 +3,7 @@ import { makeAutoObservable } from 'mobx'
 import StockInStoreState from '../../Types/StockInStoreState'
 import GetStockInsPayload from '@/src/StockIn/Application/Types/GetStockInsPayload'
 import GetStockInsUseCase from '@/src/StockIn/Application/UseCases/GetStockInsUseCase'
-import CreateStockInUseCase from '@/src/StockIn/Application/UseCases/CreateStockInUseCase'
 import StockInEntity from '@/src/StockIn/Domain/Entities/StockInEntity'
-import CreateStockInPayload from '@/src/StockIn/Application/Types/CreateStockInPayload'
 import {
     IStockInRepository,
     IStockInRepositoryToken,
@@ -17,7 +15,12 @@ export class StockInStore implements StockInStoreState {
     results: StockInEntity[] = []
     count = 0
     filters = {
-        status: undefined as undefined | 'pending' | 'completed' | 'cancelled',
+        status: undefined as
+            | undefined
+            | 'pending'
+            | 'processing'
+            | 'completed'
+            | 'cancelled',
         startDate: undefined,
         endDate: undefined,
         search: undefined,
@@ -28,25 +31,11 @@ export class StockInStore implements StockInStoreState {
     }
 
     selectedStockIn: StockInEntity | null = null
-    isCreating = false
     error: string | null = null
-
-    // Form data with default values
-    formData: CreateStockInPayload = {
-        productId: '',
-        productName: '',
-        quantity: 0,
-        unit: 'pc',
-        date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD
-        receivedBy: '',
-        status: 'pending',
-    }
 
     constructor(
         @inject(GetStockInsUseCase)
         private readonly getStockInsUseCase: GetStockInsUseCase,
-        @inject(CreateStockInUseCase)
-        private readonly createStockInUseCase: CreateStockInUseCase,
         @inject(IStockInRepositoryToken)
         private readonly stockInRepository: IStockInRepository
     ) {
@@ -91,28 +80,6 @@ export class StockInStore implements StockInStoreState {
         this.selectedStockIn = stockIn
     }
 
-    setIsCreating = (isCreating: boolean) => {
-        this.isCreating = isCreating
-    }
-
-    // Update form data
-    updateFormData = (payload: Partial<CreateStockInPayload>) => {
-        Object.assign(this.formData, payload)
-    }
-
-    // Reset form to default values
-    resetForm = () => {
-        this.formData = {
-            productId: '',
-            productName: '',
-            quantity: 0,
-            unit: 'pc',
-            date: new Date().toISOString().split('T')[0],
-            receivedBy: '',
-            status: 'pending',
-        }
-    }
-
     // Get stock ins with current filters and pagination
     async getStockIns() {
         const payload: GetStockInsPayload = {
@@ -134,47 +101,6 @@ export class StockInStore implements StockInStoreState {
                     ? error.message
                     : 'Failed to fetch stock ins'
             )
-        } finally {
-            this.setIsLoading(false)
-        }
-    }
-
-    // Create new stock in
-    async createStockIn() {
-        this.setIsLoading(true)
-        this.setError(null)
-
-        try {
-            // Validate form data
-            if (
-                !this.formData.productId ||
-                !this.formData.productName ||
-                this.formData.quantity <= 0
-            ) {
-                this.setError('Please fill all required fields')
-                return null
-            }
-
-            const newStockIn = await this.createStockInUseCase.execute(
-                this.formData
-            )
-
-            // Refresh the list to include new item
-            await this.getStockIns()
-
-            // Reset form
-            this.resetForm()
-            this.setIsCreating(false)
-
-            return newStockIn
-        } catch (error) {
-            console.error('Error creating stock in:', error)
-            this.setError(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to create stock in record'
-            )
-            return null
         } finally {
             this.setIsLoading(false)
         }

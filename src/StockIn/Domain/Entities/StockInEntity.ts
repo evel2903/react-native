@@ -1,13 +1,13 @@
+import { StockInProductItem } from './StockInGoodItem'
 export default interface StockInEntity {
     id: string
-    productId: string
-    productName: string
-    quantity: number
-    unit: string
+    reference: string
     date: string
     receivedBy: string
     supplierName?: string
     supplierInvoice?: string
     notes?: string
-    status: 'pending' | 'completed' | 'cancelled'
+    status: 'pending' | 'processing' | 'completed' | 'cancelled'
+    products: StockInProductItem[]
+    totalItems: number
 }

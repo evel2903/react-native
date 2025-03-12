@@ -1,57 +1,66 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Card, Text, Appbar, Avatar, Title, Paragraph } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { RootScreenNavigationProp } from '../Navigation/Types/Index';
-import { useI18n } from '../Hooks/UseI18n';
-import { StatusBar } from 'expo-status-bar';
-import { observer } from 'mobx-react';
-import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore';
-import { withProviders } from '../Utils/WithProviders';
-import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider';
-import { useTheme } from "../Theme/ThemeProvider";
+import React from 'react'
+import { View, StyleSheet, ScrollView } from 'react-native'
+import {
+    Card,
+    Text,
+    Appbar,
+    Avatar,
+    Title,
+    Paragraph,
+} from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useNavigation } from '@react-navigation/native'
+import { RootScreenNavigationProp } from '../Navigation/Types/Index'
+import { useI18n } from '../Hooks/UseI18n'
+import { StatusBar } from 'expo-status-bar'
+import { observer } from 'mobx-react'
+import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
+import { withProviders } from '../Utils/WithProviders'
+import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
+import { useTheme } from '../Theme/ThemeProvider'
 
 const HomeScreen = observer(() => {
-    const navigation = useNavigation<RootScreenNavigationProp<'Home'>>();
-    const theme = useTheme();
-    const i18n = useI18n();
-    const authStore = useAuthStore();
+    const navigation = useNavigation<RootScreenNavigationProp<'Home'>>()
+    const theme = useTheme()
+    const i18n = useI18n()
+    const authStore = useAuthStore()
 
     const handleLogout = async () => {
-        await authStore.logout();
-        navigation.replace('Auth');
-    };
+        await authStore.logout()
+        navigation.replace('Auth')
+    }
 
     const menuItems = [
         {
             title: i18n.t('home.menuItems.posts'),
             icon: 'post-outline',
             description: i18n.t('home.menuItems.postsDescription'),
-            onPress: () => navigation.navigate('Posts')
+            onPress: () => navigation.navigate('Posts'),
         },
         {
             title: i18n.t('home.menuItems.stockIn'),
             icon: 'arrow-collapse',
             description: i18n.t('home.menuItems.stockInDescription'),
-            onPress: () => navigation.navigate('StockIn')
+            onPress: () => navigation.navigate('StockIn'),
         },
         {
             title: i18n.t('home.menuItems.stockOut'),
             icon: 'arrow-expand',
             description: i18n.t('home.menuItems.stockOutDescription'),
-            onPress: () => navigation.navigate('StockOut')
+            onPress: () => navigation.navigate('StockOut'),
         },
         {
             title: i18n.t('home.menuItems.inventory'),
             icon: 'arrow-collapse-all',
             description: i18n.t('home.menuItems.inventoryDescription'),
-            onPress: () => navigation.navigate('Inventory')
+            onPress: () => navigation.navigate('Inventory'),
         },
-    ];
+    ]
 
     return (
-        <View style={{ flex: 1, backgroundColor: theme.theme.colors.background }}>
+        <View
+            style={{ flex: 1, backgroundColor: theme.theme.colors.background }}
+        >
             <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
             <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
                 <Appbar.Header>
@@ -65,11 +74,19 @@ const HomeScreen = observer(() => {
                         <Card.Content style={styles.welcomeCardContent}>
                             <View style={styles.welcomeTextContainer}>
                                 {authStore.user?.name ? (
-                                    <Title>{i18n.t('home.welcome', { name: authStore.user.name })}</Title>
+                                    <Title>
+                                        {i18n.t('home.welcome', {
+                                            name: authStore.user.name,
+                                        })}
+                                    </Title>
                                 ) : (
-                                    <Title>{i18n.t('home.welcomeDefault')}</Title>
+                                    <Title>
+                                        {i18n.t('home.welcomeDefault')}
+                                    </Title>
                                 )}
-                                <Paragraph>{i18n.t('home.welcomeDescription')}</Paragraph>
+                                <Paragraph>
+                                    {i18n.t('home.welcomeDescription')}
+                                </Paragraph>
                             </View>
                             {authStore.user?.avatar && (
                                 <Avatar.Image
@@ -93,10 +110,18 @@ const HomeScreen = observer(() => {
                                 onPress={item.onPress}
                             >
                                 <Card.Content style={styles.menuCardContent}>
-                                    <Avatar.Icon size={48} icon={item.icon} style={styles.menuIcon} />
+                                    <Avatar.Icon
+                                        size={48}
+                                        icon={item.icon}
+                                        style={styles.menuIcon}
+                                    />
                                     <View style={styles.menuTextContainer}>
-                                        <Text variant="titleMedium">{item.title}</Text>
-                                        <Text variant="bodySmall">{item.description}</Text>
+                                        <Text variant="titleMedium">
+                                            {item.title}
+                                        </Text>
+                                        <Text variant="bodySmall">
+                                            {item.description}
+                                        </Text>
                                     </View>
                                 </Card.Content>
                             </Card>
@@ -105,8 +130,8 @@ const HomeScreen = observer(() => {
                 </ScrollView>
             </SafeAreaView>
         </View>
-    );
-});
+    )
+})
 
 const styles = StyleSheet.create({
     scrollContent: {
@@ -144,6 +169,6 @@ const styles = StyleSheet.create({
     menuTextContainer: {
         flex: 1,
     },
-});
+})
 
-export default withProviders(AuthStoreProvider)(HomeScreen);
+export default withProviders(AuthStoreProvider)(HomeScreen)

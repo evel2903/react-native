@@ -18,6 +18,8 @@ const linking: LinkingOptions<RootStackParamList> = {
             Post: 'post/:id',
             Inventory: 'inventory',
             StockIn: 'stock-in',
+            StockInProcess: 'stock-in/:id/process',
+            StockOut: 'stock-out',
             NotFound: '*',
         },
     },

@@ -1,88 +1,106 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Button, Text, TextInput, Surface, Snackbar, HelperText } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider';
-import { useI18n } from '@/src/Core/Presentation/Hooks/UseI18n';
-import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
-import { RootScreenNavigationProp } from '@/src/Core/Presentation/Navigation/Types/Index';
-import { observer } from 'mobx-react';
-import { useAuthStore } from '../Stores/AuthStore/UseAuthStore';
-import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders';
-import { AuthStoreProvider } from '../Stores/AuthStore/AuthStoreProvider';
+import React, { useState } from 'react'
+import {
+    View,
+    StyleSheet,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+} from 'react-native'
+import {
+    Button,
+    Text,
+    TextInput,
+    Surface,
+    Snackbar,
+    HelperText,
+} from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
+import { useI18n } from '@/src/Core/Presentation/Hooks/UseI18n'
+import { StatusBar } from 'expo-status-bar'
+import { useNavigation } from '@react-navigation/native'
+import { RootScreenNavigationProp } from '@/src/Core/Presentation/Navigation/Types/Index'
+import { observer } from 'mobx-react'
+import { useAuthStore } from '../Stores/AuthStore/UseAuthStore'
+import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
+import { AuthStoreProvider } from '../Stores/AuthStore/AuthStoreProvider'
 
 const AuthScreen = observer(() => {
-    const theme = useTheme();
-    const i18n = useI18n();
-    const navigation = useNavigation<RootScreenNavigationProp<'Auth'>>();
-    const authStore = useAuthStore();
+    const theme = useTheme()
+    const i18n = useI18n()
+    const navigation = useNavigation<RootScreenNavigationProp<'Auth'>>()
+    const authStore = useAuthStore()
 
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordVisible, setPasswordVisible] = useState(false);
-    const [usernameError, setUsernameError] = useState<string | null>(null);
-    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
+    const [passwordVisible, setPasswordVisible] = useState(false)
+    const [usernameError, setUsernameError] = useState<string | null>(null)
+    const [passwordError, setPasswordError] = useState<string | null>(null)
 
-    const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
+    const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible)
 
     const validateUsername = (value: string): boolean => {
         if (!value) {
-            setUsernameError(i18n.t('auth.errors.usernameRequired'));
-            return false;
+            setUsernameError(i18n.t('auth.errors.usernameRequired'))
+            return false
         }
-        
+
         // Basic username validation
         if (value.length < 3) {
-            setUsernameError(i18n.t('auth.errors.usernameTooShort'));
-            return false;
+            setUsernameError(i18n.t('auth.errors.usernameTooShort'))
+            return false
         }
-        
-        setUsernameError(null);
-        return true;
-    };
+
+        setUsernameError(null)
+        return true
+    }
 
     const validatePassword = (password: string): boolean => {
         if (!password) {
-            setPasswordError(i18n.t('auth.errors.passwordRequired'));
-            return false;
+            setPasswordError(i18n.t('auth.errors.passwordRequired'))
+            return false
         }
-        
-        setPasswordError(null);
-        return true;
-    };
+
+        setPasswordError(null)
+        return true
+    }
 
     const validateInputs = (): boolean => {
-        const isUsernameValid = validateUsername(username);
-        const isPasswordValid = validatePassword(password);
-        
-        return isUsernameValid && isPasswordValid;
-    };
+        const isUsernameValid = validateUsername(username)
+        const isPasswordValid = validatePassword(password)
+
+        return isUsernameValid && isPasswordValid
+    }
 
     const handleLogin = async () => {
-        if (!validateInputs()) return;
+        if (!validateInputs()) return
 
-        const success = await authStore.login({ username, password });
+        const success = await authStore.login({ username, password })
         if (success) {
             // Use replace instead of navigate to remove Auth screen from history
-            navigation.replace('Home');
+            navigation.replace('Home')
         }
-    };
+    }
 
     const handleUsernameChange = (text: string) => {
-        setUsername(text);
-        if (usernameError) validateUsername(text);
-    };
+        setUsername(text)
+        if (usernameError) validateUsername(text)
+    }
 
     const handlePasswordChange = (text: string) => {
-        setPassword(text);
-        if (passwordError) validatePassword(text);
-    };
+        setPassword(text)
+        if (passwordError) validatePassword(text)
+    }
 
     return (
-        <View style={{ flex: 1, backgroundColor: theme.theme.colors.background }}>
+        <View
+            style={{ flex: 1, backgroundColor: theme.theme.colors.background }}
+        >
             <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
-            <SafeAreaView style={{ flex: 1 }} edges={['right', 'left', 'bottom']}>
+            <SafeAreaView
+                style={{ flex: 1 }}
+                edges={['right', 'left', 'bottom']}
+            >
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.keyboardAvoidView}
@@ -111,7 +129,10 @@ const AuthScreen = observer(() => {
                                     onBlur={() => validateUsername(username)}
                                 />
                                 {usernameError && (
-                                    <HelperText type="error" visible={!!usernameError}>
+                                    <HelperText
+                                        type="error"
+                                        visible={!!usernameError}
+                                    >
                                         {usernameError}
                                     </HelperText>
                                 )}
@@ -125,7 +146,11 @@ const AuthScreen = observer(() => {
                                     left={<TextInput.Icon icon="lock" />}
                                     right={
                                         <TextInput.Icon
-                                            icon={passwordVisible ? 'eye-off' : 'eye'}
+                                            icon={
+                                                passwordVisible
+                                                    ? 'eye-off'
+                                                    : 'eye'
+                                            }
                                             onPress={togglePasswordVisibility}
                                         />
                                     }
@@ -134,7 +159,10 @@ const AuthScreen = observer(() => {
                                     onBlur={() => validatePassword(password)}
                                 />
                                 {passwordError && (
-                                    <HelperText type="error" visible={!!passwordError}>
+                                    <HelperText
+                                        type="error"
+                                        visible={!!passwordError}
+                                    >
                                         {passwordError}
                                     </HelperText>
                                 )}
@@ -174,8 +202,8 @@ const AuthScreen = observer(() => {
                 </Snackbar>
             </SafeAreaView>
         </View>
-    );
-});
+    )
+})
 
 const styles = StyleSheet.create({
     keyboardAvoidView: {
@@ -220,6 +248,6 @@ const styles = StyleSheet.create({
         color: 'red',
         marginBottom: 8,
     },
-});
+})
 
-export default withProviders(AuthStoreProvider)(AuthScreen);
+export default withProviders(AuthStoreProvider)(AuthScreen)

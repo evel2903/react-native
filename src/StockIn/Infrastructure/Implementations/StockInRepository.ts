@@ -1,58 +1,138 @@
 import { injectable, inject } from 'inversiland'
 import { IStockInRepository } from '../../Domain/Specifications/IStockInRepository'
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
-import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
 import StockInDto from '../Models/StockInDto'
 import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
     IHttpClientToken,
 } from 'src/Core/Domain/Specifications/IHttpClient'
-import { v4 as uuidv4 } from 'uuid'
 
 @injectable()
 class StockInRepository implements IStockInRepository {
     private readonly baseUrl = '/api/stock-in'
 
-    // Mock data for demo
+    // Mock data with the new structure for demo
     private mockStockIns: any[] = [
         {
             id: 'si-001',
-            productId: 'prod-001',
-            productName: 'Laptop',
-            quantity: 10,
-            unit: 'pc',
+            reference: 'SI-2025-001',
             date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
             receivedBy: 'John Doe',
             supplierName: 'Tech Supplies Inc.',
             supplierInvoice: 'INV-12345',
             notes: 'Delivery was on time',
-            status: 'completed',
+            status: 'pending',
+            products: [
+                {
+                    productId: 'prod-001',
+                    productName: 'Laptop Dell XPS 13',
+                    quantity: 5,
+                    unit: 'pc',
+                    price: 1200,
+                },
+                {
+                    productId: 'prod-002',
+                    productName: 'Laptop HP Spectre',
+                    quantity: 3,
+                    unit: 'pc',
+                    price: 1100,
+                },
+                {
+                    productId: 'prod-007',
+                    productName: 'External SSD 1TB',
+                    quantity: 10,
+                    unit: 'pc',
+                    price: 120,
+                },
+            ],
+            totalItems: 18,
         },
         {
             id: 'si-002',
-            productId: 'prod-002',
-            productName: 'Smartphone',
-            quantity: 25,
-            unit: 'pc',
+            reference: 'SI-2025-002',
             date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
             receivedBy: 'Jane Smith',
             supplierName: 'Mobile Gadgets Ltd.',
             supplierInvoice: 'INV-67890',
             notes: 'Some items had minor packaging damage',
-            status: 'completed',
+            status: 'pending',
+            products: [
+                {
+                    productId: 'prod-003',
+                    productName: 'iPhone 15 Pro',
+                    quantity: 10,
+                    unit: 'pc',
+                    price: 999,
+                },
+                {
+                    productId: 'prod-004',
+                    productName: 'Samsung Galaxy S23',
+                    quantity: 15,
+                    unit: 'pc',
+                    price: 899,
+                },
+            ],
+            totalItems: 25,
         },
         {
             id: 'si-003',
-            productId: 'prod-003',
-            productName: 'Headphones',
-            quantity: 15,
-            unit: 'pc',
+            reference: 'SI-2025-003',
             date: new Date().toISOString(), // Today
-            receivedBy: 'John Doe',
+            receivedBy: 'Robert Johnson',
             supplierName: 'Audio Equipment Co.',
             supplierInvoice: 'INV-24680',
-            status: 'pending',
+            status: 'processing',
+            products: [
+                {
+                    productId: 'prod-005',
+                    productName: 'Sony WH-1000XM5 Headphones',
+                    quantity: 8,
+                    unit: 'pc',
+                    price: 349,
+                },
+                {
+                    productId: 'prod-006',
+                    productName: 'Bose QuietComfort Earbuds',
+                    quantity: 12,
+                    unit: 'pc',
+                    price: 279,
+                },
+            ],
+            totalItems: 20,
+        },
+        {
+            id: 'si-004',
+            reference: 'SI-2025-004',
+            date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+            receivedBy: 'Michael Williams',
+            supplierName: 'Office Supplies Co.',
+            supplierInvoice: 'INV-98765',
+            status: 'completed',
+            products: [
+                {
+                    productId: 'prod-008',
+                    productName: 'Ergonomic Office Chair',
+                    quantity: 5,
+                    unit: 'pc',
+                    price: 299,
+                },
+                {
+                    productId: 'prod-009',
+                    productName: 'Adjustable Standing Desk',
+                    quantity: 3,
+                    unit: 'pc',
+                    price: 499,
+                },
+                {
+                    productId: 'prod-010',
+                    productName: 'Monitor Arms',
+                    quantity: 6,
+                    unit: 'pc',
+                    price: 129,
+                },
+            ],
+            totalItems: 14,
         },
     ]
 
@@ -94,10 +174,18 @@ class StockInRepository implements IStockInRepository {
             const searchLower = payload.search.toLowerCase()
             filteredData = filteredData.filter(
                 item =>
-                    item.productName.toLowerCase().includes(searchLower) ||
+                    item.reference.toLowerCase().includes(searchLower) ||
                     item.supplierName?.toLowerCase().includes(searchLower) ||
                     item.supplierInvoice?.toLowerCase().includes(searchLower) ||
-                    item.notes?.toLowerCase().includes(searchLower)
+                    item.products.some(
+                        (product: any) =>
+                            product.productName
+                                .toLowerCase()
+                                .includes(searchLower) ||
+                            product.productId
+                                .toLowerCase()
+                                .includes(searchLower)
+                    )
             )
         }
 
@@ -129,29 +217,6 @@ class StockInRepository implements IStockInRepository {
         }
 
         return plainToInstance(StockInDto, stockIn).toDomain()
-    }
-
-    public async createStockIn(
-        data: CreateStockInPayload
-    ): Promise<StockInEntity> {
-        // Generate a new ID
-        const newId = `si-${uuidv4().substring(0, 6)}`
-
-        // Create a new stock in record
-        const newStockIn = {
-            id: newId,
-            ...data,
-            // Default to pending if no status provided
-            status: data.status || 'pending',
-            // Use current date if not provided
-            date: data.date || new Date().toISOString(),
-        }
-
-        // In a real app, we would persist this to the database
-        // For our mock, just add it to the array
-        this.mockStockIns.push(newStockIn)
-
-        return plainToInstance(StockInDto, newStockIn).toDomain()
     }
 
     public async updateStockInStatus(
