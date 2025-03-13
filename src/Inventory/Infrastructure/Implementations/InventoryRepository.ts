@@ -12,6 +12,7 @@ import InventoryRecordEntity from '../../Domain/Entities/InventoryRecordEntity'
 @injectable()
 class InventoryRepository implements IInventoryRepository {
     private readonly baseUrl = '/api/inventory'
+    private cachedMockRecords: any[] | null = null
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
@@ -20,118 +21,147 @@ class InventoryRepository implements IInventoryRepository {
     public async getInventory(
         payload: GetInventoryPayload
     ): Promise<GetInventoryResponse> {
-        // For demo purposes, we'll simulate a response
-        // In a real app, you would make an API call to fetch the data
+        try {
+            // Generate some mock inventory records
+            const mockRecords = this.generateMockInventoryRecords()
 
-        // Generate some mock inventory records
-        const mockRecords = this.generateMockInventoryRecords()
+            // Apply filters (status, date range, search)
+            let filteredData = [...mockRecords]
 
-        // Apply filters (status, date range, search)
-        let filteredData = [...mockRecords]
+            // Apply status filter
+            if (payload.status) {
+                filteredData = filteredData.filter(
+                    item => item.status === payload.status
+                )
+            }
 
-        // Apply status filter
-        if (payload.status) {
-            filteredData = filteredData.filter(
-                item => item.status === payload.status
+            // Apply date range filter
+            if (payload.startDate) {
+                const startDate = new Date(payload.startDate)
+                filteredData = filteredData.filter(
+                    item => new Date(item.date) >= startDate
+                )
+            }
+            if (payload.endDate) {
+                const endDate = new Date(payload.endDate)
+                filteredData = filteredData.filter(
+                    item => new Date(item.date) <= endDate
+                )
+            }
+
+            // Apply location filter
+            if (payload.location) {
+                filteredData = filteredData.filter(
+                    item => item.location === payload.location
+                )
+            }
+
+            // Apply search filter
+            if (payload.search) {
+                const searchLower = payload.search.toLowerCase()
+                filteredData = filteredData.filter(
+                    item =>
+                        item.reference.toLowerCase().includes(searchLower) ||
+                        item.conductedBy.toLowerCase().includes(searchLower) ||
+                        item.location?.toLowerCase().includes(searchLower) ||
+                        item.products.some(
+                            (product: any) =>
+                                product.productName
+                                    .toLowerCase()
+                                    .includes(searchLower) ||
+                                product.productId
+                                    .toLowerCase()
+                                    .includes(searchLower)
+                        )
+                )
+            }
+
+            // Get the total count before pagination
+            const count = filteredData.length
+
+            // Apply pagination
+            const startIndex = (payload.page - 1) * payload.pageSize
+            const endIndex = startIndex + payload.pageSize
+            const paginatedData = filteredData.slice(startIndex, endIndex)
+
+            // Transform to domain entities
+            const results = paginatedData.map(item =>
+                plainToInstance(InventoryRecordDto, item).toDomain()
             )
-        }
 
-        // Apply date range filter
-        if (payload.startDate) {
-            const startDate = new Date(payload.startDate)
-            filteredData = filteredData.filter(
-                item => new Date(item.date) >= startDate
-            )
-        }
-        if (payload.endDate) {
-            const endDate = new Date(payload.endDate)
-            filteredData = filteredData.filter(
-                item => new Date(item.date) <= endDate
-            )
-        }
-
-        // Apply location filter
-        if (payload.location) {
-            filteredData = filteredData.filter(
-                item => item.location === payload.location
-            )
-        }
-
-        // Apply search filter
-        if (payload.search) {
-            const searchLower = payload.search.toLowerCase()
-            filteredData = filteredData.filter(
-                item =>
-                    item.reference.toLowerCase().includes(searchLower) ||
-                    item.conductedBy.toLowerCase().includes(searchLower) ||
-                    item.location?.toLowerCase().includes(searchLower) ||
-                    item.products.some(
-                        (product: any) =>
-                            product.productName
-                                .toLowerCase()
-                                .includes(searchLower) ||
-                            product.productId
-                                .toLowerCase()
-                                .includes(searchLower)
-                    )
-            )
-        }
-
-        // Get the total count before pagination
-        const count = filteredData.length
-
-        // Apply pagination
-        const startIndex = (payload.page - 1) * payload.pageSize
-        const endIndex = startIndex + payload.pageSize
-        const paginatedData = filteredData.slice(startIndex, endIndex)
-
-        // Transform to domain entities
-        const results = paginatedData.map(item =>
-            plainToInstance(InventoryRecordDto, item).toDomain()
-        )
-
-        return {
-            results,
-            count,
+            return {
+                results,
+                count,
+            }
+        } catch (error) {
+            console.error('Error in getInventory:', error)
+            return {
+                results: [],
+                count: 0
+            }
         }
     }
 
     public async getInventoryRecordById(
         id: string
     ): Promise<InventoryRecordEntity> {
-        // In a real app, you would make an API call to fetch the inventory record
-        // For demo purposes, we'll find it in our mock data
-        const mockRecords = this.generateMockInventoryRecords()
-        const record = mockRecords.find(record => record.id === id)
+        try {
+            // In a real app, you would make an API call to fetch the inventory record
+            // For demo purposes, we'll find it in our mock data
+            const mockRecords = this.generateMockInventoryRecords()
+            const record = mockRecords.find(record => record.id === id)
 
-        if (!record) {
-            throw new Error(`Inventory record with id ${id} not found`)
+            if (!record) {
+                throw new Error(`Inventory record with id ${id} not found`)
+            }
+
+            return plainToInstance(InventoryRecordDto, record).toDomain()
+        } catch (error) {
+            console.error('Error in getInventoryRecordById:', error)
+            throw error
         }
-
-        return plainToInstance(InventoryRecordDto, record).toDomain()
     }
 
     public async updateInventoryRecordStatus(
         id: string,
         status: InventoryRecordEntity['status']
     ): Promise<InventoryRecordEntity> {
-        // Find the item index in our mock data
-        const mockRecords = this.generateMockInventoryRecords()
-        const index = mockRecords.findIndex(item => item.id === id)
+        try {
+            // Find the item index in our mock data
+            const mockRecords = this.generateMockInventoryRecords()
+            const index = mockRecords.findIndex(item => item.id === id)
 
-        if (index === -1) {
-            throw new Error(`Inventory record with id ${id} not found`)
+            if (index === -1) {
+                throw new Error(`Inventory record with id ${id} not found`)
+            }
+
+            // Update the status
+            mockRecords[index].status = status
+            
+            // Update the cached data
+            if (this.cachedMockRecords) {
+                const cacheIndex = this.cachedMockRecords.findIndex(item => item.id === id)
+                if (cacheIndex !== -1) {
+                    this.cachedMockRecords[cacheIndex].status = status
+                }
+            }
+
+            return plainToInstance(InventoryRecordDto, mockRecords[index]).toDomain()
+        } catch (error) {
+            console.error('Error in updateInventoryRecordStatus:', error)
+            throw error
         }
-
-        // Update the status
-        mockRecords[index].status = status
-
-        return plainToInstance(InventoryRecordDto, mockRecords[index]).toDomain()
     }
 
     // Helper method to generate mock inventory records
     private generateMockInventoryRecords(): any[] {
-        return [
+        // Use cached data if available
+        if (this.cachedMockRecords) {
+            return this.cachedMockRecords
+        }
+        
+        // Generate mock data and cache it
+        this.cachedMockRecords = [
             {
                 id: 'inv-001',
                 reference: 'INV-2025-001',
@@ -255,6 +285,8 @@ class InventoryRepository implements IInventoryRepository {
                 totalItems: 0,
             },
         ]
+        
+        return this.cachedMockRecords
     }
 }
 

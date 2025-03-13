@@ -30,11 +30,24 @@ const InventoryScreen = observer(() => {
     const i18n = useI18n()
 
     const [searchQuery, setSearchQuery] = useState('')
+    const [isInitialized, setIsInitialized] = useState(false)
 
     useEffect(() => {
+        console.log('InventoryScreen mounted')
         // Load inventory data when component mounts
-        inventoryStore.resetFilters() // Start with no filters applied
-    }, [inventoryStore])
+        const fetchData = async () => {
+            try {
+                await inventoryStore.resetFilters() // Start with no filters applied
+                console.log('Inventory data loaded successfully')
+            } catch (error) {
+                console.error('Error loading inventory data:', error)
+            } finally {
+                setIsInitialized(true)
+            }
+        }
+        
+        fetchData()
+    }, [])
 
     const handleGoBack = () => {
         navigation.navigate('Home')
@@ -50,16 +63,46 @@ const InventoryScreen = observer(() => {
     }
 
     const handleProcess = (id: string) => {
+        console.log('Navigating to process screen with ID:', id)
         // Navigate to the process screen with the selected inventory ID
         navigation.navigate('InventoryProcess', { id })
     }
 
     const handleFilter = (value: string) => {
+        console.log('Filtering by status:', value)
         if (value === 'all') {
             inventoryStore.filterByStatus(undefined)
         } else {
             inventoryStore.filterByStatus(value as any)
         }
+    }
+
+    // Handle error state
+    if (inventoryStore.error && isInitialized) {
+        return (
+            <View style={{ flex: 1, backgroundColor: theme.theme.colors.background }}>
+                <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
+                <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
+                    <Appbar.Header>
+                        <Appbar.BackAction onPress={handleGoBack} />
+                        <Appbar.Content title="Inventory" />
+                    </Appbar.Header>
+                    
+                    <View style={styles.errorContainer}>
+                        <Text variant="bodyLarge" style={styles.errorText}>
+                            {inventoryStore.error}
+                        </Text>
+                        <Button
+                            mode="contained"
+                            onPress={() => inventoryStore.resetFilters()}
+                            style={styles.resetButton}
+                        >
+                            Try Again
+                        </Button>
+                    </View>
+                </SafeAreaView>
+            </View>
+        )
     }
 
     return (
@@ -190,7 +233,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     filterScrollContent: {
-        paddingHorizontal: this,
+        paddingHorizontal: 16,
         paddingRight: 24,
         gap: 12,
     },
@@ -236,6 +279,17 @@ const styles = StyleSheet.create({
     },
     resetButton: {
         marginTop: 16,
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+    },
+    errorText: {
+        textAlign: 'center',
+        marginBottom: 16,
+        color: '#f44336',
     },
 })
 

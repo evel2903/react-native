@@ -62,21 +62,22 @@ export class GetInventoryStore implements GetInventoryStoreState {
             ...this.filters,
             ...this.pagination,
         }
-
+    
         this.setIsLoading(true)
-
-        return this.getInventoryUseCase
-            .execute(payload)
-            .then(response => {
-                this.setResults(response.results)
-                this.setCount(response.count)
-            })
-            .catch(error => {
-                console.error('Error fetching inventory:', error)
-            })
-            .finally(() => {
-                this.setIsLoading(false)
-            })
+        this.setError(null)
+    
+        try {
+            const response = await this.getInventoryUseCase.execute(payload)
+            this.setResults(response.results)
+            this.setCount(response.count)
+        } catch (error) {
+            console.error('Error fetching inventory records:', error)
+            this.setError(error instanceof Error ? error.message : 'Failed to fetch inventory records')
+            // Ensure we set empty results to prevent rendering issues
+            this.setResults([])
+        } finally {
+            this.setIsLoading(false)
+        }
     }
 
     // Reset filters and refresh data

@@ -96,9 +96,12 @@ export class InventoryStore implements InventoryStoreState {
         this.setError(null)
 
         try {
+            console.log('Fetching inventory with payload:', payload)
             const response = await this.getInventoryUseCase.execute(payload)
+            console.log('Inventory response received:', response)
             this.setResults(response.results)
             this.setCount(response.count)
+            return response
         } catch (error) {
             console.error('Error fetching inventory records:', error)
             this.setError(
@@ -106,6 +109,13 @@ export class InventoryStore implements InventoryStoreState {
                     ? error.message
                     : 'Failed to fetch inventory records'
             )
+            // Ensure we set empty results to prevent rendering issues
+            this.setResults([])
+            this.setCount(0)
+            return {
+                results: [],
+                count: 0
+            }
         } finally {
             this.setIsLoading(false)
         }
@@ -117,7 +127,9 @@ export class InventoryStore implements InventoryStoreState {
         this.setError(null)
 
         try {
+            console.log('Fetching inventory record details for ID:', id)
             const record = await this.getInventoryRecordUseCase.execute(id)
+            console.log('Inventory record details received')
             this.setSelectedInventoryRecord(record)
             return record
         } catch (error) {
@@ -127,6 +139,7 @@ export class InventoryStore implements InventoryStoreState {
                     ? error.message
                     : 'Failed to fetch inventory record details'
             )
+            this.setSelectedInventoryRecord(null)
             return null
         } finally {
             this.setIsLoading(false)
@@ -139,10 +152,12 @@ export class InventoryStore implements InventoryStoreState {
         this.setError(null)
 
         try {
+            console.log('Updating inventory status for ID:', id, 'to', status)
             const updatedRecord = await this.updateInventoryStatusUseCase.execute({
                 id,
                 status,
             })
+            console.log('Inventory status updated successfully')
 
             // Update in the results list if present
             const index = this.results.findIndex(item => item.id === id)
@@ -174,6 +189,7 @@ export class InventoryStore implements InventoryStoreState {
 
     // Filter by status
     filterByStatus(status?: InventoryRecordEntity['status']) {
+        console.log('Filtering by status:', status)
         this.filters.status = status
         this.pagination.page = 1
         this.getInventory()
@@ -203,6 +219,7 @@ export class InventoryStore implements InventoryStoreState {
 
     // Reset filters
     resetFilters() {
+        console.log('Resetting filters and fetching inventory')
         this.filters = {
             status: undefined,
             startDate: undefined,

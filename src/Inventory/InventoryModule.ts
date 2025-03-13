@@ -18,7 +18,7 @@ import UpdateInventoryStatusUseCase from './Application/UseCases/UpdateInventory
         UpdateInventoryStatusUseCase,
         {
             useClass: InventoryStore,
-            scope: 'Transient',
+            scope: 'Singleton', // Changed from 'Transient' to 'Singleton'
         },
     ],
 })
