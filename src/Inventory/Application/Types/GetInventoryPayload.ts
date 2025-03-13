@@ -1,8 +1,9 @@
 export default interface GetInventoryPayload {
     page: number
     pageSize: number
-    category?: string
+    status?: 'pending' | 'in-progress' | 'completed' | 'cancelled'
+    startDate?: string
+    endDate?: string
+    location?: string
     search?: string
-    sortBy?: string
-    sortOrder?: 'asc' | 'desc'
 }

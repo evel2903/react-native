@@ -18,6 +18,7 @@ export type RootStackParamList = {
     Posts: undefined
     Post: { id: number }
     Inventory: undefined
+    InventoryProcess: { id: string }
     StockIn: undefined
     StockInProcess: { id: string }
     StockOut: undefined

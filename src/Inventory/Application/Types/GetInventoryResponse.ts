@@ -1,6 +1,6 @@
-import InventoryItemEntity from '../../Domain/Entities/InventoryItemEntity'
+import InventoryRecordEntity from '../../Domain/Entities/InventoryRecordEntity'
 
 export default interface GetInventoryResponse {
-    results: InventoryItemEntity[]
+    results: InventoryRecordEntity[]
     count: number
 }

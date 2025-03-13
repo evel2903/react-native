@@ -3,20 +3,19 @@ import {
     IInventoryRepository,
     IInventoryRepositoryToken,
 } from '../../Domain/Specifications/IInventoryRepository'
-import GetInventoryPayload from '../Types/GetInventoryPayload'
 import { UseCase } from '@/src/Core/Application/UseCase'
-import GetInventoryResponse from '../Types/GetInventoryResponse'
+import InventoryRecordEntity from '../../Domain/Entities/InventoryRecordEntity'
 
 @injectable()
-export default class GetInventoryUseCase
-    implements UseCase<GetInventoryPayload, Promise<GetInventoryResponse>>
+export default class GetInventoryRecordUseCase
+    implements UseCase<string, Promise<InventoryRecordEntity>>
 {
     constructor(
         @inject(IInventoryRepositoryToken)
         private readonly inventoryRepository: IInventoryRepository
     ) {}
 
-    public execute(payload: GetInventoryPayload) {
-        return this.inventoryRepository.getInventory(payload)
+    public execute(id: string) {
+        return this.inventoryRepository.getInventoryRecordById(id)
     }
 }

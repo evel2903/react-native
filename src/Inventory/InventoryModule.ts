@@ -1,8 +1,11 @@
+// src/Inventory/InventoryModule.ts
 import { getModuleContainer, module } from 'inversiland'
-import { GetInventoryStore } from './Presentation/Stores/GetInventoryStore/GetInventoryStore'
+import { InventoryStore } from './Presentation/Stores/InventoryStore/InventoryStore'
 import { IInventoryRepositoryToken } from './Domain/Specifications/IInventoryRepository'
 import InventoryRepository from './Infrastructure/Implementations/InventoryRepository'
 import GetInventoryUseCase from './Application/UseCases/GetInventoryUseCase'
+import GetInventoryRecordUseCase from './Application/UseCases/GetInventoryRecordUseCase'
+import UpdateInventoryStatusUseCase from './Application/UseCases/UpdateInventoryStatusUseCase'
 
 @module({
     providers: [
@@ -11,8 +14,10 @@ import GetInventoryUseCase from './Application/UseCases/GetInventoryUseCase'
             useClass: InventoryRepository,
         },
         GetInventoryUseCase,
+        GetInventoryRecordUseCase,
+        UpdateInventoryStatusUseCase,
         {
-            useClass: GetInventoryStore,
+            useClass: InventoryStore,
             scope: 'Transient',
         },
     ],

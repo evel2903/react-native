@@ -7,6 +7,7 @@ import PostsScreen from 'src/post/presentation/screens/PostsScreen'
 import AuthScreen from '@/src/Auth/Presentation/Screens/AuthScreen'
 import HomeScreen from '../Screens/HomeScreen'
 import InventoryScreen from '@/src/Inventory/Presentation/Screens/InventoryScreen'
+import InventoryProcessScreen from '@/src/Inventory/Presentation/Screens/InventoryProcessScreen'
 import StockInScreen from '@/src/StockIn/Presentation/Screens/StockInScreen'
 import StockInProcessScreen from '@/src/StockIn/Presentation/Screens/StockInProcessScreen'
 import StockOutScreen from '@/src/StockOut/Presentation/Screens/StockOutScreen'
@@ -45,6 +46,10 @@ const RootNavigator = observer(() => {
             <Stack.Screen name="Posts" component={PostsScreen} />
             <Stack.Screen name="Post" component={PostScreen} />
             <Stack.Screen name="Inventory" component={InventoryScreen} />
+            <Stack.Screen
+                name="InventoryProcess"
+                component={InventoryProcessScreen}
+            />
             <Stack.Screen name="StockIn" component={StockInScreen} />
             <Stack.Screen
                 name="StockInProcess"

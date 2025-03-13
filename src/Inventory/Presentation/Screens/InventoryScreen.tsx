@@ -1,43 +1,39 @@
+// src/Inventory/Presentation/Screens/InventoryScreen.tsx
 import React, { useEffect, useState } from 'react'
-import { View, FlatList, StyleSheet } from 'react-native'
+import { View, FlatList, StyleSheet, ScrollView } from 'react-native'
 import {
     Appbar,
     Searchbar,
     ActivityIndicator,
     Text,
     Chip,
+    Card,
     Button,
-    Menu,
-    Divider,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { RootScreenNavigationProp } from '@/src/Core/Presentation/Navigation/Types/Index'
 import { observer } from 'mobx-react'
-import { useGetInventoryStore } from '../Stores/GetInventoryStore/UseGetInventoryStore'
+import { useInventoryStore } from '../Stores/InventoryStore/UseInventoryStore'
 import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
-import { GetInventoryStoreProvider } from '../Stores/GetInventoryStore/GetInventoryStoreProvider'
+import { InventoryStoreProvider } from '../Stores/InventoryStore/InventoryStoreProvider'
 import { useI18n } from '@/src/Core/Presentation/Hooks/UseI18n'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
-import InventoryItem from '../Components/InventoryItem'
 import { StatusBar } from 'expo-status-bar'
+import InventoryRecordItem from '../Components/InventoryRecordItem'
+import InventoryRecordEntity from '../../Domain/Entities/InventoryRecordEntity'
 
 const InventoryScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'Inventory'>>()
-    const inventoryStore = useGetInventoryStore()
+    const inventoryStore = useInventoryStore()
     const theme = useTheme()
     const i18n = useI18n()
 
     const [searchQuery, setSearchQuery] = useState('')
-    const [filterMenuVisible, setFilterMenuVisible] = useState(false)
-    const [sortMenuVisible, setSortMenuVisible] = useState(false)
-
-    // Available categories for filtering (would come from API in real app)
-    const categories = ['All', 'Electronics', 'Furniture', 'Office Supplies']
 
     useEffect(() => {
         // Load inventory data when component mounts
-        inventoryStore.getInventory()
+        inventoryStore.resetFilters() // Start with no filters applied
     }, [inventoryStore])
 
     const handleGoBack = () => {
@@ -53,22 +49,17 @@ const InventoryScreen = observer(() => {
         inventoryStore.search('')
     }
 
-    const handleFilterByCategory = (category?: string) => {
-        // If 'All' is selected, pass undefined to remove the filter
-        inventoryStore.filterByCategory(
-            category === 'All' ? undefined : category
-        )
-        setFilterMenuVisible(false)
+    const handleProcess = (id: string) => {
+        // Navigate to the process screen with the selected inventory ID
+        navigation.navigate('InventoryProcess', { id })
     }
 
-    const handleSort = (field: string) => {
-        inventoryStore.sort(field)
-        setSortMenuVisible(false)
-    }
-
-    const handleItemPress = (id: string) => {
-        // In a real app, this would navigate to a detail view
-        console.log('Item pressed:', id)
+    const handleFilter = (value: string) => {
+        if (value === 'all') {
+            inventoryStore.filterByStatus(undefined)
+        } else {
+            inventoryStore.filterByStatus(value as any)
+        }
     }
 
     return (
@@ -80,10 +71,9 @@ const InventoryScreen = observer(() => {
                 <Appbar.Header>
                     <Appbar.BackAction onPress={handleGoBack} />
                     <Appbar.Content title="Inventory" />
-                    <Appbar.Action icon="plus" onPress={() => {}} />
                 </Appbar.Header>
 
-                {/* Search and Filter Bar */}
+                {/* Search Bar */}
                 <View style={styles.searchContainer}>
                     <Searchbar
                         placeholder="Search inventory"
@@ -93,110 +83,67 @@ const InventoryScreen = observer(() => {
                         onClearIconPress={handleClearSearch}
                         style={styles.searchbar}
                     />
-                    <View style={styles.filterContainer}>
-                        <Menu
-                            visible={filterMenuVisible}
-                            onDismiss={() => setFilterMenuVisible(false)}
-                            anchor={
-                                <Button
-                                    mode="outlined"
-                                    onPress={() => setFilterMenuVisible(true)}
-                                    icon="filter-variant"
-                                    style={styles.filterButton}
-                                >
-                                    Filter
-                                </Button>
-                            }
-                        >
-                            {categories.map(category => (
-                                <Menu.Item
-                                    key={category}
-                                    onPress={() =>
-                                        handleFilterByCategory(category)
-                                    }
-                                    title={category}
-                                />
-                            ))}
-                        </Menu>
-
-                        <Menu
-                            visible={sortMenuVisible}
-                            onDismiss={() => setSortMenuVisible(false)}
-                            anchor={
-                                <Button
-                                    mode="outlined"
-                                    onPress={() => setSortMenuVisible(true)}
-                                    icon="sort-variant"
-                                    style={styles.filterButton}
-                                >
-                                    Sort
-                                </Button>
-                            }
-                        >
-                            <Menu.Item
-                                onPress={() => handleSort('name')}
-                                title="Name"
-                            />
-                            <Menu.Item
-                                onPress={() => handleSort('quantity')}
-                                title="Quantity"
-                            />
-                            <Menu.Item
-                                onPress={() => handleSort('category')}
-                                title="Category"
-                            />
-                            <Menu.Item
-                                onPress={() => handleSort('lastUpdated')}
-                                title="Last Updated"
-                            />
-                        </Menu>
-                    </View>
                 </View>
 
-                {/* Active Filters Display */}
-                {(inventoryStore.filters.category ||
-                    inventoryStore.filters.search) && (
-                    <View style={styles.activeFiltersContainer}>
-                        <Text variant="bodySmall" style={styles.filtersLabel}>
-                            Active Filters:
-                        </Text>
-                        <View style={styles.chipContainer}>
-                            {inventoryStore.filters.category && (
-                                <Chip
-                                    onClose={() =>
-                                        handleFilterByCategory(undefined)
-                                    }
-                                    style={styles.filterChip}
-                                >
-                                    {inventoryStore.filters.category}
-                                </Chip>
-                            )}
-                            {inventoryStore.filters.search && (
-                                <Chip
-                                    onClose={() => handleClearSearch()}
-                                    style={styles.filterChip}
-                                >
-                                    Search: {inventoryStore.filters.search}
-                                </Chip>
-                            )}
-                        </View>
-                    </View>
-                )}
+                {/* Status Filter */}
+                <View style={styles.filterArea}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.filterScrollContent}
+                        style={styles.filterContainer}
+                    >
+                        {[
+                            { value: 'all', label: 'All' },
+                            { value: 'pending', label: 'Pending' },
+                            { value: 'in-progress', label: 'In Progress' },
+                            { value: 'completed', label: 'Completed' },
+                            { value: 'cancelled', label: 'Cancelled' },
+                        ].map(filter => (
+                            <Chip
+                                key={filter.value}
+                                selected={
+                                    (filter.value === 'all' &&
+                                        !inventoryStore.filters.status) ||
+                                    inventoryStore.filters.status === filter.value
+                                }
+                                onPress={() => handleFilter(filter.value)}
+                                style={[
+                                    styles.filterChip,
+                                    (filter.value === 'all' &&
+                                        !inventoryStore.filters.status) ||
+                                    inventoryStore.filters.status === filter.value
+                                        ? styles.activeFilterChip
+                                        : styles.inactiveFilterChip,
+                                ]}
+                                showSelectedCheck={false}
+                                mode="flat"
+                                textStyle={[
+                                    (filter.value === 'all' &&
+                                        !inventoryStore.filters.status) ||
+                                    inventoryStore.filters.status === filter.value
+                                        ? styles.activeFilterText
+                                        : styles.inactiveFilterText,
+                                ]}
+                            >
+                                {filter.label}
+                            </Chip>
+                        ))}
+                    </ScrollView>
+                </View>
 
-                <Divider />
-
-                {/* Inventory List */}
+                {/* Inventory Records List */}
                 {inventoryStore.isLoading ? (
                     <View style={styles.loaderContainer}>
                         <ActivityIndicator size="large" />
                         <Text style={styles.loaderText}>
-                            Loading inventory...
+                            Loading inventory records...
                         </Text>
                     </View>
                 ) : inventoryStore.isEmpty ? (
                     <View style={styles.emptyContainer}>
                         <Text variant="bodyLarge">
-                            No inventory items found
+                            No inventory records found
                         </Text>
                         <Button
                             mode="contained"
@@ -211,9 +158,9 @@ const InventoryScreen = observer(() => {
                         data={inventoryStore.results}
                         keyExtractor={item => item.id}
                         renderItem={({ item }) => (
-                            <InventoryItem
-                                item={item}
-                                onPress={handleItemPress}
+                            <InventoryRecordItem
+                                record={item}
+                                onPress={handleProcess}
                             />
                         )}
                         contentContainerStyle={styles.listContent}
@@ -227,35 +174,48 @@ const InventoryScreen = observer(() => {
 const styles = StyleSheet.create({
     searchContainer: {
         padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
+        paddingBottom: 8,
     },
     searchbar: {
-        flex: 1,
-        marginRight: 8,
+        elevation: 0,
+    },
+    filterArea: {
+        marginBottom: 16,
+        backgroundColor: '#F9FAFB',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+        paddingBottom: 8,
     },
     filterContainer: {
-        flexDirection: 'row',
+        paddingVertical: 12,
     },
-    filterButton: {
-        marginLeft: 8,
-    },
-    activeFiltersContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingBottom: 12,
-    },
-    filtersLabel: {
-        marginRight: 8,
-    },
-    chipContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+    filterScrollContent: {
+        paddingHorizontal: this,
+        paddingRight: 24,
+        gap: 12,
     },
     filterChip: {
-        marginRight: 8,
-        marginBottom: 8,
+        height: 36,
+        minWidth: 100,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    filterChipText: {
+        textAlign: 'center',
+    },
+    activeFilterChip: {
+        backgroundColor: '#5D3FD3',
+    },
+    inactiveFilterChip: {
+        backgroundColor: '#EDE9FE',
+    },
+    activeFilterText: {
+        color: 'white',
+        fontWeight: '500',
+    },
+    inactiveFilterText: {
+        color: '#4B5563',
     },
     listContent: {
         padding: 16,
@@ -279,4 +239,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default withProviders(GetInventoryStoreProvider)(InventoryScreen)
+export default withProviders(InventoryStoreProvider)(InventoryScreen)
