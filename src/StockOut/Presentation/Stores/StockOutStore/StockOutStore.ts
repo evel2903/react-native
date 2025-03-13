@@ -10,6 +10,7 @@ import {
     IStockOutRepository,
     IStockOutRepositoryToken,
 } from '@/src/StockOut/Domain/Specifications/IStockOutRepository'
+import { StockOutProductItem } from '../../Domain/Entities/StockOutProductItem'
 
 @injectable()
 export class StockOutStore implements StockOutStoreState {
@@ -17,7 +18,7 @@ export class StockOutStore implements StockOutStoreState {
     results: StockOutEntity[] = []
     count = 0
     filters = {
-        status: undefined as undefined | 'pending' | 'completed' | 'cancelled',
+        status: undefined as undefined | 'pending' | 'processing' | 'completed' | 'cancelled',
         startDate: undefined,
         endDate: undefined,
         search: undefined,
@@ -33,13 +34,17 @@ export class StockOutStore implements StockOutStoreState {
 
     // Form data with default values
     formData: CreateStockOutPayload = {
-        productId: '',
-        productName: '',
-        quantity: 0,
-        unit: 'pc',
+        products: [{
+            productId: '',
+            productName: '',
+            quantity: 1,
+            unit: 'pc',
+        }],
         date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD
         issuedBy: '',
         issuedTo: '',
+        reason: '',
+        notes: '',
         status: 'pending',
     }
 
@@ -101,16 +106,51 @@ export class StockOutStore implements StockOutStoreState {
         Object.assign(this.formData, payload)
     }
 
+    // Add a new product to the form
+    addProduct = () => {
+        this.formData.products.push({
+            productId: '',
+            productName: '',
+            quantity: 1,
+            unit: 'pc'
+        })
+    }
+
+    // Update a product in the form
+    updateProduct = (index: number, product: Partial<StockOutProductItem>) => {
+        if (index >= 0 && index < this.formData.products.length) {
+            this.formData.products[index] = {
+                ...this.formData.products[index],
+                ...product
+            }
+        }
+    }
+
+    // Remove a product from the form
+    removeProduct = (index: number) => {
+        if (index >= 0 && index < this.formData.products.length) {
+            this.formData.products.splice(index, 1)
+            // Always keep at least one product
+            if (this.formData.products.length === 0) {
+                this.addProduct()
+            }
+        }
+    }
+
     // Reset form to default values
     resetForm = () => {
         this.formData = {
-            productId: '',
-            productName: '',
-            quantity: 0,
-            unit: 'pc',
+            products: [{
+                productId: '',
+                productName: '',
+                quantity: 1,
+                unit: 'pc',
+            }],
             date: new Date().toISOString().split('T')[0],
             issuedBy: '',
             issuedTo: '',
+            reason: '',
+            notes: '',
             status: 'pending',
         }
     }
@@ -149,9 +189,9 @@ export class StockOutStore implements StockOutStoreState {
         try {
             // Validate form data
             if (
-                !this.formData.productId ||
-                !this.formData.productName ||
-                this.formData.quantity <= 0 ||
+                this.formData.products.length === 0 ||
+                this.formData.products.some(p => !p.productId || !p.productName || p.quantity <= 0) ||
+                !this.formData.issuedBy ||
                 !this.formData.issuedTo
             ) {
                 this.setError('Please fill all required fields')
@@ -248,15 +288,15 @@ export class StockOutStore implements StockOutStoreState {
 
     // Filter by date range
     filterByDateRange(startDate?: string, endDate?: string) {
-        //this.filters.startDate = startDate;
-        //this.filters.endDate = endDate;
+        //this.filters.startDate = startDate
+        //this.filters.endDate = endDate
         this.pagination.page = 1
         this.getStockOuts()
     }
 
     // Search
     search(query?: string) {
-        //this.filters.search = query;
+        //this.filters.search = query
         this.pagination.page = 1
         this.getStockOuts()
     }

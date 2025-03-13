@@ -1,3 +1,4 @@
+// src/Core/Presentation/Navigation/Types/Index.tsx
 import {
     NativeStackNavigationProp,
     NativeStackScreenProps,
@@ -20,6 +21,7 @@ export type RootStackParamList = {
     StockIn: undefined
     StockInProcess: { id: string }
     StockOut: undefined
+    StockOutProcess: { id: string }
     NotFound: undefined
 }
 

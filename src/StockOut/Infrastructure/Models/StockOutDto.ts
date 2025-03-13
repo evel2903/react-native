@@ -1,22 +1,14 @@
-import { Expose } from 'class-transformer'
+import { Expose, Type } from 'class-transformer'
 import ResponseDto from 'src/Core/Infrastructure/Models/ResponseDto'
 import StockOutEntity from '../../Domain/Entities/StockOutEntity'
+import { StockOutProductItemDto } from './StockOutProductItemDto'
 
 export default class StockOutDto extends ResponseDto<StockOutEntity> {
     @Expose()
     id!: string
 
     @Expose()
-    productId!: string
-
-    @Expose()
-    productName!: string
-
-    @Expose()
-    quantity!: number
-
-    @Expose()
-    unit!: string
+    reference!: string
 
     @Expose()
     date!: string
@@ -34,21 +26,33 @@ export default class StockOutDto extends ResponseDto<StockOutEntity> {
     notes?: string
 
     @Expose()
-    status!: 'pending' | 'completed' | 'cancelled'
+    status!: 'pending' | 'processing' | 'completed' | 'cancelled'
+
+    @Expose()
+    @Type(() => StockOutProductItemDto)
+    products!: StockOutProductItemDto[]
+
+    @Expose()
+    totalItems!: number
 
     toDomain(): StockOutEntity {
         return {
             id: this.id,
-            productId: this.productId,
-            productName: this.productName,
-            quantity: this.quantity,
-            unit: this.unit,
+            reference: this.reference,
             date: this.date,
             issuedBy: this.issuedBy,
             issuedTo: this.issuedTo,
             reason: this.reason,
             notes: this.notes,
             status: this.status,
+            products: this.products.map(product => ({
+                productId: product.productId,
+                productName: product.productName,
+                quantity: product.quantity,
+                unit: product.unit,
+                price: product.price
+            })),
+            totalItems: this.totalItems
         }
     }
 }

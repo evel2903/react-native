@@ -1,5 +1,6 @@
+// src/StockOut/Presentation/Screens/StockOutScreen.tsx
 import React, { useEffect, useState } from 'react'
-import { View, FlatList, StyleSheet } from 'react-native'
+import { View, FlatList, StyleSheet, ScrollView } from 'react-native'
 import {
     Appbar,
     Searchbar,
@@ -53,10 +54,17 @@ const StockOutScreen = observer(() => {
         stockOutStore.search('')
     }
 
+    const handleProcess = (id: string) => {
+        // Navigate to process screen
+        navigation.navigate('StockOutProcess', { id })
+    }
+
     const getStatusColor = (status: StockOutEntity['status']) => {
         switch (status) {
             case 'pending':
                 return '#ff9800' // Orange
+            case 'processing':
+                return '#2196f3' // Blue
             case 'completed':
                 return '#4caf50' // Green
             case 'cancelled':
@@ -66,23 +74,23 @@ const StockOutScreen = observer(() => {
         }
     }
 
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString()
+    }
+
     const renderStockOutItem = ({ item }: { item: StockOutEntity }) => {
         const statusColor = getStatusColor(item.status)
-        const formattedDate = new Date(item.date).toLocaleDateString()
+        const isProcessable =
+            item.status === 'pending' || item.status === 'processing'
 
         return (
-            <Card
-                style={styles.card}
-                onPress={() => stockOutStore.getStockOutDetails(item.id)}
-            >
+            <Card style={styles.card}>
                 <Card.Content>
                     <View style={styles.cardHeader}>
                         <View>
-                            <Text variant="titleMedium">
-                                {item.productName}
-                            </Text>
+                            <Text variant="titleMedium">{item.reference}</Text>
                             <Text variant="bodySmall">
-                                Product ID: {item.productId}
+                                Date: {formatDate(item.date)}
                             </Text>
                         </View>
                         <Badge
@@ -103,28 +111,13 @@ const StockOutScreen = observer(() => {
                                 variant="bodyMedium"
                                 style={styles.detailLabel}
                             >
-                                Quantity:
+                                Issued To:
                             </Text>
                             <Text
                                 variant="bodyMedium"
                                 style={styles.detailValue}
                             >
-                                {item.quantity} {item.unit}
-                            </Text>
-                        </View>
-
-                        <View style={styles.detailRow}>
-                            <Text
-                                variant="bodyMedium"
-                                style={styles.detailLabel}
-                            >
-                                Date:
-                            </Text>
-                            <Text
-                                variant="bodyMedium"
-                                style={styles.detailValue}
-                            >
-                                {formattedDate}
+                                {item.issuedTo}
                             </Text>
                         </View>
 
@@ -148,13 +141,13 @@ const StockOutScreen = observer(() => {
                                 variant="bodyMedium"
                                 style={styles.detailLabel}
                             >
-                                Issued To:
+                                Total Items:
                             </Text>
                             <Text
                                 variant="bodyMedium"
                                 style={styles.detailValue}
                             >
-                                {item.issuedTo}
+                                {item.totalItems}
                             </Text>
                         </View>
 
@@ -175,33 +168,42 @@ const StockOutScreen = observer(() => {
                             </View>
                         )}
                     </View>
+
+                    <Divider style={styles.divider} />
+
+                    <Text variant="bodySmall">
+                        Products ({item.products.length}):
+                    </Text>
+                    <View style={styles.productsPreview}>
+                        {item.products.slice(0, 2).map((product, index) => (
+                            <Text
+                                key={index}
+                                variant="bodySmall"
+                                style={styles.productItem}
+                            >
+                                • {product.productName} ({product.quantity}{' '}
+                                {product.unit})
+                            </Text>
+                        ))}
+                        {item.products.length > 2 && (
+                            <Text
+                                variant="bodySmall"
+                                style={styles.moreProducts}
+                            >
+                                And {item.products.length - 2} more
+                                product(s)...
+                            </Text>
+                        )}
+                    </View>
                 </Card.Content>
 
                 <Card.Actions>
-                    {item.status === 'pending' && (
-                        <>
-                            <Button
-                                onPress={() =>
-                                    stockOutStore.updateStatus(
-                                        item.id,
-                                        'completed'
-                                    )
-                                }
-                            >
-                                Complete
-                            </Button>
-                            <Button
-                                onPress={() =>
-                                    stockOutStore.updateStatus(
-                                        item.id,
-                                        'cancelled'
-                                    )
-                                }
-                            >
-                                Cancel
-                            </Button>
-                        </>
-                    )}
+                    <Button
+                        mode="contained"
+                        onPress={() => handleProcess(item.id)}
+                    >
+                        {isProcessable ? 'Process' : 'View Details'}
+                    </Button>
                 </Card.Actions>
             </Card>
         )
@@ -241,23 +243,52 @@ const StockOutScreen = observer(() => {
                         </View>
 
                         {/* Status Filter */}
-                        <View style={styles.filterContainer}>
-                            <SegmentedButtons
-                                value={stockOutStore.filters.status || 'all'}
-                                onValueChange={value =>
-                                    stockOutStore.filterByStatus(
-                                        value === 'all'
-                                            ? undefined
-                                            : (value as any)
-                                    )
-                                }
-                                buttons={[
+                        <View style={styles.filterArea}>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.filterScrollContent}
+                                style={styles.filterContainer}
+                            >
+                                {[
                                     { value: 'all', label: 'All' },
                                     { value: 'pending', label: 'Pending' },
+                                    { value: 'processing', label: 'Processing' },
                                     { value: 'completed', label: 'Completed' },
                                     { value: 'cancelled', label: 'Cancelled' },
-                                ]}
-                            />
+                                ].map(filter => (
+                                    <Chip
+                                        key={filter.value}
+                                        selected={
+                                            (filter.value === 'all' &&
+                                                !stockOutStore.filters.status) ||
+                                            stockOutStore.filters.status === filter.value
+                                        }
+                                        onPress={() => stockOutStore.filterByStatus(
+                                            filter.value === 'all' ? undefined : filter.value as any
+                                        )}
+                                        style={[
+                                            styles.filterChip,
+                                            (filter.value === 'all' &&
+                                                !stockOutStore.filters.status) ||
+                                            stockOutStore.filters.status === filter.value
+                                                ? styles.activeFilterChip
+                                                : styles.inactiveFilterChip,
+                                        ]}
+                                        showSelectedCheck={false}
+                                        mode="flat"
+                                        textStyle={[
+                                            (filter.value === 'all' &&
+                                                !stockOutStore.filters.status) ||
+                                            stockOutStore.filters.status === filter.value
+                                                ? styles.activeFilterText
+                                                : styles.inactiveFilterText,
+                                        ]}
+                                    >
+                                        {filter.label}
+                                    </Chip>
+                                ))}
+                            </ScrollView>
                         </View>
 
                         {/* Stock Out List */}
@@ -305,13 +336,45 @@ const StockOutScreen = observer(() => {
 const styles = StyleSheet.create({
     searchContainer: {
         padding: 16,
+        paddingBottom: 8,
     },
     searchbar: {
         elevation: 0,
     },
-    filterContainer: {
-        paddingHorizontal: 16,
+    filterArea: {
+        marginBottom: 16,
+        backgroundColor: '#F9FAFB',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
         paddingBottom: 8,
+    },
+    filterContainer: {
+        paddingVertical: 12,
+    },
+    filterScrollContent: {
+        paddingHorizontal: 16,
+        paddingRight: 24,
+        gap: 12,
+    },
+    filterChip: {
+        height: 36,
+        minWidth: 100,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    activeFilterChip: {
+        backgroundColor: '#5D3FD3',
+    },
+    inactiveFilterChip: {
+        backgroundColor: '#EDE9FE',
+    },
+    activeFilterText: {
+        color: 'white',
+        fontWeight: '500',
+    },
+    inactiveFilterText: {
+        color: '#4B5563',
     },
     card: {
         marginBottom: 12,
@@ -338,6 +401,16 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         flex: 2,
+    },
+    productsPreview: {
+        marginTop: 4,
+    },
+    productItem: {
+        marginBottom: 2,
+    },
+    moreProducts: {
+        fontStyle: 'italic',
+        marginTop: 2,
     },
     listContent: {
         padding: 16,

@@ -1,3 +1,4 @@
+// src/Core/Presentation/Navigation/RootNavigator.tsx
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { RootStackParamList } from './Types/Index'
 import PostScreen from 'src/post/presentation/screens/PostScreen'
@@ -9,6 +10,7 @@ import InventoryScreen from '@/src/Inventory/Presentation/Screens/InventoryScree
 import StockInScreen from '@/src/StockIn/Presentation/Screens/StockInScreen'
 import StockInProcessScreen from '@/src/StockIn/Presentation/Screens/StockInProcessScreen'
 import StockOutScreen from '@/src/StockOut/Presentation/Screens/StockOutScreen'
+import StockOutProcessScreen from '@/src/StockOut/Presentation/Screens/StockOutProcessScreen'
 import { useTheme } from '../Theme/ThemeProvider'
 import { observer } from 'mobx-react'
 import { withProviders } from '../Utils/WithProviders'
@@ -49,6 +51,10 @@ const RootNavigator = observer(() => {
                 component={StockInProcessScreen}
             />
             <Stack.Screen name="StockOut" component={StockOutScreen} />
+            <Stack.Screen
+                name="StockOutProcess"
+                component={StockOutProcessScreen}
+            />
             <Stack.Screen name="NotFound" component={NotFoundScreen} />
         </Stack.Navigator>
     )

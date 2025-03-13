@@ -1,13 +1,14 @@
+import { StockOutProductItem } from './StockOutProductItem'
+
 export default interface StockOutEntity {
     id: string
-    productId: string
-    productName: string
-    quantity: number
-    unit: string
+    reference: string
     date: string
     issuedBy: string
     issuedTo: string
     reason?: string
     notes?: string
-    status: 'pending' | 'completed' | 'cancelled'
+    status: 'pending' | 'processing' | 'completed' | 'cancelled'
+    products: StockOutProductItem[]
+    totalItems: number
 }

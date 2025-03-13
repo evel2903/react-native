@@ -1,12 +1,11 @@
+import { StockOutProductItem } from '../../Domain/Entities/StockOutProductItem'
+
 export default interface CreateStockOutPayload {
-    productId: string
-    productName: string
-    quantity: number
-    unit: string
+    products: StockOutProductItem[]
     date: string
     issuedBy: string
     issuedTo: string
     reason?: string
     notes?: string
-    status?: 'pending' | 'completed' | 'cancelled'
+    status?: 'pending' | 'processing' | 'completed' | 'cancelled'
 }
