@@ -40,8 +40,7 @@ const InventoryRecordItem = ({ record, onPress }: InventoryRecordItemProps) => {
         return new Date(dateString).toLocaleDateString()
     }
 
-    const isProcessable =
-        status === 'pending' || status === 'in-progress'
+    const isProcessable = status === 'pending' || status === 'in-progress'
 
     return (
         <Card style={styles.card}>
@@ -67,46 +66,28 @@ const InventoryRecordItem = ({ record, onPress }: InventoryRecordItemProps) => {
 
                 <View style={styles.cardDetails}>
                     <View style={styles.detailRow}>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.detailLabel}
-                        >
+                        <Text variant="bodyMedium" style={styles.detailLabel}>
                             Location:
                         </Text>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.detailValue}
-                        >
+                        <Text variant="bodyMedium" style={styles.detailValue}>
                             {location || 'N/A'}
                         </Text>
                     </View>
 
                     <View style={styles.detailRow}>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.detailLabel}
-                        >
+                        <Text variant="bodyMedium" style={styles.detailLabel}>
                             Total Items:
                         </Text>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.detailValue}
-                        >
+                        <Text variant="bodyMedium" style={styles.detailValue}>
                             {totalItems}
                         </Text>
                     </View>
 
                     <View style={styles.detailRow}>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.detailLabel}
-                        >
+                        <Text variant="bodyMedium" style={styles.detailLabel}>
                             Conducted By:
                         </Text>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.detailValue}
-                        >
+                        <Text variant="bodyMedium" style={styles.detailValue}>
                             {conductedBy}
                         </Text>
                     </View>
@@ -114,9 +95,7 @@ const InventoryRecordItem = ({ record, onPress }: InventoryRecordItemProps) => {
 
                 <Divider style={styles.divider} />
 
-                <Text variant="bodySmall">
-                    Products ({products.length}):
-                </Text>
+                <Text variant="bodySmall">Products ({products.length}):</Text>
                 <View style={styles.productsPreview}>
                     {products.slice(0, 2).map((product, index) => (
                         <Text
@@ -124,15 +103,13 @@ const InventoryRecordItem = ({ record, onPress }: InventoryRecordItemProps) => {
                             variant="bodySmall"
                             style={styles.productItem}
                         >
-                            • {product.productName} (Expected: {product.expectedQuantity}, 
-                            Actual: {product.actualQuantity})
+                            • {product.productName} (Expected:{' '}
+                            {product.expectedQuantity}, Actual:{' '}
+                            {product.actualQuantity})
                         </Text>
                     ))}
                     {products.length > 2 && (
-                        <Text
-                            variant="bodySmall"
-                            style={styles.moreProducts}
-                        >
+                        <Text variant="bodySmall" style={styles.moreProducts}>
                             And {products.length - 2} more product(s)...
                         </Text>
                     )}
@@ -140,10 +117,7 @@ const InventoryRecordItem = ({ record, onPress }: InventoryRecordItemProps) => {
             </Card.Content>
 
             <Card.Actions>
-                <Button
-                    mode="contained"
-                    onPress={() => onPress(id)}
-                >
+                <Button mode="contained" onPress={() => onPress(id)}>
                     {isProcessable ? 'Process' : 'View Details'}
                 </Button>
             </Card.Actions>

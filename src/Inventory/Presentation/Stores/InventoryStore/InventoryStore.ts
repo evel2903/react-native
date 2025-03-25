@@ -114,7 +114,7 @@ export class InventoryStore implements InventoryStoreState {
             this.setCount(0)
             return {
                 results: [],
-                count: 0
+                count: 0,
             }
         } finally {
             this.setIsLoading(false)
@@ -153,10 +153,11 @@ export class InventoryStore implements InventoryStoreState {
 
         try {
             console.log('Updating inventory status for ID:', id, 'to', status)
-            const updatedRecord = await this.updateInventoryStatusUseCase.execute({
-                id,
-                status,
-            })
+            const updatedRecord =
+                await this.updateInventoryStatusUseCase.execute({
+                    id,
+                    status,
+                })
             console.log('Inventory status updated successfully')
 
             // Update in the results list if present

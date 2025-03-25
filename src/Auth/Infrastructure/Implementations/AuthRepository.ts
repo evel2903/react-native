@@ -5,7 +5,6 @@ import UserEntity from '../../Domain/Entities/UserEntity'
 import IHttpClient, {
     IHttpClientToken,
 } from '@/src/Core/Domain/Specifications/IHttpClient'
-import LoginDto from '../Models/LoginDto'
 import { plainToInstance } from 'class-transformer'
 import UserDto from '../Models/UserDto'
 
@@ -25,11 +24,19 @@ class AuthRepository implements IAuthRepository {
                 credentials
             )
 
-            // Extract user data from the response
-            const userData = response.data.user
+            // Check if the response is successful
+            if (response.status !== 'success') {
+                throw new Error(response.message || 'Login failed')
+            }
+
+            // Extract tokens and user data from the response
+            const { accessToken, refreshToken, user } = response.data
+
+            // Store tokens
+            await this.httpClient.storeTokens(accessToken, refreshToken)
 
             // Transform to domain entity using UserDto
-            const userDto = plainToInstance(UserDto, userData)
+            const userDto = plainToInstance(UserDto, user)
 
             return userDto.toDomain()
         } catch (error) {
@@ -45,7 +52,8 @@ class AuthRepository implements IAuthRepository {
             // In a real app, you might need to invalidate the token on server side
             // await this.httpClient.post(`${this.baseUrl}/logout`);
 
-            // For now, we'll just return as if logout was successful
+            // Clear tokens
+            await this.httpClient.clearTokens()
             return
         } catch (error) {
             console.error('Logout error:', error)

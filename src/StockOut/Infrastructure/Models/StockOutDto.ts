@@ -50,9 +50,9 @@ export default class StockOutDto extends ResponseDto<StockOutEntity> {
                 productName: product.productName,
                 quantity: product.quantity,
                 unit: product.unit,
-                price: product.price
+                price: product.price,
             })),
-            totalItems: this.totalItems
+            totalItems: this.totalItems,
         }
     }
 }

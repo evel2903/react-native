@@ -31,17 +31,17 @@ class StockOutRepository implements IStockOutRepository {
                     productName: 'Laptop Dell XPS 13',
                     quantity: 2,
                     unit: 'pc',
-                    price: 1200
+                    price: 1200,
                 },
                 {
                     productId: 'prod-007',
                     productName: 'External SSD 1TB',
                     quantity: 5,
                     unit: 'pc',
-                    price: 120
-                }
+                    price: 120,
+                },
             ],
-            totalItems: 7
+            totalItems: 7,
         },
         {
             id: 'so-002',
@@ -57,17 +57,17 @@ class StockOutRepository implements IStockOutRepository {
                     productName: 'iPhone 15 Pro',
                     quantity: 3,
                     unit: 'pc',
-                    price: 999
+                    price: 999,
                 },
                 {
                     productId: 'prod-004',
                     productName: 'Samsung Galaxy S23',
                     quantity: 2,
                     unit: 'pc',
-                    price: 899
-                }
+                    price: 899,
+                },
             ],
-            totalItems: 5
+            totalItems: 5,
         },
         {
             id: 'so-003',
@@ -83,11 +83,11 @@ class StockOutRepository implements IStockOutRepository {
                     productName: 'Sony WH-1000XM5 Headphones',
                     quantity: 3,
                     unit: 'pc',
-                    price: 349
-                }
+                    price: 349,
+                },
             ],
-            totalItems: 3
-        }
+            totalItems: 3,
+        },
     ]
 
     constructor(
@@ -137,7 +137,9 @@ class StockOutRepository implements IStockOutRepository {
                             product.productName
                                 .toLowerCase()
                                 .includes(searchLower) ||
-                            product.productId.toLowerCase().includes(searchLower)
+                            product.productId
+                                .toLowerCase()
+                                .includes(searchLower)
                     )
             )
         }
@@ -177,7 +179,9 @@ class StockOutRepository implements IStockOutRepository {
     ): Promise<StockOutEntity> {
         // Generate a new ID and reference
         const newId = `so-${uuidv4().substring(0, 6)}`
-        const newReference = `SO-${new Date().getFullYear()}-${String(this.mockStockOuts.length + 1).padStart(3, '0')}`
+        const newReference = `SO-${new Date().getFullYear()}-${String(
+            this.mockStockOuts.length + 1
+        ).padStart(3, '0')}`
 
         // Calculate total items
         const totalItems = data.products.reduce(
@@ -194,7 +198,7 @@ class StockOutRepository implements IStockOutRepository {
             status: data.status || 'pending',
             // Use current date if not provided
             date: data.date || new Date().toISOString(),
-            totalItems
+            totalItems,
         }
 
         // In a real app, we would persist this to the database

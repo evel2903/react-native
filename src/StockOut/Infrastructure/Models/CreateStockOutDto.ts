@@ -34,7 +34,7 @@ export default class CreateStockOutDto extends PayloadDto<CreateStockOutPayload>
             issuedTo: payload.issuedTo,
             reason: payload.reason,
             notes: payload.notes,
-            status: payload.status || 'pending'
+            status: payload.status || 'pending',
         }
     }
 }

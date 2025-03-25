@@ -26,7 +26,9 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
     const [unitMenuVisible, setUnitMenuVisible] = useState<number | null>(null)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
-    const [productErrors, setProductErrors] = useState<Record<string, Record<string, string>>>({})
+    const [productErrors, setProductErrors] = useState<
+        Record<string, Record<string, string>>
+    >({})
     const [dialogVisible, setDialogVisible] = useState(false)
 
     const unitOptions = ['pc', 'kg', 'liter', 'box', 'carton', 'pallet']
@@ -36,30 +38,33 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
         { value: 'cancelled', label: 'Cancelled' },
     ]
 
-    const validateProduct = (product: StockOutProductItem, index: number): boolean => {
+    const validateProduct = (
+        product: StockOutProductItem,
+        index: number
+    ): boolean => {
         const newErrors: Record<string, string> = {}
-        
+
         if (!product.productId) {
             newErrors.productId = 'Product ID is required'
         }
-        
+
         if (!product.productName) {
             newErrors.productName = 'Product name is required'
         }
-        
+
         if (!product.quantity || product.quantity <= 0) {
             newErrors.quantity = 'Quantity must be greater than 0'
         }
-        
+
         if (!product.unit) {
             newErrors.unit = 'Unit is required'
         }
-        
+
         setProductErrors(prev => ({
             ...prev,
-            [index]: newErrors
+            [index]: newErrors,
         }))
-        
+
         return Object.keys(newErrors).length === 0
     }
 
@@ -110,9 +115,13 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
         }
     }
 
-    const updateProductField = (index: number, field: string, value: string | number) => {
+    const updateProductField = (
+        index: number,
+        field: string,
+        value: string | number
+    ) => {
         stockOutStore.updateProduct(index, {
-            [field]: value
+            [field]: value,
         } as any)
 
         // Clear error for this field if it exists
@@ -121,8 +130,8 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
                 ...prev,
                 [index]: {
                     ...prev[index],
-                    [field]: ''
-                }
+                    [field]: '',
+                },
             }))
         }
     }
@@ -136,9 +145,9 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
 
                 {/* Products Section */}
                 <Card style={styles.productsCard}>
-                    <Card.Title 
-                        title="Products" 
-                        right={(props) => (
+                    <Card.Title
+                        title="Products"
+                        right={props => (
                             <IconButton
                                 {...props}
                                 icon="plus"
@@ -147,105 +156,174 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
                         )}
                     />
                     <Card.Content>
-                        {stockOutStore.formData.products.map((product, index) => (
-                            <View key={index} style={styles.productContainer}>
-                                <View style={styles.productHeader}>
-                                    <Text variant="titleMedium">Product {index + 1}</Text>
-                                    {stockOutStore.formData.products.length > 1 && (
-                                        <IconButton
-                                            icon="delete"
-                                            size={20}
-                                            onPress={() => stockOutStore.removeProduct(index)}
-                                        />
-                                    )}
-                                </View>
-                                
-                                <TextInput
-                                    label="Product ID *"
-                                    value={product.productId}
-                                    onChangeText={(text) => updateProductField(index, 'productId', text)}
-                                    mode="outlined"
-                                    style={styles.input}
-                                    error={!!productErrors[index]?.productId}
-                                />
-                                {productErrors[index]?.productId && (
-                                    <HelperText type="error">{productErrors[index].productId}</HelperText>
-                                )}
-
-                                <TextInput
-                                    label="Product Name *"
-                                    value={product.productName}
-                                    onChangeText={(text) => updateProductField(index, 'productName', text)}
-                                    mode="outlined"
-                                    style={styles.input}
-                                    error={!!productErrors[index]?.productName}
-                                />
-                                {productErrors[index]?.productName && (
-                                    <HelperText type="error">{productErrors[index].productName}</HelperText>
-                                )}
-
-                                <View style={styles.row}>
-                                    <View style={styles.quantityContainer}>
-                                        <TextInput
-                                            label="Quantity *"
-                                            value={product.quantity.toString()}
-                                            onChangeText={(text) => {
-                                                const num = parseFloat(text)
-                                                updateProductField(index, 'quantity', isNaN(num) ? 0 : num)
-                                            }}
-                                            keyboardType="numeric"
-                                            mode="outlined"
-                                            style={styles.quantityInput}
-                                            error={!!productErrors[index]?.quantity}
-                                        />
-                                        {productErrors[index]?.quantity && (
-                                            <HelperText type="error">{productErrors[index].quantity}</HelperText>
+                        {stockOutStore.formData.products.map(
+                            (product, index) => (
+                                <View
+                                    key={index}
+                                    style={styles.productContainer}
+                                >
+                                    <View style={styles.productHeader}>
+                                        <Text variant="titleMedium">
+                                            Product {index + 1}
+                                        </Text>
+                                        {stockOutStore.formData.products
+                                            .length > 1 && (
+                                            <IconButton
+                                                icon="delete"
+                                                size={20}
+                                                onPress={() =>
+                                                    stockOutStore.removeProduct(
+                                                        index
+                                                    )
+                                                }
+                                            />
                                         )}
                                     </View>
 
-                                    <View style={styles.unitContainer}>
-                                        <Menu
-                                            visible={unitMenuVisible === index}
-                                            onDismiss={() => setUnitMenuVisible(null)}
-                                            anchor={
-                                                <Button
-                                                    mode="outlined"
-                                                    onPress={() => setUnitMenuVisible(index)}
-                                                    style={styles.unitButton}
-                                                >
-                                                    {product.unit || 'Select Unit'}
-                                                </Button>
-                                            }
-                                        >
-                                            {unitOptions.map((unit) => (
-                                                <Menu.Item
-                                                    key={unit}
-                                                    onPress={() => {
-                                                        updateProductField(index, 'unit', unit)
-                                                        setUnitMenuVisible(null)
-                                                    }}
-                                                    title={unit}
-                                                />
-                                            ))}
-                                        </Menu>
+                                    <TextInput
+                                        label="Product ID *"
+                                        value={product.productId}
+                                        onChangeText={text =>
+                                            updateProductField(
+                                                index,
+                                                'productId',
+                                                text
+                                            )
+                                        }
+                                        mode="outlined"
+                                        style={styles.input}
+                                        error={
+                                            !!productErrors[index]?.productId
+                                        }
+                                    />
+                                    {productErrors[index]?.productId && (
+                                        <HelperText type="error">
+                                            {productErrors[index].productId}
+                                        </HelperText>
+                                    )}
+
+                                    <TextInput
+                                        label="Product Name *"
+                                        value={product.productName}
+                                        onChangeText={text =>
+                                            updateProductField(
+                                                index,
+                                                'productName',
+                                                text
+                                            )
+                                        }
+                                        mode="outlined"
+                                        style={styles.input}
+                                        error={
+                                            !!productErrors[index]?.productName
+                                        }
+                                    />
+                                    {productErrors[index]?.productName && (
+                                        <HelperText type="error">
+                                            {productErrors[index].productName}
+                                        </HelperText>
+                                    )}
+
+                                    <View style={styles.row}>
+                                        <View style={styles.quantityContainer}>
+                                            <TextInput
+                                                label="Quantity *"
+                                                value={product.quantity.toString()}
+                                                onChangeText={text => {
+                                                    const num = parseFloat(text)
+                                                    updateProductField(
+                                                        index,
+                                                        'quantity',
+                                                        isNaN(num) ? 0 : num
+                                                    )
+                                                }}
+                                                keyboardType="numeric"
+                                                mode="outlined"
+                                                style={styles.quantityInput}
+                                                error={
+                                                    !!productErrors[index]
+                                                        ?.quantity
+                                                }
+                                            />
+                                            {productErrors[index]?.quantity && (
+                                                <HelperText type="error">
+                                                    {
+                                                        productErrors[index]
+                                                            .quantity
+                                                    }
+                                                </HelperText>
+                                            )}
+                                        </View>
+
+                                        <View style={styles.unitContainer}>
+                                            <Menu
+                                                visible={
+                                                    unitMenuVisible === index
+                                                }
+                                                onDismiss={() =>
+                                                    setUnitMenuVisible(null)
+                                                }
+                                                anchor={
+                                                    <Button
+                                                        mode="outlined"
+                                                        onPress={() =>
+                                                            setUnitMenuVisible(
+                                                                index
+                                                            )
+                                                        }
+                                                        style={
+                                                            styles.unitButton
+                                                        }
+                                                    >
+                                                        {product.unit ||
+                                                            'Select Unit'}
+                                                    </Button>
+                                                }
+                                            >
+                                                {unitOptions.map(unit => (
+                                                    <Menu.Item
+                                                        key={unit}
+                                                        onPress={() => {
+                                                            updateProductField(
+                                                                index,
+                                                                'unit',
+                                                                unit
+                                                            )
+                                                            setUnitMenuVisible(
+                                                                null
+                                                            )
+                                                        }}
+                                                        title={unit}
+                                                    />
+                                                ))}
+                                            </Menu>
+                                        </View>
                                     </View>
+
+                                    <TextInput
+                                        label="Price (optional)"
+                                        value={product.price?.toString() || ''}
+                                        onChangeText={text => {
+                                            const num = parseFloat(text)
+                                            updateProductField(
+                                                index,
+                                                'price',
+                                                isNaN(num) ? undefined : num
+                                            )
+                                        }}
+                                        keyboardType="numeric"
+                                        mode="outlined"
+                                        style={styles.input}
+                                    />
+
+                                    {index <
+                                        stockOutStore.formData.products.length -
+                                            1 && (
+                                        <Divider style={styles.divider} />
+                                    )}
                                 </View>
-
-                                <TextInput
-                                    label="Price (optional)"
-                                    value={product.price?.toString() || ''}
-                                    onChangeText={(text) => {
-                                        const num = parseFloat(text)
-                                        updateProductField(index, 'price', isNaN(num) ? undefined : num)
-                                    }}
-                                    keyboardType="numeric"
-                                    mode="outlined"
-                                    style={styles.input}
-                                />
-
-                                {index < stockOutStore.formData.products.length - 1 && <Divider style={styles.divider} />}
-                            </View>
-                        ))}
+                            )
+                        )}
                     </Card.Content>
                 </Card>
 
@@ -270,7 +348,9 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
                             error={!!errors.issuedBy}
                         />
                         {errors.issuedBy && (
-                            <HelperText type="error">{errors.issuedBy}</HelperText>
+                            <HelperText type="error">
+                                {errors.issuedBy}
+                            </HelperText>
                         )}
 
                         <TextInput
@@ -282,7 +362,9 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
                             error={!!errors.issuedTo}
                         />
                         {errors.issuedTo && (
-                            <HelperText type="error">{errors.issuedTo}</HelperText>
+                            <HelperText type="error">
+                                {errors.issuedTo}
+                            </HelperText>
                         )}
 
                         <TextInput
@@ -304,7 +386,9 @@ const StockOutForm = observer(({ onCancel }: StockOutFormProps) => {
                                 >
                                     Status:{' '}
                                     {statusOptions.find(
-                                        s => s.value === stockOutStore.formData.status
+                                        s =>
+                                            s.value ===
+                                            stockOutStore.formData.status
                                     )?.label || 'Pending'}
                                 </Button>
                             }

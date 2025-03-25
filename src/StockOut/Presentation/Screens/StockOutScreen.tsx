@@ -247,13 +247,18 @@ const StockOutScreen = observer(() => {
                             <ScrollView
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.filterScrollContent}
+                                contentContainerStyle={
+                                    styles.filterScrollContent
+                                }
                                 style={styles.filterContainer}
                             >
                                 {[
                                     { value: 'all', label: 'All' },
                                     { value: 'pending', label: 'Pending' },
-                                    { value: 'processing', label: 'Processing' },
+                                    {
+                                        value: 'processing',
+                                        label: 'Processing',
+                                    },
                                     { value: 'completed', label: 'Completed' },
                                     { value: 'cancelled', label: 'Cancelled' },
                                 ].map(filter => (
@@ -261,17 +266,25 @@ const StockOutScreen = observer(() => {
                                         key={filter.value}
                                         selected={
                                             (filter.value === 'all' &&
-                                                !stockOutStore.filters.status) ||
-                                            stockOutStore.filters.status === filter.value
+                                                !stockOutStore.filters
+                                                    .status) ||
+                                            stockOutStore.filters.status ===
+                                                filter.value
                                         }
-                                        onPress={() => stockOutStore.filterByStatus(
-                                            filter.value === 'all' ? undefined : filter.value as any
-                                        )}
+                                        onPress={() =>
+                                            stockOutStore.filterByStatus(
+                                                filter.value === 'all'
+                                                    ? undefined
+                                                    : (filter.value as any)
+                                            )
+                                        }
                                         style={[
                                             styles.filterChip,
                                             (filter.value === 'all' &&
-                                                !stockOutStore.filters.status) ||
-                                            stockOutStore.filters.status === filter.value
+                                                !stockOutStore.filters
+                                                    .status) ||
+                                            stockOutStore.filters.status ===
+                                                filter.value
                                                 ? styles.activeFilterChip
                                                 : styles.inactiveFilterChip,
                                         ]}
@@ -279,8 +292,10 @@ const StockOutScreen = observer(() => {
                                         mode="flat"
                                         textStyle={[
                                             (filter.value === 'all' &&
-                                                !stockOutStore.filters.status) ||
-                                            stockOutStore.filters.status === filter.value
+                                                !stockOutStore.filters
+                                                    .status) ||
+                                            stockOutStore.filters.status ===
+                                                filter.value
                                                 ? styles.activeFilterText
                                                 : styles.inactiveFilterText,
                                         ]}

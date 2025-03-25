@@ -1,4 +1,4 @@
-import { InventoryProductItem } from "./InventoryProductItem";
+import { InventoryProductItem } from './InventoryProductItem'
 export default interface InventoryRecordEntity {
     id: string
     reference: string

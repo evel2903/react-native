@@ -18,7 +18,12 @@ export class StockOutStore implements StockOutStoreState {
     results: StockOutEntity[] = []
     count = 0
     filters = {
-        status: undefined as undefined | 'pending' | 'processing' | 'completed' | 'cancelled',
+        status: undefined as
+            | undefined
+            | 'pending'
+            | 'processing'
+            | 'completed'
+            | 'cancelled',
         startDate: undefined,
         endDate: undefined,
         search: undefined,
@@ -34,12 +39,14 @@ export class StockOutStore implements StockOutStoreState {
 
     // Form data with default values
     formData: CreateStockOutPayload = {
-        products: [{
-            productId: '',
-            productName: '',
-            quantity: 1,
-            unit: 'pc',
-        }],
+        products: [
+            {
+                productId: '',
+                productName: '',
+                quantity: 1,
+                unit: 'pc',
+            },
+        ],
         date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD
         issuedBy: '',
         issuedTo: '',
@@ -112,7 +119,7 @@ export class StockOutStore implements StockOutStoreState {
             productId: '',
             productName: '',
             quantity: 1,
-            unit: 'pc'
+            unit: 'pc',
         })
     }
 
@@ -121,7 +128,7 @@ export class StockOutStore implements StockOutStoreState {
         if (index >= 0 && index < this.formData.products.length) {
             this.formData.products[index] = {
                 ...this.formData.products[index],
-                ...product
+                ...product,
             }
         }
     }
@@ -140,12 +147,14 @@ export class StockOutStore implements StockOutStoreState {
     // Reset form to default values
     resetForm = () => {
         this.formData = {
-            products: [{
-                productId: '',
-                productName: '',
-                quantity: 1,
-                unit: 'pc',
-            }],
+            products: [
+                {
+                    productId: '',
+                    productName: '',
+                    quantity: 1,
+                    unit: 'pc',
+                },
+            ],
             date: new Date().toISOString().split('T')[0],
             issuedBy: '',
             issuedTo: '',
@@ -190,7 +199,9 @@ export class StockOutStore implements StockOutStoreState {
             // Validate form data
             if (
                 this.formData.products.length === 0 ||
-                this.formData.products.some(p => !p.productId || !p.productName || p.quantity <= 0) ||
+                this.formData.products.some(
+                    p => !p.productId || !p.productName || p.quantity <= 0
+                ) ||
                 !this.formData.issuedBy ||
                 !this.formData.issuedTo
             ) {

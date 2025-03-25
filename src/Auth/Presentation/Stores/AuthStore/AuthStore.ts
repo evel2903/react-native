@@ -10,8 +10,6 @@ import IHttpClient, {
 } from '@/src/Core/Domain/Specifications/IHttpClient'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const ACCESS_TOKEN_KEY = 'accessToken'
-const REFRESH_TOKEN_KEY = 'refreshToken'
 const USER_DATA_KEY = 'userData'
 
 @injectable()
@@ -98,25 +96,11 @@ export class AuthStore implements AuthStoreState {
                 return false
             }
 
-            // Make login API request
-            const response = await this.loginUseCase.execute(credentials)
-
-            // Store auth tokens from the response (assuming they're in the response)
-            try {
-                // The tokens would typically come from the response
-                // Here we're hard-coding to match your sample response
-                const accessToken =
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOiI2YzViNTVlYy1iZTg5LTQ3MWItOTVlMC0xZmMwZDZjNGI4ZDkiLCJVc2VybmFtZSI6ImFkbWluIiwiRW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0MTU3NjIxNywiZXhwIjoxNzQxNTc3MTE3fQ.IpUyii3LpmJadOCUgyQCckWdVhS8au5E0sxgxi89GEU'
-                const refreshToken =
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDE1NzYyMTcsImV4cCI6MTc0MjE4MTAxN30.n5kjIY_scuPfDC2EHVVSCDUgW4381-Za9N5Gh2qYPNY'
-
-                await this.httpClient.storeTokens(accessToken, refreshToken)
-            } catch (error) {
-                console.error('Failed to store auth tokens:', error)
-            }
+            // Make login API request - tokens will be stored by the repository
+            const user = await this.loginUseCase.execute(credentials)
 
             // Set user data
-            this.setUser(response)
+            this.setUser(user)
             return true
         } catch (error) {
             this.setError(

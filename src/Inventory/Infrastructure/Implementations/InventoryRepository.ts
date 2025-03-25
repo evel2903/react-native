@@ -97,7 +97,7 @@ class InventoryRepository implements IInventoryRepository {
             console.error('Error in getInventory:', error)
             return {
                 results: [],
-                count: 0
+                count: 0,
             }
         }
     }
@@ -137,16 +137,21 @@ class InventoryRepository implements IInventoryRepository {
 
             // Update the status
             mockRecords[index].status = status
-            
+
             // Update the cached data
             if (this.cachedMockRecords) {
-                const cacheIndex = this.cachedMockRecords.findIndex(item => item.id === id)
+                const cacheIndex = this.cachedMockRecords.findIndex(
+                    item => item.id === id
+                )
                 if (cacheIndex !== -1) {
                     this.cachedMockRecords[cacheIndex].status = status
                 }
             }
 
-            return plainToInstance(InventoryRecordDto, mockRecords[index]).toDomain()
+            return plainToInstance(
+                InventoryRecordDto,
+                mockRecords[index]
+            ).toDomain()
         } catch (error) {
             console.error('Error in updateInventoryRecordStatus:', error)
             throw error
@@ -159,13 +164,15 @@ class InventoryRepository implements IInventoryRepository {
         if (this.cachedMockRecords) {
             return this.cachedMockRecords
         }
-        
+
         // Generate mock data and cache it
         this.cachedMockRecords = [
             {
                 id: 'inv-001',
                 reference: 'INV-2025-001',
-                date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+                date: new Date(
+                    Date.now() - 5 * 24 * 60 * 60 * 1000
+                ).toISOString(), // 5 days ago
                 conductedBy: 'John Doe',
                 location: 'Warehouse A',
                 status: 'pending',
@@ -207,7 +214,9 @@ class InventoryRepository implements IInventoryRepository {
             {
                 id: 'inv-002',
                 reference: 'INV-2025-002',
-                date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+                date: new Date(
+                    Date.now() - 2 * 24 * 60 * 60 * 1000
+                ).toISOString(), // 2 days ago
                 conductedBy: 'Jane Smith',
                 location: 'Warehouse B',
                 status: 'in-progress',
@@ -246,7 +255,9 @@ class InventoryRepository implements IInventoryRepository {
             {
                 id: 'inv-003',
                 reference: 'INV-2025-003',
-                date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+                date: new Date(
+                    Date.now() - 10 * 24 * 60 * 60 * 1000
+                ).toISOString(), // 10 days ago
                 conductedBy: 'Robert Johnson',
                 location: 'Warehouse A',
                 status: 'completed',
@@ -276,7 +287,9 @@ class InventoryRepository implements IInventoryRepository {
             {
                 id: 'inv-004',
                 reference: 'INV-2025-004',
-                date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
+                date: new Date(
+                    Date.now() - 15 * 24 * 60 * 60 * 1000
+                ).toISOString(), // 15 days ago
                 conductedBy: 'Michael Williams',
                 location: 'Warehouse C',
                 status: 'cancelled',
@@ -285,7 +298,7 @@ class InventoryRepository implements IInventoryRepository {
                 totalItems: 0,
             },
         ]
-        
+
         return this.cachedMockRecords
     }
 }

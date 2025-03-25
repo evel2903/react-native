@@ -45,7 +45,7 @@ const InventoryScreen = observer(() => {
                 setIsInitialized(true)
             }
         }
-        
+
         fetchData()
     }, [])
 
@@ -80,14 +80,19 @@ const InventoryScreen = observer(() => {
     // Handle error state
     if (inventoryStore.error && isInitialized) {
         return (
-            <View style={{ flex: 1, backgroundColor: theme.theme.colors.background }}>
+            <View
+                style={{
+                    flex: 1,
+                    backgroundColor: theme.theme.colors.background,
+                }}
+            >
                 <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
                 <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
                     <Appbar.Header>
                         <Appbar.BackAction onPress={handleGoBack} />
                         <Appbar.Content title="Inventory" />
                     </Appbar.Header>
-                    
+
                     <View style={styles.errorContainer}>
                         <Text variant="bodyLarge" style={styles.errorText}>
                             {inventoryStore.error}
@@ -148,14 +153,16 @@ const InventoryScreen = observer(() => {
                                 selected={
                                     (filter.value === 'all' &&
                                         !inventoryStore.filters.status) ||
-                                    inventoryStore.filters.status === filter.value
+                                    inventoryStore.filters.status ===
+                                        filter.value
                                 }
                                 onPress={() => handleFilter(filter.value)}
                                 style={[
                                     styles.filterChip,
                                     (filter.value === 'all' &&
                                         !inventoryStore.filters.status) ||
-                                    inventoryStore.filters.status === filter.value
+                                    inventoryStore.filters.status ===
+                                        filter.value
                                         ? styles.activeFilterChip
                                         : styles.inactiveFilterChip,
                                 ]}
@@ -164,7 +171,8 @@ const InventoryScreen = observer(() => {
                                 textStyle={[
                                     (filter.value === 'all' &&
                                         !inventoryStore.filters.status) ||
-                                    inventoryStore.filters.status === filter.value
+                                    inventoryStore.filters.status ===
+                                        filter.value
                                         ? styles.activeFilterText
                                         : styles.inactiveFilterText,
                                 ]}

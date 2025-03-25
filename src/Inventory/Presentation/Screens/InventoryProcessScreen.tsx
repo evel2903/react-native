@@ -40,7 +40,9 @@ const InventoryProcessScreen = observer(
         >(null)
 
         // Additional state for editing product quantities (for an actual implementation)
-        const [editingProduct, setEditingProduct] = useState<string | null>(null)
+        const [editingProduct, setEditingProduct] = useState<string | null>(
+            null
+        )
 
         useEffect(() => {
             // Load inventory record details when component mounts
@@ -182,7 +184,9 @@ const InventoryProcessScreen = observer(
                                         </Text>
                                         <Text variant="bodyMedium">
                                             Date:{' '}
-                                            {formatDate(selectedInventoryRecord.date)}
+                                            {formatDate(
+                                                selectedInventoryRecord.date
+                                            )}
                                         </Text>
                                     </View>
                                     <Chip
@@ -221,7 +225,9 @@ const InventoryProcessScreen = observer(
                                             Conducted By:
                                         </Text>
                                         <Text variant="bodyMedium">
-                                            {selectedInventoryRecord.conductedBy}
+                                            {
+                                                selectedInventoryRecord.conductedBy
+                                            }
                                         </Text>
                                     </View>
 
@@ -289,7 +295,9 @@ const InventoryProcessScreen = observer(
 
                                 <DataTable>
                                     <DataTable.Header>
-                                        <DataTable.Title style={styles.productNameCell}>
+                                        <DataTable.Title
+                                            style={styles.productNameCell}
+                                        >
                                             Product
                                         </DataTable.Title>
                                         <DataTable.Title numeric>
@@ -316,7 +324,9 @@ const InventoryProcessScreen = observer(
                                                     </Text>
                                                     <Text
                                                         variant="bodySmall"
-                                                        style={styles.productIdText}
+                                                        style={
+                                                            styles.productIdText
+                                                        }
                                                     >
                                                         {product.productId}
                                                     </Text>
@@ -325,20 +335,34 @@ const InventoryProcessScreen = observer(
                                                     {product.expectedQuantity}
                                                 </DataTable.Cell>
                                                 <DataTable.Cell numeric>
-                                                    {editingProduct === product.productId ? (
+                                                    {editingProduct ===
+                                                    product.productId ? (
                                                         <TextInput
                                                             value={product.actualQuantity.toString()}
                                                             keyboardType="numeric"
-                                                            style={styles.quantityInput}
+                                                            style={
+                                                                styles.quantityInput
+                                                            }
                                                             // In a real implementation, this would update the actual quantity
                                                             // onChangeText={text => updateActualQuantity(product.productId, text)}
                                                         />
                                                     ) : (
                                                         <Text
-                                                            onPress={() => isProcessable && handleEditActualQuantity(product.productId)}
-                                                            style={isProcessable ? styles.editableText : undefined}
+                                                            onPress={() =>
+                                                                isProcessable &&
+                                                                handleEditActualQuantity(
+                                                                    product.productId
+                                                                )
+                                                            }
+                                                            style={
+                                                                isProcessable
+                                                                    ? styles.editableText
+                                                                    : undefined
+                                                            }
                                                         >
-                                                            {product.actualQuantity}
+                                                            {
+                                                                product.actualQuantity
+                                                            }
                                                         </Text>
                                                     )}
                                                 </DataTable.Cell>
@@ -351,7 +375,9 @@ const InventoryProcessScreen = observer(
                                                             fontWeight: 'bold',
                                                         }}
                                                     >
-                                                        {product.discrepancy > 0 ? '+' : ''}
+                                                        {product.discrepancy > 0
+                                                            ? '+'
+                                                            : ''}
                                                         {product.discrepancy}
                                                     </Text>
                                                 </DataTable.Cell>

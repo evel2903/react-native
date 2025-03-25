@@ -18,14 +18,20 @@ export default class UserDto extends ResponseDto<UserEntity> {
     @Expose()
     permissions?: string[]
 
+    @Expose()
+    avatarUrl?: string
+
     toDomain(): UserEntity {
         return {
             id: this.id,
             name: this.fullname || this.username,
             email: this.email,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                this.fullname || this.username
-            )}&background=random`,
+            // Use the provided avatarUrl if available, otherwise generate a placeholder
+            avatar:
+                this.avatarUrl ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    this.fullname || this.username
+                )}&background=random`,
             permissions: this.permissions || [],
         }
     }

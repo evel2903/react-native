@@ -24,6 +24,7 @@ const HomeScreen = observer(() => {
     const theme = useTheme()
     const i18n = useI18n()
     const authStore = useAuthStore()
+    console.log(authStore.user)
 
     const handleLogout = async () => {
         await authStore.logout()
