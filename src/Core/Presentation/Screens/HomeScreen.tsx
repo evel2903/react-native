@@ -33,28 +33,10 @@ const HomeScreen = observer(() => {
 
     const menuItems = [
         {
-            title: i18n.t('home.menuItems.posts'),
-            icon: 'post-outline',
-            description: i18n.t('home.menuItems.postsDescription'),
-            onPress: () => navigation.navigate('Posts'),
-        },
-        {
             title: i18n.t('home.menuItems.stockIn'),
             icon: 'arrow-collapse',
             description: i18n.t('home.menuItems.stockInDescription'),
             onPress: () => navigation.navigate('StockIn'),
-        },
-        {
-            title: i18n.t('home.menuItems.stockOut'),
-            icon: 'arrow-expand',
-            description: i18n.t('home.menuItems.stockOutDescription'),
-            onPress: () => navigation.navigate('StockOut'),
-        },
-        {
-            title: i18n.t('home.menuItems.inventory'),
-            icon: 'arrow-collapse-all',
-            description: i18n.t('home.menuItems.inventoryDescription'),
-            onPress: () => navigation.navigate('Inventory'),
         },
     ]
 

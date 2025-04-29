@@ -65,36 +65,42 @@ const StockInScreen = observer(() => {
 
     const getStatusColor = (status: StockInEntity['status']) => {
         switch (status) {
-            case 'pending':
-                return '#ff9800' // Orange
-            case 'processing':
-                return '#2196f3' // Blue
-            case 'completed':
-                return '#4caf50' // Green
-            case 'cancelled':
-                return '#f44336' // Red
+            case 'DRAFT':
+                return '#ff9800'; // Orange
+            case 'PENDING':
+                return '#2196f3'; // Blue
+            case 'APPROVED':
+                return '#4caf50'; // Green
+            case 'REJECTED':
+            case 'CANCELLED':
+                return '#f44336'; // Red
             default:
-                return '#757575' // Grey
+                return '#757575'; // Grey
         }
-    }
+    };
+    const formatAmount = (amount: string) => {
+        return parseFloat(amount).toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+    };
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString()
     }
 
     const renderStockInItem = ({ item }: { item: StockInEntity }) => {
-        const statusColor = getStatusColor(item.status)
-        const isProcessable =
-            item.status === 'pending' || item.status === 'processing'
-
+        const statusColor = getStatusColor(item.status);
+        const isProcessable = ['DRAFT', 'PENDING'].includes(item.status);
+    
         return (
             <Card style={styles.card}>
                 <Card.Content>
                     <View style={styles.cardHeader}>
                         <View>
-                            <Text variant="titleMedium">{item.reference}</Text>
+                            <Text variant="titleMedium">{item.code}</Text>
                             <Text variant="bodySmall">
-                                Date: {formatDate(item.date)}
+                                Date: {formatDate(item.inDate)}
                             </Text>
                         </View>
                         <Badge
@@ -106,9 +112,9 @@ const StockInScreen = observer(() => {
                             {item.status}
                         </Badge>
                     </View>
-
+    
                     <Divider style={styles.divider} />
-
+    
                     <View style={styles.cardDetails}>
                         <View style={styles.detailRow}>
                             <Text
@@ -121,10 +127,10 @@ const StockInScreen = observer(() => {
                                 variant="bodyMedium"
                                 style={styles.detailValue}
                             >
-                                {item.supplierName || 'N/A'}
+                                {item.supplier?.name || 'N/A'}
                             </Text>
                         </View>
-
+    
                         <View style={styles.detailRow}>
                             <Text
                                 variant="bodyMedium"
@@ -136,54 +142,52 @@ const StockInScreen = observer(() => {
                                 variant="bodyMedium"
                                 style={styles.detailValue}
                             >
-                                {item.totalItems}
+                                {item.details.length}
                             </Text>
                         </View>
-
+    
                         <View style={styles.detailRow}>
                             <Text
                                 variant="bodyMedium"
                                 style={styles.detailLabel}
                             >
-                                Received By:
+                                Amount:
                             </Text>
                             <Text
                                 variant="bodyMedium"
                                 style={styles.detailValue}
                             >
-                                {item.receivedBy}
+                                ${formatAmount(item.totalAmount)}
                             </Text>
                         </View>
                     </View>
-
+    
                     <Divider style={styles.divider} />
-
+    
                     <Text variant="bodySmall">
-                        Products ({item.products.length}):
+                        Items ({item.details.length}):
                     </Text>
                     <View style={styles.productsPreview}>
-                        {item.products.slice(0, 2).map((product, index) => (
+                        {item.details.slice(0, 2).map((detail, index) => (
                             <Text
                                 key={index}
                                 variant="bodySmall"
                                 style={styles.productItem}
                             >
-                                • {product.productName} ({product.quantity}{' '}
-                                {product.unit})
+                                • {detail.goods?.name || `Item #${index + 1}`} ({detail.quantity} units)
                             </Text>
                         ))}
-                        {item.products.length > 2 && (
+                        {item.details.length > 2 && (
                             <Text
                                 variant="bodySmall"
                                 style={styles.moreProducts}
                             >
-                                And {item.products.length - 2} more
-                                product(s)...
+                                And {item.details.length - 2} more item(s)...
                             </Text>
                         )}
                     </View>
                 </Card.Content>
-
+    
                 <Card.Actions>
                     <Button
                         mode="contained"
@@ -194,8 +198,8 @@ const StockInScreen = observer(() => {
                     </Button>
                 </Card.Actions>
             </Card>
-        )
-    }
+        );
+    };
 
     return (
         <View
@@ -221,51 +225,50 @@ const StockInScreen = observer(() => {
                 </View>
 
                 {/* Status Filter */}
-                <View style={styles.filterArea}>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.filterScrollContent}
-                        style={styles.filterContainer}
-                    >
-                        {[
-                            { value: 'all', label: 'All' },
-                            { value: 'pending', label: 'Pending' },
-                            { value: 'processing', label: 'Processing' },
-                            { value: 'completed', label: 'Completed' },
-                            { value: 'cancelled', label: 'Cancelled' },
-                        ].map(filter => (
-                            <Chip
-                                key={filter.value}
-                                selected={
-                                    (filter.value === 'all' &&
-                                        !stockInStore.filters.status) ||
-                                    stockInStore.filters.status === filter.value
-                                }
-                                onPress={() => handleFilter(filter.value)}
-                                style={[
-                                    styles.filterChip,
-                                    (filter.value === 'all' &&
-                                        !stockInStore.filters.status) ||
-                                    stockInStore.filters.status === filter.value
-                                        ? styles.activeFilterChip
-                                        : styles.inactiveFilterChip,
-                                ]}
-                                showSelectedCheck={false}
-                                mode="flat"
-                                textStyle={[
-                                    (filter.value === 'all' &&
-                                        !stockInStore.filters.status) ||
-                                    stockInStore.filters.status === filter.value
-                                        ? styles.activeFilterText
-                                        : styles.inactiveFilterText,
-                                ]}
-                            >
-                                {filter.label}
-                            </Chip>
-                        ))}
-                    </ScrollView>
-                </View>
+                <ScrollView
+    horizontal
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.filterScrollContent}
+    style={styles.filterContainer}
+>
+    {[
+        { value: 'all', label: 'All' },
+        { value: 'DRAFT', label: 'Draft' },
+        { value: 'PENDING', label: 'Pending' },
+        { value: 'APPROVED', label: 'Approved' },
+        { value: 'REJECTED', label: 'Rejected' },
+        { value: 'CANCELLED', label: 'Cancelled' },
+    ].map(filter => (
+        <Chip
+            key={filter.value}
+            selected={
+                (filter.value === 'all' &&
+                    !stockInStore.filters.status) ||
+                stockInStore.filters.status === filter.value
+            }
+            onPress={() => handleFilter(filter.value)}
+            style={[
+                styles.filterChip,
+                (filter.value === 'all' &&
+                    !stockInStore.filters.status) ||
+                stockInStore.filters.status === filter.value
+                    ? styles.activeFilterChip
+                    : styles.inactiveFilterChip,
+            ]}
+            showSelectedCheck={false}
+            mode="flat"
+            textStyle={[
+                (filter.value === 'all' &&
+                    !stockInStore.filters.status) ||
+                stockInStore.filters.status === filter.value
+                    ? styles.activeFilterText
+                    : styles.inactiveFilterText,
+            ]}
+        >
+            {filter.label}
+        </Chip>
+    ))}
+</ScrollView>
 
                 {/* Stock In List */}
                 {stockInStore.isLoading ? (

@@ -1,57 +1,80 @@
-import { Expose, Type } from 'class-transformer'
-import ResponseDto from 'src/Core/Infrastructure/Models/ResponseDto'
-import StockInEntity from '../../Domain/Entities/StockInEntity'
-import { StockInProductItemDto } from './StockInProductItemDto'
+import { Expose, Type } from 'class-transformer';
+import ResponseDto from 'src/Core/Infrastructure/Models/ResponseDto';
+import StockInEntity from '../../Domain/Entities/StockInEntity';
+import { StockInDetailItemDto } from './StockInDetailItemDto';
+import { SupplierDto } from './SupplierDto';
+
 export default class StockInDto extends ResponseDto<StockInEntity> {
     @Expose()
-    id!: string
+    id!: string;
 
     @Expose()
-    reference!: string
+    code!: string;
 
     @Expose()
-    date!: string
+    supplierId!: string;
 
     @Expose()
-    receivedBy!: string
+    inDate!: string;
 
     @Expose()
-    supplierName?: string
+    description?: string;
 
     @Expose()
-    supplierInvoice?: string
+    status!: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
     @Expose()
-    notes?: string
+    notes?: string;
 
     @Expose()
-    status!: 'pending' | 'processing' | 'completed' | 'cancelled'
+    lotNumber?: string;
 
     @Expose()
-    @Type(() => StockInProductItemDto)
-    products!: StockInProductItemDto[]
+    totalAmount!: string;
 
     @Expose()
-    totalItems!: number
+    createdBy?: string | null;
+
+    @Expose()
+    approvedBy?: string | null;
+
+    @Expose()
+    @Type(() => StockInDetailItemDto)
+    details!: StockInDetailItemDto[];
+
+    @Expose()
+    @Type(() => SupplierDto)
+    supplier?: SupplierDto;
 
     toDomain(): StockInEntity {
         return {
             id: this.id,
-            reference: this.reference,
-            date: this.date,
-            receivedBy: this.receivedBy,
-            supplierName: this.supplierName,
-            supplierInvoice: this.supplierInvoice,
-            notes: this.notes,
+            code: this.code,
+            supplierId: this.supplierId,
+            inDate: this.inDate,
+            description: this.description,
             status: this.status,
-            products: this.products.map(product => ({
-                productId: product.productId,
-                productName: product.productName,
-                quantity: product.quantity,
-                unit: product.unit,
-                price: product.price,
+            notes: this.notes,
+            lotNumber: this.lotNumber,
+            totalAmount: this.totalAmount,
+            createdBy: this.createdBy,
+            approvedBy: this.approvedBy,
+            details: this.details.map(detail => ({
+                id: detail.id,
+                goodsId: detail.goodsId,
+                quantity: detail.quantity,
+                price: detail.price,
+                expiryDate: detail.expiryDate,
+                notes: detail.notes,
+                goods: detail.goods
             })),
-            totalItems: this.totalItems,
-        }
+            supplier: this.supplier ? {
+                id: this.supplier.id,
+                code: this.supplier.code,
+                name: this.supplier.name,
+                isActive: this.supplier.isActive,
+                isDeleted: this.supplier.isDeleted
+            } : undefined
+        };
     }
 }

@@ -24,7 +24,7 @@ import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
 import { withProviders } from 'src/Core/Presentation/Utils/WithProviders'
 import { StockInStoreProvider } from '../Stores/StockInStore/StockInStoreProvider'
 import { useTheme } from 'src/Core/Presentation/Theme/ThemeProvider'
-import { StockInProductItem } from '../../Domain/Entities/StockInGoodItem'
+import { StockInProductItem } from '../../Domain/Entities/StockInDetailItem'
 
 const StockInProcessScreen = observer(
     ({ route, navigation }: RootStackScreenProps<'StockInProcess'>) => {
@@ -95,30 +95,28 @@ const StockInProcessScreen = observer(
 
         const getStatusColor = (status: string) => {
             switch (status) {
-                case 'pending':
-                    return '#ff9800' // Orange
-                case 'processing':
-                    return '#2196f3' // Blue
-                case 'completed':
-                    return '#4caf50' // Green
-                case 'cancelled':
-                    return '#f44336' // Red
+                case 'DRAFT':
+                    return '#ff9800'; // Orange
+                case 'PENDING':
+                    return '#2196f3'; // Blue
+                case 'APPROVED':
+                    return '#4caf50'; // Green
+                case 'REJECTED':
+                case 'CANCELLED':
+                    return '#f44336'; // Red
                 default:
-                    return '#757575' // Grey
+                    return '#757575'; // Grey
             }
-        }
+        };
 
+        // Include the formatAmount function
+        const formatAmount = (amount: string) => {
+            return parseFloat(amount).toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        };
         // Calculate total value of the stock in
-        const calculateTotal = () => {
-            if (!stockInStore.selectedStockIn?.products) return 0
-
-            return stockInStore.selectedStockIn.products.reduce(
-                (sum, product) => {
-                    return sum + (product.price || 0) * product.quantity
-                },
-                0
-            )
-        }
 
         if (stockInStore.isLoading) {
             return (
@@ -159,9 +157,7 @@ const StockInProcessScreen = observer(
         }
 
         const { selectedStockIn } = stockInStore
-        const isProcessable =
-            selectedStockIn.status === 'pending' ||
-            selectedStockIn.status === 'processing'
+        const isProcessable = ['DRAFT', 'PENDING'].includes(selectedStockIn.status);
 
         return (
             <View
@@ -176,204 +172,189 @@ const StockInProcessScreen = observer(
                         <Appbar.BackAction onPress={handleGoBack} />
                         <Appbar.Content
                             title="Process Stock In"
-                            subtitle={selectedStockIn.reference}
                         />
                     </Appbar.Header>
 
                     <ScrollView contentContainerStyle={styles.scrollContent}>
                         {/* Header Section */}
                         <Card style={styles.headerCard}>
-                            <Card.Content>
-                                <View style={styles.headerRow}>
-                                    <View>
-                                        <Text variant="titleLarge">
-                                            {selectedStockIn.reference}
-                                        </Text>
-                                        <Text variant="bodyMedium">
-                                            Date:{' '}
-                                            {formatDate(selectedStockIn.date)}
-                                        </Text>
-                                    </View>
-                                    <Chip
-                                        style={{
-                                            backgroundColor: getStatusColor(
-                                                selectedStockIn.status
-                                            ),
-                                        }}
-                                        textStyle={{ color: 'white' }}
-                                    >
-                                        {selectedStockIn.status.toUpperCase()}
-                                    </Chip>
-                                </View>
+    <Card.Content>
+        <View style={styles.headerRow}>
+            <View>
+                <Text variant="titleLarge">
+                    {selectedStockIn.code}
+                </Text>
+                <Text variant="bodyMedium">
+                    Date: {formatDate(selectedStockIn.inDate)}
+                </Text>
+            </View>
+            <Chip
+                style={{
+                    backgroundColor: getStatusColor(selectedStockIn.status),
+                }}
+                textStyle={{ color: 'white' }}
+            >
+                {selectedStockIn.status}
+            </Chip>
+        </View>
 
-                                <Divider style={styles.divider} />
+        <Divider style={styles.divider} />
 
-                                <View style={styles.infoGrid}>
-                                    <View style={styles.infoItem}>
-                                        <Text
-                                            variant="bodySmall"
-                                            style={styles.infoLabel}
-                                        >
-                                            Supplier:
-                                        </Text>
-                                        <Text variant="bodyMedium">
-                                            {selectedStockIn.supplierName ||
-                                                'N/A'}
-                                        </Text>
-                                    </View>
+        <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+                <Text
+                    variant="bodySmall"
+                    style={styles.infoLabel}
+                >
+                    Supplier:
+                </Text>
+                <Text variant="bodyMedium">
+                    {selectedStockIn.supplier?.name || 'N/A'}
+                </Text>
+            </View>
 
-                                    <View style={styles.infoItem}>
-                                        <Text
-                                            variant="bodySmall"
-                                            style={styles.infoLabel}
-                                        >
-                                            Invoice Ref:
-                                        </Text>
-                                        <Text variant="bodyMedium">
-                                            {selectedStockIn.supplierInvoice ||
-                                                'N/A'}
-                                        </Text>
-                                    </View>
+            <View style={styles.infoItem}>
+                <Text
+                    variant="bodySmall"
+                    style={styles.infoLabel}
+                >
+                    Lot Number:
+                </Text>
+                <Text variant="bodyMedium">
+                    {selectedStockIn.lotNumber || 'N/A'}
+                </Text>
+            </View>
 
-                                    <View style={styles.infoItem}>
-                                        <Text
-                                            variant="bodySmall"
-                                            style={styles.infoLabel}
-                                        >
-                                            Received By:
-                                        </Text>
-                                        <Text variant="bodyMedium">
-                                            {selectedStockIn.receivedBy}
-                                        </Text>
-                                    </View>
+            <View style={styles.infoItem}>
+                <Text
+                    variant="bodySmall"
+                    style={styles.infoLabel}
+                >
+                    Total Amount:
+                </Text>
+                <Text variant="bodyMedium">
+                    ${formatAmount(selectedStockIn.totalAmount)}
+                </Text>
+            </View>
 
-                                    <View style={styles.infoItem}>
-                                        <Text
-                                            variant="bodySmall"
-                                            style={styles.infoLabel}
-                                        >
-                                            Total Items:
-                                        </Text>
-                                        <Text variant="bodyMedium">
-                                            {selectedStockIn.totalItems}
-                                        </Text>
-                                    </View>
-                                </View>
+            <View style={styles.infoItem}>
+                <Text
+                    variant="bodySmall"
+                    style={styles.infoLabel}
+                >
+                    Items Count:
+                </Text>
+                <Text variant="bodyMedium">
+                    {selectedStockIn.details.length}
+                </Text>
+            </View>
+        </View>
 
-                                {selectedStockIn.notes && (
-                                    <>
-                                        <Divider style={styles.divider} />
-                                        <View>
-                                            <Text
-                                                variant="bodySmall"
-                                                style={styles.infoLabel}
-                                            >
-                                                Notes:
-                                            </Text>
-                                            <Text variant="bodyMedium">
-                                                {selectedStockIn.notes}
-                                            </Text>
-                                        </View>
-                                    </>
-                                )}
-                            </Card.Content>
-                        </Card>
+        {selectedStockIn.description && (
+            <View style={styles.infoItem}>
+                <Text
+                    variant="bodySmall"
+                    style={styles.infoLabel}
+                >
+                    Description:
+                </Text>
+                <Text variant="bodyMedium">
+                    {selectedStockIn.description}
+                </Text>
+            </View>
+        )}
+
+        {selectedStockIn.notes && (
+            <>
+                <Divider style={styles.divider} />
+                <View>
+                    <Text
+                        variant="bodySmall"
+                        style={styles.infoLabel}
+                    >
+                        Notes:
+                    </Text>
+                    <Text variant="bodyMedium">
+                        {selectedStockIn.notes}
+                    </Text>
+                </View>
+            </>
+        )}
+    </Card.Content>
+</Card>
 
                         {/* Products Table */}
                         <Card style={styles.productsCard}>
-                            <Card.Content>
-                                <Text
-                                    variant="titleMedium"
-                                    style={styles.sectionTitle}
-                                >
-                                    Products
-                                </Text>
+    <Card.Content>
+        <Text
+            variant="titleMedium"
+            style={styles.sectionTitle}
+        >
+            Items
+        </Text>
 
-                                <DataTable>
-                                    <DataTable.Header>
-                                        <DataTable.Title>ID</DataTable.Title>
-                                        <DataTable.Title
-                                            style={styles.productNameCell}
-                                        >
-                                            Product
-                                        </DataTable.Title>
-                                        <DataTable.Title numeric>
-                                            Qty
-                                        </DataTable.Title>
-                                        <DataTable.Title>Unit</DataTable.Title>
-                                        <DataTable.Title numeric>
-                                            Price
-                                        </DataTable.Title>
-                                        <DataTable.Title numeric>
-                                            Subtotal
-                                        </DataTable.Title>
-                                    </DataTable.Header>
+        <DataTable>
+            <DataTable.Header>
+                <DataTable.Title>ID</DataTable.Title>
+                <DataTable.Title style={styles.productNameCell}>
+                    Item
+                </DataTable.Title>
+                <DataTable.Title numeric>
+                    Qty
+                </DataTable.Title>
+                <DataTable.Title numeric>
+                    Price
+                </DataTable.Title>
+                <DataTable.Title numeric>
+                    Subtotal
+                </DataTable.Title>
+            </DataTable.Header>
 
-                                    {selectedStockIn.products.map(
-                                        (product, index) => (
-                                            <DataTable.Row key={index}>
-                                                <DataTable.Cell>
-                                                    {product.productId}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell
-                                                    style={
-                                                        styles.productNameCell
-                                                    }
-                                                >
-                                                    {product.productName}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell numeric>
-                                                    {product.quantity}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell>
-                                                    {product.unit}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell numeric>
-                                                    {product.price
-                                                        ? `$${product.price.toFixed(
-                                                              2
-                                                          )}`
-                                                        : '-'}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell numeric>
-                                                    {product.price
-                                                        ? `$${(
-                                                              product.price *
-                                                              product.quantity
-                                                          ).toFixed(2)}`
-                                                        : '-'}
-                                                </DataTable.Cell>
-                                            </DataTable.Row>
-                                        )
-                                    )}
+            {selectedStockIn.details.map((detail, index) => (
+                <DataTable.Row key={detail.id || index}>
+                    <DataTable.Cell>
+                        {detail.goodsId.substring(0, 8)}...
+                    </DataTable.Cell>
+                    <DataTable.Cell style={styles.productNameCell}>
+                        {detail.goods?.name || `Item #${index + 1}`}
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric>
+                        {detail.quantity}
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric>
+                        ${formatAmount(detail.price)}
+                    </DataTable.Cell>
+                    <DataTable.Cell numeric>
+                        ${formatAmount(String(parseFloat(detail.price) * detail.quantity))}
+                    </DataTable.Cell>
+                </DataTable.Row>
+            ))}
 
-                                    <DataTable.Row style={styles.totalRow}>
-                                        <DataTable.Cell
-                                            style={styles.productNameCell}
-                                            colSpan={4}
-                                        >
-                                            <Text
-                                                variant="bodyMedium"
-                                                style={styles.totalLabel}
-                                            >
-                                                Total
-                                            </Text>
-                                        </DataTable.Cell>
-                                        <DataTable.Cell
-                                            numeric
-                                        ></DataTable.Cell>
-                                        <DataTable.Cell numeric>
-                                            <Text
-                                                variant="bodyLarge"
-                                                style={styles.totalValue}
-                                            >
-                                                ${calculateTotal().toFixed(2)}
-                                            </Text>
-                                        </DataTable.Cell>
-                                    </DataTable.Row>
-                                </DataTable>
-                            </Card.Content>
-                        </Card>
+            <DataTable.Row style={styles.totalRow}>
+                <DataTable.Cell
+                    style={styles.productNameCell}
+                    colSpan={3}
+                >
+                    <Text
+                        variant="bodyMedium"
+                        style={styles.totalLabel}
+                    >
+                        Total
+                    </Text>
+                </DataTable.Cell>
+                <DataTable.Cell numeric></DataTable.Cell>
+                <DataTable.Cell numeric>
+                    <Text
+                        variant="bodyLarge"
+                        style={styles.totalValue}
+                    >
+                        ${formatAmount(selectedStockIn.totalAmount)}
+                    </Text>
+                </DataTable.Cell>
+            </DataTable.Row>
+        </DataTable>
+    </Card.Content>
+</Card>
 
                         {/* Action Buttons */}
                         {isProcessable && (
