@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, StyleSheet, ScrollView } from 'react-native'
 import {
     TextInput,
@@ -8,10 +8,15 @@ import {
     Menu,
     Dialog,
     Portal,
+    ActivityIndicator,
+    Divider,
 } from 'react-native-paper'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
+import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
+import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
+import { MasterDataStoreProvider } from '@/src/Common/Presentation/Stores/MasterDataStore/MasterDataStoreProvider'
 
 interface StockInFormProps {
     onCancel: () => void
@@ -19,38 +24,62 @@ interface StockInFormProps {
 
 const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     const stockInStore = useStockInStore()
+    const masterDataStore = useMasterDataStore()
+    
     const [unitMenuVisible, setUnitMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
+    const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
+    const [goodsMenuVisible, setGoodsMenuVisible] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [dialogVisible, setDialogVisible] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
 
-    const unitOptions = ['pc', 'kg', 'liter', 'box', 'carton', 'pallet']
+    // Load master data when component mounts
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setIsLoading(true)
+                await Promise.all([
+                    masterDataStore.loadUnits(),
+                    masterDataStore.loadSuppliers(),
+                    masterDataStore.loadGoods()
+                ])
+            } catch (error) {
+                console.error('Error loading master data:', error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        
+        loadData()
+    }, [masterDataStore])
+
     const statusOptions = [
-        { value: 'pending', label: 'Pending' },
-        { value: 'completed', label: 'Completed' },
-        { value: 'cancelled', label: 'Cancelled' },
+        { value: 'DRAFT', label: 'Draft' },
+        { value: 'PENDING', label: 'Pending' },
     ]
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {}
 
         if (!stockInStore.formData.productId) {
-            newErrors.productId = 'Product ID is required'
+            newErrors.productId = 'Product is required'
         }
 
-        if (!stockInStore.formData.productName) {
-            newErrors.productName = 'Product name is required'
-        }
-
-        if (
-            !stockInStore.formData.quantity ||
-            stockInStore.formData.quantity <= 0
-        ) {
+        if (!stockInStore.formData.quantity || stockInStore.formData.quantity <= 0) {
             newErrors.quantity = 'Quantity must be greater than 0'
+        }
+
+        if (!stockInStore.formData.unit) {
+            newErrors.unit = 'Unit is required'
         }
 
         if (!stockInStore.formData.receivedBy) {
             newErrors.receivedBy = 'Received by is required'
+        }
+
+        if (!stockInStore.formData.supplierName) {
+            newErrors.supplierName = 'Supplier is required'
         }
 
         setErrors(newErrors)
@@ -82,6 +111,40 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
         }
     }
 
+    const selectGoods = (goodsId: string) => {
+        const goods = masterDataStore.getGoodsById(goodsId)
+        if (goods) {
+            updateField('productId', goods.id)
+            updateField('productName', goods.name)
+            
+            // Set the unit based on the goods unit if available
+            if (goods.unit) {
+                const unit = masterDataStore.units.data.find(u => u.name === goods.unit?.name)
+                if (unit) {
+                    updateField('unit', unit.name)
+                }
+            }
+        }
+        setGoodsMenuVisible(false)
+    }
+
+    const selectSupplier = (supplierId: string) => {
+        const supplier = masterDataStore.getSupplierById(supplierId)
+        if (supplier) {
+            updateField('supplierName', supplier.name)
+        }
+        setSupplierMenuVisible(false)
+    }
+
+    if (isLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" />
+                <Text>Loading master data...</Text>
+            </View>
+        )
+    }
+
     return (
         <View style={styles.container}>
             <ScrollView>
@@ -89,28 +152,37 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                     Create Stock In Record
                 </Text>
 
-                <TextInput
-                    label="Product ID *"
-                    value={stockInStore.formData.productId}
-                    onChangeText={text => updateField('productId', text)}
-                    mode="outlined"
-                    style={styles.input}
-                    error={!!errors.productId}
-                />
+                {/* Product/Goods selection */}
+                <Text variant="titleMedium" style={styles.sectionTitle}>Product Information</Text>
+                <Menu
+                    visible={goodsMenuVisible}
+                    onDismiss={() => setGoodsMenuVisible(false)}
+                    anchor={
+                        <Button
+                            mode="outlined"
+                            onPress={() => setGoodsMenuVisible(true)}
+                            style={styles.selectButton}
+                            icon="package-variant"
+                        >
+                            {stockInStore.formData.productName || 'Select Product'}
+                        </Button>
+                    }
+                    style={styles.menuContainer}
+                >
+                    <ScrollView style={styles.menuScrollView}>
+                        {masterDataStore.goods.data
+                            .filter(item => item.isActive && !item.isDeleted)
+                            .map(goods => (
+                                <Menu.Item
+                                    key={goods.id}
+                                    onPress={() => selectGoods(goods.id)}
+                                    title={`${goods.name} (${goods.code})`}
+                                />
+                            ))}
+                    </ScrollView>
+                </Menu>
                 {errors.productId && (
                     <HelperText type="error">{errors.productId}</HelperText>
-                )}
-
-                <TextInput
-                    label="Product Name *"
-                    value={stockInStore.formData.productName}
-                    onChangeText={text => updateField('productName', text)}
-                    mode="outlined"
-                    style={styles.input}
-                    error={!!errors.productName}
-                />
-                {errors.productName && (
-                    <HelperText type="error">{errors.productName}</HelperText>
                 )}
 
                 <View style={styles.row}>
@@ -149,20 +221,74 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                                 </Button>
                             }
                         >
-                            {unitOptions.map(unit => (
-                                <Menu.Item
-                                    key={unit}
-                                    onPress={() => {
-                                        updateField('unit', unit)
-                                        setUnitMenuVisible(false)
-                                    }}
-                                    title={unit}
-                                />
-                            ))}
+                            {masterDataStore.units.data
+                                .filter(unit => unit.isActive && !unit.isDeleted)
+                                .map(unit => (
+                                    <Menu.Item
+                                        key={unit.id}
+                                        onPress={() => {
+                                            updateField('unit', unit.name)
+                                            setUnitMenuVisible(false)
+                                        }}
+                                        title={unit.name}
+                                    />
+                                ))}
                         </Menu>
+                        {errors.unit && (
+                            <HelperText type="error">{errors.unit}</HelperText>
+                        )}
                     </View>
                 </View>
 
+                <Divider style={styles.divider} />
+                
+                {/* Supplier information */}
+                <Text variant="titleMedium" style={styles.sectionTitle}>Supplier Information</Text>
+                
+                <Menu
+                    visible={supplierMenuVisible}
+                    onDismiss={() => setSupplierMenuVisible(false)}
+                    anchor={
+                        <Button
+                            mode="outlined"
+                            onPress={() => setSupplierMenuVisible(true)}
+                            style={styles.selectButton}
+                            icon="truck-delivery"
+                        >
+                            {stockInStore.formData.supplierName || 'Select Supplier'}
+                        </Button>
+                    }
+                    style={styles.menuContainer}
+                >
+                    <ScrollView style={styles.menuScrollView}>
+                        {masterDataStore.suppliers.data
+                            .filter(supplier => supplier.isActive && !supplier.isDeleted)
+                            .map(supplier => (
+                                <Menu.Item
+                                    key={supplier.id}
+                                    onPress={() => selectSupplier(supplier.id)}
+                                    title={`${supplier.name} (${supplier.code})`}
+                                />
+                            ))}
+                    </ScrollView>
+                </Menu>
+                {errors.supplierName && (
+                    <HelperText type="error">{errors.supplierName}</HelperText>
+                )}
+
+                <TextInput
+                    label="Supplier Invoice"
+                    value={stockInStore.formData.supplierInvoice || ''}
+                    onChangeText={text => updateField('supplierInvoice', text)}
+                    mode="outlined"
+                    style={styles.input}
+                />
+
+                <Divider style={styles.divider} />
+                
+                {/* Stock in details */}
+                <Text variant="titleMedium" style={styles.sectionTitle}>Stock In Details</Text>
+                
                 <TextInput
                     label="Date *"
                     value={stockInStore.formData.date}
@@ -183,22 +309,6 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                     <HelperText type="error">{errors.receivedBy}</HelperText>
                 )}
 
-                <TextInput
-                    label="Supplier Name"
-                    value={stockInStore.formData.supplierName || ''}
-                    onChangeText={text => updateField('supplierName', text)}
-                    mode="outlined"
-                    style={styles.input}
-                />
-
-                <TextInput
-                    label="Supplier Invoice"
-                    value={stockInStore.formData.supplierInvoice || ''}
-                    onChangeText={text => updateField('supplierInvoice', text)}
-                    mode="outlined"
-                    style={styles.input}
-                />
-
                 <Menu
                     visible={statusMenuVisible}
                     onDismiss={() => setStatusMenuVisible(false)}
@@ -207,11 +317,12 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             mode="outlined"
                             onPress={() => setStatusMenuVisible(true)}
                             style={styles.statusButton}
+                            icon="information"
                         >
                             Status:{' '}
                             {statusOptions.find(
                                 s => s.value === stockInStore.formData.status
-                            )?.label || 'Pending'}
+                            )?.label || 'Draft'}
                         </Button>
                     }
                 >
@@ -288,12 +399,30 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
     },
+    loadingContainer: {
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 300,
+    },
     title: {
-        marginBottom: 16,
+        marginBottom: 24,
         textAlign: 'center',
+    },
+    sectionTitle: {
+        marginBottom: 16,
+        marginTop: 8,
+    },
+    divider: {
+        marginVertical: 16,
     },
     input: {
         marginBottom: 12,
+    },
+    selectButton: {
+        marginBottom: 12,
+        justifyContent: 'flex-start',
+        height: 56,
     },
     row: {
         flexDirection: 'row',
@@ -317,11 +446,19 @@ const styles = StyleSheet.create({
     },
     statusButton: {
         marginBottom: 12,
+        justifyContent: 'flex-start',
+        height: 56,
+    },
+    menuContainer: {
+        maxHeight: 300,
+    },
+    menuScrollView: {
+        maxHeight: 250,
     },
     actions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 16,
+        marginTop: 24,
         marginBottom: 24,
     },
     button: {
@@ -330,4 +467,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default StockInForm
+export default withProviders(MasterDataStoreProvider)(StockInForm)
