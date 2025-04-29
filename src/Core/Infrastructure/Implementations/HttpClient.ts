@@ -50,21 +50,18 @@ class HttpClient implements IHttpClient {
                                 { refreshToken }
                             )
 
-                            if (response.data.data?.accessToken) {
-                                // Save the new tokens
+                            // Check if the refresh was successful
+                            if (response.data.status === 'success') {
+                                const newAccessToken = response.data.accessToken
+
+                                // Save the new access token
                                 await AsyncStorage.setItem(
                                     ACCESS_TOKEN_KEY,
-                                    response.data.data.accessToken
+                                    newAccessToken
                                 )
-                                if (response.data.data.refreshToken) {
-                                    await AsyncStorage.setItem(
-                                        REFRESH_TOKEN_KEY,
-                                        response.data.data.refreshToken
-                                    )
-                                }
 
                                 // Update the authorization header
-                                originalRequest.headers.Authorization = `Bearer ${response.data.data.accessToken}`
+                                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
 
                                 // Retry the original request
                                 return axios(originalRequest)
