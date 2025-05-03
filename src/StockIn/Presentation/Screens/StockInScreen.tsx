@@ -5,10 +5,8 @@ import {
     Searchbar,
     ActivityIndicator,
     Text,
-    Card,
     Button,
     IconButton,
-    Divider,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -19,26 +17,7 @@ import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { StockInStoreProvider } from '../Stores/StockInStore/StockInStoreProvider'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { StatusBar } from 'expo-status-bar'
-
-// Define the StockIn type based on the actual API response
-interface StockInItem {
-    id: string
-    code: string
-    supplierId: string
-    supplierCode: string
-    supplierName: string
-    inDate: string
-    description: string
-    status: string
-    notes: string
-    priority: number
-    totalAmount: string
-    count: number
-    lotNumber: string
-    updatedAt: string
-    createdAt: string
-    isDeleted: boolean
-}
+import StockInListItem from '../Components/StockInListItem'
 
 const StockInScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
@@ -90,59 +69,6 @@ const StockInScreen = observer(() => {
         console.log('Delete stock in:', id)
     }
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-CA').replace(/-/g, '/')
-    }
-
-    const renderStockInItem = ({ item }: { item: StockInItem }) => {
-        return (
-            <Card style={styles.card}>
-                <Card.Content>
-                    <View style={styles.stockInInfo}>
-                        <Text style={styles.codeText}>Code: {item.code}</Text>
-                        <View style={styles.notificationBadge}>
-                            <Text style={styles.notificationText}>1</Text>
-                        </View>
-                    </View>
-                    <Text>Lot number: {item.lotNumber}</Text>
-                    <Text>Stock in date: {formatDate(item.inDate)}</Text>
-                    <Text>{item.supplierCode}-KSS</Text>
-                    <View style={styles.detailsRow}>
-                        <Text>Quantity of goods: {item.count || 2}</Text>
-                        <Text>Total cost: {parseInt(item.totalAmount) || 500}</Text>
-                    </View>
-                    <Divider style={styles.divider} />
-                    <View style={styles.actionsRow}>
-                        <Button 
-                            mode="contained"
-                            style={styles.approveButton}
-                            onPress={() => handleApprove(item.id)}
-                        >
-                            Approve
-                        </Button>
-                        <View style={styles.iconButtons}>
-                            <IconButton 
-                                icon="eye"
-                                size={20}
-                                onPress={() => handleView(item.id)}
-                            />
-                            <IconButton 
-                                icon="pencil"
-                                size={20}
-                                onPress={() => handleEdit(item.id)}
-                            />
-                            <IconButton 
-                                icon="delete"
-                                size={20}
-                                onPress={() => handleDelete(item.id)}
-                            />
-                        </View>
-                    </View>
-                </Card.Content>
-            </Card>
-        )
-    }
-
     return (
         <View style={[styles.container, { backgroundColor: theme.theme.colors.background }]}>
             <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
@@ -156,7 +82,7 @@ const StockInScreen = observer(() => {
                 {/* Search Bar */}
                 <View style={styles.searchContainer}>
                     <Searchbar
-                        placeholder="search"
+                        placeholder="Search"
                         onChangeText={setSearchQuery}
                         value={searchQuery}
                         onSubmitEditing={handleSearch}
@@ -193,7 +119,15 @@ const StockInScreen = observer(() => {
                     <FlatList
                         data={stockInStore.results}
                         keyExtractor={item => item.id}
-                        renderItem={renderStockInItem}
+                        renderItem={({ item }) => (
+                            <StockInListItem
+                                item={item}
+                                onApprove={handleApprove}
+                                onView={handleView}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
+                        )}
                         contentContainerStyle={styles.listContent}
                     />
                 )}
@@ -215,50 +149,6 @@ const styles = StyleSheet.create({
     },
     searchbar: {
         elevation: 0,
-    },
-    card: {
-        marginBottom: 12,
-        borderRadius: 8,
-    },
-    stockInInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    codeText: {
-        fontWeight: 'bold',
-    },
-    notificationBadge: {
-        backgroundColor: '#d32f2f',
-        borderRadius: 12,
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    notificationText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    detailsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
-    },
-    divider: {
-        marginVertical: 8,
-    },
-    actionsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    approveButton: {
-        borderRadius: 4,
-    },
-    iconButtons: {
-        flexDirection: 'row',
     },
     listContent: {
         padding: 16,
