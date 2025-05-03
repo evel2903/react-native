@@ -4,7 +4,7 @@ import GetStockInsPayload from '../../Application/Types/GetStockInsPayload';
 import StockInEntity from '../../Domain/Entities/StockInEntity';
 import StockInDto from '../Models/StockInDto';
 import { plainToInstance } from 'class-transformer';
-import IHttpClient, { IHttpClientToken } from 'src/Core/Domain/Specifications/IHttpClient';
+import IHttpClient, { IHttpClientToken } from '@/src/Core/Domain/Specifications/IHttpClient';
 
 @injectable()
 class StockInRepository implements IStockInRepository {
@@ -30,8 +30,7 @@ class StockInRepository implements IStockInRepository {
             }
             
             if (payload.status) {
-                // Convert status to uppercase to match API format
-                queryParams.append('status', payload.status.toUpperCase());
+                queryParams.append('status', payload.status);
             }
             
             if (payload.startDate) {
@@ -51,19 +50,39 @@ class StockInRepository implements IStockInRepository {
             // Make API request
             const response: any = await this.httpClient.get(url);
             
-            // Check if the response contains a data array
-            if (!response.data || !Array.isArray(response.data)) {
+            // Check if the response has the expected structure
+            if (!response || !response.data || !Array.isArray(response.data)) {
                 throw new Error('Unexpected API response format');
             }
             
-            // Transform response data to domain entities
-            const stockIns = response.data.map((item: any) =>
-                plainToInstance(StockInDto, item).toDomain()
-            );
+            // Transform the data to match our domain model
+            const stockInItems = response.data.map((item: any) => {
+                return {
+                    id: item.id,
+                    code: item.code,
+                    supplierId: item.supplierId,
+                    inDate: item.inDate,
+                    description: item.description || '',
+                    status: item.status,
+                    notes: item.notes || '',
+                    lotNumber: item.lotNumber,
+                    totalAmount: item.totalAmount,
+                    createdBy: null,
+                    approvedBy: null,
+                    details: [], // Will be populated when getting individual stock in details
+                    supplier: {
+                        id: item.supplierId,
+                        code: item.supplierCode,
+                        name: item.supplierName,
+                        isActive: !item.isDeleted,
+                        isDeleted: item.isDeleted
+                    }
+                } as StockInEntity;
+            });
             
             return {
-                results: stockIns,
-                count: response.total || stockIns.length,
+                results: stockInItems,
+                count: response.total || stockInItems.length,
             };
         } catch (error) {
             console.error('Error fetching stock ins:', error);
@@ -75,13 +94,35 @@ class StockInRepository implements IStockInRepository {
         try {
             const response: any = await this.httpClient.get(`${this.baseUrl}/${id}`);
             
-            // Check if the response contains the expected data
-            if (!response.data) {
+            // Check if the response has the expected structure
+            if (!response || !response.data) {
                 throw new Error('Stock in record not found');
             }
             
-            // Transform the single item to domain entity
-            return plainToInstance(StockInDto, response.data).toDomain();
+            const item = response.data;
+            
+            // Transform the item to match our domain model
+            return {
+                id: item.id,
+                code: item.code,
+                supplierId: item.supplierId,
+                inDate: item.inDate,
+                description: item.description || '',
+                status: item.status,
+                notes: item.notes || '',
+                lotNumber: item.lotNumber,
+                totalAmount: item.totalAmount,
+                createdBy: item.createdBy || null,
+                approvedBy: item.approvedBy || null,
+                details: item.details || [], // Assuming details are included in the single item response
+                supplier: {
+                    id: item.supplierId,
+                    code: item.supplierCode,
+                    name: item.supplierName,
+                    isActive: !item.isDeleted,
+                    isDeleted: item.isDeleted
+                }
+            } as StockInEntity;
         } catch (error) {
             console.error(`Error fetching stock in with ID ${id}:`, error);
             throw error;
@@ -99,15 +140,40 @@ class StockInRepository implements IStockInRepository {
                 { status }
             );
             
-            // Transform the updated item to domain entity
-            return plainToInstance(StockInDto, response.data).toDomain();
+            // Check if the response has the expected structure
+            if (!response || !response.data) {
+                throw new Error('Failed to update stock in status');
+            }
+            
+            const item = response.data;
+            
+            // Transform the updated item to match our domain model
+            return {
+                id: item.id,
+                code: item.code,
+                supplierId: item.supplierId,
+                inDate: item.inDate,
+                description: item.description || '',
+                status: item.status,
+                notes: item.notes || '',
+                lotNumber: item.lotNumber,
+                totalAmount: item.totalAmount,
+                createdBy: item.createdBy || null,
+                approvedBy: item.approvedBy || null,
+                details: item.details || [], // Assuming details are included in the response
+                supplier: {
+                    id: item.supplierId,
+                    code: item.supplierCode,
+                    name: item.supplierName,
+                    isActive: !item.isDeleted,
+                    isDeleted: item.isDeleted
+                }
+            } as StockInEntity;
         } catch (error) {
             console.error(`Error updating stock in status for ID ${id}:`, error);
             throw error;
         }
     }
-    
-    // Add additional methods as required, such as createStockIn, etc.
 }
 
 export default StockInRepository;

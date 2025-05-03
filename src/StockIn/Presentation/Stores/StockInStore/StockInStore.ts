@@ -1,11 +1,7 @@
-// src/StockIn/Presentation/Stores/StockInStore/StockInStore.ts
-// Update the filters to use uppercase status values
-
 import { injectable, inject } from 'inversiland';
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
 import StockInStoreState from '../../Types/StockInStoreState';
 import GetStockInsPayload from '@/src/StockIn/Application/Types/GetStockInsPayload';
-import GetStockInsUseCase from '@/src/StockIn/Application/UseCases/GetStockInsUseCase';
 import StockInEntity from '@/src/StockIn/Domain/Entities/StockInEntity';
 import {
     IStockInRepository,
@@ -38,8 +34,6 @@ export class StockInStore implements StockInStoreState {
     error: string | null = null;
 
     constructor(
-        @inject(GetStockInsUseCase)
-        private readonly getStockInsUseCase: GetStockInsUseCase,
         @inject(IStockInRepositoryToken)
         private readonly stockInRepository: IStockInRepository
     ) {
@@ -87,26 +81,43 @@ export class StockInStore implements StockInStoreState {
     // Get stock ins with current filters and pagination
     async getStockIns() {
         const payload: GetStockInsPayload = {
-            ...this.filters,
-            ...this.pagination,
+            page: this.pagination.page,
+            pageSize: this.pagination.pageSize,
+            status: this.filters.status,
+            startDate: this.filters.startDate,
+            endDate: this.filters.endDate,
+            search: this.filters.search,
         };
 
         this.setIsLoading(true);
         this.setError(null);
 
         try {
-            const response = await this.getStockInsUseCase.execute(payload);
-            this.setResults(response.results);
-            this.setCount(response.count);
+            const response = await this.stockInRepository.getStockIns(payload);
+
+            console.log(response);
+            
+            runInAction(() => {
+                this.setResults(response.results);
+                this.setCount(response.count);
+            });
         } catch (error) {
             console.error('Error fetching stock ins:', error);
-            this.setError(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to fetch stock ins'
-            );
+            
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to fetch stock ins'
+                );
+                // Ensure we clear any previous results
+                this.setResults([]);
+                this.setCount(0);
+            });
         } finally {
-            this.setIsLoading(false);
+            runInAction(() => {
+                this.setIsLoading(false);
+            });
         }
     }
 
@@ -117,56 +128,80 @@ export class StockInStore implements StockInStoreState {
 
         try {
             const stockIn = await this.stockInRepository.getStockInById(id);
-            this.setSelectedStockIn(stockIn);
+            
+            runInAction(() => {
+                this.setSelectedStockIn(stockIn);
+            });
+            
             return stockIn;
         } catch (error) {
             console.error('Error fetching stock in details:', error);
-            this.setError(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to fetch stock in details'
-            );
+            
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to fetch stock in details'
+                );
+                this.setSelectedStockIn(null);
+            });
+            
             return null;
         } finally {
-            this.setIsLoading(false);
+            runInAction(() => {
+                this.setIsLoading(false);
+            });
         }
     }
 
     // Update stock in status
-    async updateStatus(id: string, status: StockInEntity['status']) {
+    async updateStatus(id: string, status: 'completed' | 'cancelled') {
         this.setIsLoading(true);
         this.setError(null);
 
+        // Map the simplified status to the actual API status value
+        const apiStatus = status === 'completed' ? 'APPROVED' : 'CANCELLED';
+
         try {
-            const updatedStockIn =
-                await this.stockInRepository.updateStockInStatus(id, status);
+            const updatedStockIn = await this.stockInRepository.updateStockInStatus(
+                id, 
+                apiStatus as StockInEntity['status']
+            );
 
-            // Update in the results list if present
-            const index = this.results.findIndex(item => item.id === id);
-            if (index !== -1) {
-                this.results[index] = updatedStockIn;
-            }
+            runInAction(() => {
+                // Update in the results list if present
+                const index = this.results.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    this.results[index] = updatedStockIn;
+                }
 
-            // Update selected stock in if it's the current one
-            if (this.selectedStockIn && this.selectedStockIn.id === id) {
-                this.setSelectedStockIn(updatedStockIn);
-            }
+                // Update selected stock in if it's the current one
+                if (this.selectedStockIn && this.selectedStockIn.id === id) {
+                    this.setSelectedStockIn(updatedStockIn);
+                }
+            });
 
             return updatedStockIn;
         } catch (error) {
             console.error('Error updating stock in status:', error);
-            this.setError(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to update status'
-            );
+            
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to update status'
+                );
+            });
+            
             return null;
         } finally {
-            this.setIsLoading(false);
+            runInAction(() => {
+                this.setIsLoading(false);
+            });
         }
     }
 
-    // Filter by status - updated to handle uppercase statuses
+    // Filter by status
     filterByStatus(status?: StockInEntity['status']) {
         this.filters.status = status;
         this.pagination.page = 1;
@@ -183,7 +218,7 @@ export class StockInStore implements StockInStoreState {
 
     // Search
     search(query?: string) {
-        this.filters.search = query;
+        this.filters.search = query && query.length > 0 ? query : undefined;
         this.pagination.page = 1;
         this.getStockIns();
     }
