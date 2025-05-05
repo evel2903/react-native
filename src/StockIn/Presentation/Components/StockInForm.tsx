@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react'
-import { View, StyleSheet, ScrollView } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { 
+    View, 
+    StyleSheet, 
+    ScrollView, 
+    KeyboardAvoidingView, 
+    Platform, 
+    Keyboard,
+    TouchableWithoutFeedback
+} from 'react-native'
 import {
     TextInput,
     Button,
@@ -10,6 +18,8 @@ import {
     Portal,
     ActivityIndicator,
     Divider,
+    Surface,
+    IconButton,
 } from 'react-native-paper'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
@@ -17,6 +27,7 @@ import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataS
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
 import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { MasterDataStoreProvider } from '@/src/Common/Presentation/Stores/MasterDataStore/MasterDataStoreProvider'
+import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 
 interface StockInFormProps {
     onCancel: () => void
@@ -25,6 +36,8 @@ interface StockInFormProps {
 const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     const stockInStore = useStockInStore()
     const masterDataStore = useMasterDataStore()
+    const theme = useTheme()
+    const scrollViewRef = useRef<ScrollView>(null)
 
     const [unitMenuVisible, setUnitMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
@@ -33,6 +46,7 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [dialogVisible, setDialogVisible] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [currentFocusedField, setCurrentFocusedField] = useState<string | null>(null)
 
     // Load master data when component mounts
     useEffect(() => {
@@ -53,6 +67,48 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
 
         loadData()
     }, [masterDataStore])
+
+    // Set up keyboard dismiss on tap outside
+    const dismissKeyboard = () => {
+        Keyboard.dismiss()
+        setCurrentFocusedField(null)
+    }
+
+    // Handle scroll to focused input
+    const handleFocus = (fieldName: string) => {
+        setCurrentFocusedField(fieldName)
+        
+        // Add a small delay to ensure the keyboard is shown before scrolling
+        setTimeout(() => {
+            scrollViewRef.current?.scrollTo({
+                y: getScrollPosition(fieldName),
+                animated: true,
+            })
+        }, 100)
+    }
+
+    // Get appropriate scroll position based on field name
+    const getScrollPosition = (fieldName: string): number => {
+        // These values should be adjusted based on your actual UI layout
+        switch (fieldName) {
+            case 'quantity':
+                return 120
+            case 'unit':
+                return 170
+            case 'supplier':
+                return 250
+            case 'invoice':
+                return 300
+            case 'date':
+                return 350
+            case 'receivedBy':
+                return 400
+            case 'notes':
+                return 500
+            default:
+                return 0
+        }
+    }
 
     const statusOptions = [
         { value: 'DRAFT', label: 'Draft' },
@@ -90,6 +146,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     }
 
     const handleSubmit = async () => {
+        dismissKeyboard()
+        
         if (!validateForm()) {
             return
         }
@@ -143,288 +201,352 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
 
     if (isLoading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" />
-                <Text>Loading master data...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: theme.theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.theme.colors.primary} />
+                <Text style={styles.loadingText}>Loading master data...</Text>
             </View>
         )
     }
 
     return (
-        <View style={styles.container}>
-            <ScrollView>
-                <Text variant="titleLarge" style={styles.title}>
-                    Create Stock In Record
-                </Text>
-
-                {/* Product/Goods selection */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                    Product Information
-                </Text>
-                <Menu
-                    visible={goodsMenuVisible}
-                    onDismiss={() => setGoodsMenuVisible(false)}
-                    anchor={
-                        <Button
-                            mode="outlined"
-                            onPress={() => setGoodsMenuVisible(true)}
-                            style={styles.selectButton}
-                            icon="package-variant"
-                        >
-                            {stockInStore.formData.productName ||
-                                'Select Product'}
-                        </Button>
-                    }
-                    style={styles.menuContainer}
-                >
-                    <ScrollView style={styles.menuScrollView}>
-                        {masterDataStore.goods.data
-                            .filter(item => item.isActive && !item.isDeleted)
-                            .map(goods => (
-                                <Menu.Item
-                                    key={goods.id}
-                                    onPress={() => selectGoods(goods.id)}
-                                    title={`${goods.name} (${goods.code})`}
-                                />
-                            ))}
-                    </ScrollView>
-                </Menu>
-                {errors.productId && (
-                    <HelperText type="error">{errors.productId}</HelperText>
-                )}
-
-                <View style={styles.row}>
-                    <View style={styles.quantityContainer}>
-                        <TextInput
-                            label="Quantity *"
-                            value={stockInStore.formData.quantity.toString()}
-                            onChangeText={text => {
-                                const num = parseFloat(text)
-                                updateField('quantity', isNaN(num) ? 0 : num)
-                            }}
-                            keyboardType="numeric"
-                            mode="outlined"
-                            style={styles.quantityInput}
-                            error={!!errors.quantity}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={[styles.container, { backgroundColor: theme.theme.colors.background }]}
+        >
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+                <View style={styles.innerContainer}>
+                    <Surface style={styles.headerContainer} elevation={2}>
+                        <Text variant="titleLarge" style={styles.title}>
+                            Create Stock In Record
+                        </Text>
+                        <IconButton
+                            icon="close"
+                            size={24}
+                            onPress={onCancel}
                         />
-                        {errors.quantity && (
-                            <HelperText type="error">
-                                {errors.quantity}
-                            </HelperText>
-                        )}
-                    </View>
+                    </Surface>
 
-                    <View style={styles.unitContainer}>
+                    <ScrollView 
+                        ref={scrollViewRef}
+                        style={styles.scrollView}
+                        contentContainerStyle={styles.scrollContent}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {/* Product/Goods selection */}
+                        <Text variant="titleMedium" style={styles.sectionTitle}>
+                            Product Information
+                        </Text>
                         <Menu
-                            visible={unitMenuVisible}
-                            onDismiss={() => setUnitMenuVisible(false)}
+                            visible={goodsMenuVisible}
+                            onDismiss={() => setGoodsMenuVisible(false)}
                             anchor={
                                 <Button
                                     mode="outlined"
-                                    onPress={() => setUnitMenuVisible(true)}
-                                    style={styles.unitButton}
+                                    onPress={() => {
+                                        dismissKeyboard()
+                                        setGoodsMenuVisible(true)
+                                    }}
+                                    style={styles.selectButton}
+                                    icon="package-variant"
                                 >
-                                    {stockInStore.formData.unit ||
-                                        'Select Unit'}
+                                    {stockInStore.formData.productName ||
+                                        'Select Product'}
+                                </Button>
+                            }
+                            style={styles.menuContainer}
+                        >
+                            <ScrollView style={styles.menuScrollView}>
+                                {masterDataStore.goods.data
+                                    .filter(item => item.isActive && !item.isDeleted)
+                                    .map(goods => (
+                                        <Menu.Item
+                                            key={goods.id}
+                                            onPress={() => selectGoods(goods.id)}
+                                            title={`${goods.name} (${goods.code})`}
+                                        />
+                                    ))}
+                            </ScrollView>
+                        </Menu>
+                        {errors.productId && (
+                            <HelperText type="error">{errors.productId}</HelperText>
+                        )}
+
+                        <View style={styles.row}>
+                            <View style={styles.quantityContainer}>
+                                <TextInput
+                                    label="Quantity *"
+                                    value={stockInStore.formData.quantity.toString()}
+                                    onChangeText={text => {
+                                        const num = parseFloat(text)
+                                        updateField('quantity', isNaN(num) ? 0 : num)
+                                    }}
+                                    keyboardType="numeric"
+                                    mode="outlined"
+                                    style={styles.quantityInput}
+                                    error={!!errors.quantity}
+                                    onFocus={() => handleFocus('quantity')}
+                                />
+                                {errors.quantity && (
+                                    <HelperText type="error">
+                                        {errors.quantity}
+                                    </HelperText>
+                                )}
+                            </View>
+
+                            <View style={styles.unitContainer}>
+                                <Menu
+                                    visible={unitMenuVisible}
+                                    onDismiss={() => setUnitMenuVisible(false)}
+                                    anchor={
+                                        <Button
+                                            mode="outlined"
+                                            onPress={() => {
+                                                dismissKeyboard()
+                                                setUnitMenuVisible(true)
+                                                handleFocus('unit')
+                                            }}
+                                            style={styles.unitButton}
+                                        >
+                                            {stockInStore.formData.unit ||
+                                                'Select Unit'}
+                                        </Button>
+                                    }
+                                >
+                                    {masterDataStore.units.data
+                                        .filter(
+                                            unit => unit.isActive && !unit.isDeleted
+                                        )
+                                        .map(unit => (
+                                            <Menu.Item
+                                                key={unit.id}
+                                                onPress={() => {
+                                                    updateField('unit', unit.name)
+                                                    setUnitMenuVisible(false)
+                                                }}
+                                                title={unit.name}
+                                            />
+                                        ))}
+                                </Menu>
+                                {errors.unit && (
+                                    <HelperText type="error">{errors.unit}</HelperText>
+                                )}
+                            </View>
+                        </View>
+
+                        <Divider style={styles.divider} />
+
+                        {/* Supplier information */}
+                        <Text variant="titleMedium" style={styles.sectionTitle}>
+                            Supplier Information
+                        </Text>
+
+                        <Menu
+                            visible={supplierMenuVisible}
+                            onDismiss={() => setSupplierMenuVisible(false)}
+                            anchor={
+                                <Button
+                                    mode="outlined"
+                                    onPress={() => {
+                                        dismissKeyboard()
+                                        setSupplierMenuVisible(true)
+                                        handleFocus('supplier')
+                                    }}
+                                    style={styles.selectButton}
+                                    icon="truck-delivery"
+                                >
+                                    {stockInStore.formData.supplierName ||
+                                        'Select Supplier'}
+                                </Button>
+                            }
+                            style={styles.menuContainer}
+                        >
+                            <ScrollView style={styles.menuScrollView}>
+                                {masterDataStore.suppliers.data
+                                    .filter(
+                                        supplier =>
+                                            supplier.isActive && !supplier.isDeleted
+                                    )
+                                    .map(supplier => (
+                                        <Menu.Item
+                                            key={supplier.id}
+                                            onPress={() => selectSupplier(supplier.id)}
+                                            title={`${supplier.name} (${supplier.code})`}
+                                        />
+                                    ))}
+                            </ScrollView>
+                        </Menu>
+                        {errors.supplierName && (
+                            <HelperText type="error">{errors.supplierName}</HelperText>
+                        )}
+
+                        <TextInput
+                            label="Supplier Invoice"
+                            value={stockInStore.formData.supplierInvoice || ''}
+                            onChangeText={text => updateField('supplierInvoice', text)}
+                            mode="outlined"
+                            style={styles.input}
+                            onFocus={() => handleFocus('invoice')}
+                        />
+
+                        <Divider style={styles.divider} />
+
+                        {/* Stock in details */}
+                        <Text variant="titleMedium" style={styles.sectionTitle}>
+                            Stock In Details
+                        </Text>
+
+                        <TextInput
+                            label="Date *"
+                            value={stockInStore.formData.date}
+                            onChangeText={text => updateField('date', text)}
+                            mode="outlined"
+                            style={styles.input}
+                            onFocus={() => handleFocus('date')}
+                            placeholder="YYYY-MM-DD"
+                        />
+
+                        <TextInput
+                            label="Received By *"
+                            value={stockInStore.formData.receivedBy}
+                            onChangeText={text => updateField('receivedBy', text)}
+                            mode="outlined"
+                            style={styles.input}
+                            error={!!errors.receivedBy}
+                            onFocus={() => handleFocus('receivedBy')}
+                        />
+                        {errors.receivedBy && (
+                            <HelperText type="error">{errors.receivedBy}</HelperText>
+                        )}
+
+                        <Menu
+                            visible={statusMenuVisible}
+                            onDismiss={() => setStatusMenuVisible(false)}
+                            anchor={
+                                <Button
+                                    mode="outlined"
+                                    onPress={() => {
+                                        dismissKeyboard()
+                                        setStatusMenuVisible(true)
+                                    }}
+                                    style={styles.statusButton}
+                                    icon="information"
+                                >
+                                    Status:{' '}
+                                    {statusOptions.find(
+                                        s => s.value === stockInStore.formData.status
+                                    )?.label || 'Draft'}
                                 </Button>
                             }
                         >
-                            {masterDataStore.units.data
-                                .filter(
-                                    unit => unit.isActive && !unit.isDeleted
-                                )
-                                .map(unit => (
-                                    <Menu.Item
-                                        key={unit.id}
-                                        onPress={() => {
-                                            updateField('unit', unit.name)
-                                            setUnitMenuVisible(false)
-                                        }}
-                                        title={unit.name}
-                                    />
-                                ))}
-                        </Menu>
-                        {errors.unit && (
-                            <HelperText type="error">{errors.unit}</HelperText>
-                        )}
-                    </View>
-                </View>
-
-                <Divider style={styles.divider} />
-
-                {/* Supplier information */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                    Supplier Information
-                </Text>
-
-                <Menu
-                    visible={supplierMenuVisible}
-                    onDismiss={() => setSupplierMenuVisible(false)}
-                    anchor={
-                        <Button
-                            mode="outlined"
-                            onPress={() => setSupplierMenuVisible(true)}
-                            style={styles.selectButton}
-                            icon="truck-delivery"
-                        >
-                            {stockInStore.formData.supplierName ||
-                                'Select Supplier'}
-                        </Button>
-                    }
-                    style={styles.menuContainer}
-                >
-                    <ScrollView style={styles.menuScrollView}>
-                        {masterDataStore.suppliers.data
-                            .filter(
-                                supplier =>
-                                    supplier.isActive && !supplier.isDeleted
-                            )
-                            .map(supplier => (
+                            {statusOptions.map(status => (
                                 <Menu.Item
-                                    key={supplier.id}
-                                    onPress={() => selectSupplier(supplier.id)}
-                                    title={`${supplier.name} (${supplier.code})`}
+                                    key={status.value}
+                                    onPress={() => {
+                                        updateField('status', status.value)
+                                        setStatusMenuVisible(false)
+                                    }}
+                                    title={status.label}
                                 />
                             ))}
-                    </ScrollView>
-                </Menu>
-                {errors.supplierName && (
-                    <HelperText type="error">{errors.supplierName}</HelperText>
-                )}
+                        </Menu>
 
-                <TextInput
-                    label="Supplier Invoice"
-                    value={stockInStore.formData.supplierInvoice || ''}
-                    onChangeText={text => updateField('supplierInvoice', text)}
-                    mode="outlined"
-                    style={styles.input}
-                />
-
-                <Divider style={styles.divider} />
-
-                {/* Stock in details */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>
-                    Stock In Details
-                </Text>
-
-                <TextInput
-                    label="Date *"
-                    value={stockInStore.formData.date}
-                    onChangeText={text => updateField('date', text)}
-                    mode="outlined"
-                    style={styles.input}
-                />
-
-                <TextInput
-                    label="Received By *"
-                    value={stockInStore.formData.receivedBy}
-                    onChangeText={text => updateField('receivedBy', text)}
-                    mode="outlined"
-                    style={styles.input}
-                    error={!!errors.receivedBy}
-                />
-                {errors.receivedBy && (
-                    <HelperText type="error">{errors.receivedBy}</HelperText>
-                )}
-
-                <Menu
-                    visible={statusMenuVisible}
-                    onDismiss={() => setStatusMenuVisible(false)}
-                    anchor={
-                        <Button
+                        <TextInput
+                            label="Notes"
+                            value={stockInStore.formData.notes || ''}
+                            onChangeText={text => updateField('notes', text)}
                             mode="outlined"
-                            onPress={() => setStatusMenuVisible(true)}
-                            style={styles.statusButton}
-                            icon="information"
-                        >
-                            Status:{' '}
-                            {statusOptions.find(
-                                s => s.value === stockInStore.formData.status
-                            )?.label || 'Draft'}
-                        </Button>
-                    }
-                >
-                    {statusOptions.map(status => (
-                        <Menu.Item
-                            key={status.value}
-                            onPress={() => {
-                                updateField('status', status.value)
-                                setStatusMenuVisible(false)
-                            }}
-                            title={status.label}
+                            multiline
+                            numberOfLines={4}
+                            style={styles.textArea}
+                            onFocus={() => handleFocus('notes')}
                         />
-                    ))}
-                </Menu>
 
-                <TextInput
-                    label="Notes"
-                    value={stockInStore.formData.notes || ''}
-                    onChangeText={text => updateField('notes', text)}
-                    mode="outlined"
-                    multiline
-                    numberOfLines={3}
-                    style={styles.input}
-                />
+                        {/* Add some padding at the bottom to ensure visibility when keyboard is open */}
+                        <View style={styles.bottomPadding} />
+                    </ScrollView>
 
-                <View style={styles.actions}>
-                    <Button
-                        mode="outlined"
-                        onPress={onCancel}
-                        style={styles.button}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        mode="contained"
-                        onPress={handleSubmit}
-                        loading={stockInStore.isLoading}
-                        disabled={stockInStore.isLoading}
-                        style={styles.button}
-                    >
-                        Submit
-                    </Button>
-                </View>
-            </ScrollView>
+                    <Surface style={styles.footer} elevation={4}>
+                        <View style={styles.actions}>
+                            <Button
+                                mode="outlined"
+                                onPress={onCancel}
+                                style={styles.button}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                mode="contained"
+                                onPress={handleSubmit}
+                                loading={stockInStore.isLoading}
+                                disabled={stockInStore.isLoading}
+                                style={styles.button}
+                            >
+                                Submit
+                            </Button>
+                        </View>
+                    </Surface>
 
-            <Portal>
-                <Dialog
-                    visible={dialogVisible}
-                    onDismiss={() => setDialogVisible(false)}
-                >
-                    <Dialog.Title>Success</Dialog.Title>
-                    <Dialog.Content>
-                        <Text variant="bodyMedium">
-                            Stock in record created successfully.
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button
-                            onPress={() => {
-                                setDialogVisible(false)
-                                onCancel()
-                            }}
+                    <Portal>
+                        <Dialog
+                            visible={dialogVisible}
+                            onDismiss={() => setDialogVisible(false)}
                         >
-                            OK
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
-        </View>
+                            <Dialog.Title>Success</Dialog.Title>
+                            <Dialog.Content>
+                                <Text variant="bodyMedium">
+                                    Stock in record created successfully.
+                                </Text>
+                            </Dialog.Content>
+                            <Dialog.Actions>
+                                <Button
+                                    onPress={() => {
+                                        setDialogVisible(false)
+                                        onCancel()
+                                    }}
+                                >
+                                    OK
+                                </Button>
+                            </Dialog.Actions>
+                        </Dialog>
+                    </Portal>
+                </View>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     )
 })
 
 const styles = StyleSheet.create({
     container: {
-        padding: 16,
+        flex: 1,
+    },
+    innerContainer: {
+        flex: 1,
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
     },
     loadingContainer: {
-        padding: 16,
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        height: 300,
+        padding: 16,
+    },
+    loadingText: {
+        marginTop: 12,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        padding: 16,
     },
     title: {
-        marginBottom: 24,
         textAlign: 'center',
     },
     sectionTitle: {
@@ -467,21 +589,31 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         height: 56,
     },
+    textArea: {
+        marginBottom: 12,
+        height: 100,
+    },
     menuContainer: {
         maxHeight: 300,
     },
     menuScrollView: {
         maxHeight: 250,
     },
+    footer: {
+        padding: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+    },
     actions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 24,
-        marginBottom: 24,
     },
     button: {
         flex: 1,
         marginHorizontal: 4,
+    },
+    bottomPadding: {
+        height: 100,
     },
 })
 

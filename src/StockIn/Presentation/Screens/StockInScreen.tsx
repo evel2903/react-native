@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { View, StyleSheet, FlatList } from 'react-native'
+import React, { useEffect, useState, useCallback } from 'react'
+import { View, StyleSheet, FlatList, RefreshControl, Dimensions } from 'react-native'
 import {
     Appbar,
     Searchbar,
@@ -7,9 +7,6 @@ import {
     Text,
     Button,
     IconButton,
-    Divider,
-    Portal,
-    Modal,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -27,8 +24,9 @@ const StockInScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
     const stockInStore = useStockInStore()
     const theme = useTheme()
-
     const [searchQuery, setSearchQuery] = useState('')
+    const [refreshing, setRefreshing] = useState(false)
+    const windowHeight = Dimensions.get('window').height
 
     useEffect(() => {
         // Load stock in data when component mounts
@@ -77,6 +75,19 @@ const StockInScreen = observer(() => {
         console.log('Delete stock in:', id)
     }
 
+    const onRefresh = useCallback(() => {
+        setRefreshing(true)
+        stockInStore.getStockIns().finally(() => {
+            setRefreshing(false)
+        })
+    }, [stockInStore])
+
+    // Calculate list height dynamically based on whether filter is visible
+    const getListHeight = () => {
+        const baseHeight = windowHeight - 160 // Height minus header and search bar
+        return stockInStore.filterVisible ? baseHeight - 320 : baseHeight
+    }
+
     return (
         <View style={[styles.container, { backgroundColor: theme.theme.colors.background }]}>
             <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
@@ -90,7 +101,7 @@ const StockInScreen = observer(() => {
                 {/* Search and Filter Bar */}
                 <View style={styles.searchContainer}>
                     <Searchbar
-                        placeholder="Search"
+                        placeholder="Search stock ins..."
                         onChangeText={setSearchQuery}
                         value={searchQuery}
                         onSubmitEditing={handleSearch}
@@ -109,11 +120,13 @@ const StockInScreen = observer(() => {
 
                 {/* Filter Form */}
                 {stockInStore.filterVisible && (
-                    <StockInFilterForm />
+                    <View style={styles.filterContainer}>
+                        <StockInFilterForm />
+                    </View>
                 )}
 
                 {/* Stock In List */}
-                {stockInStore.isLoading ? (
+                {stockInStore.isLoading && !refreshing ? (
                     <View style={styles.loaderContainer}>
                         <ActivityIndicator size="large" />
                         <Text style={styles.loaderText}>
@@ -146,9 +159,21 @@ const StockInScreen = observer(() => {
                                 onDelete={handleDelete}
                             />
                         )}
-                        contentContainerStyle={styles.listContent}
+                        contentContainerStyle={[
+                            styles.listContent,
+                            { minHeight: getListHeight() }
+                        ]}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[theme.theme.colors.primary]}
+                            />
+                        }
                     />
                 )}
+
+                {/* Removed FAB in favor of header action button */}
             </SafeAreaView>
         </View>
     )
@@ -166,19 +191,25 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
         flexDirection: 'row',
         alignItems: 'center',
+        zIndex: 1,
     },
     searchbar: {
         flex: 1,
-        elevation: 0,
+        elevation: 2,
     },
     filterButton: {
         marginLeft: 8,
+        elevation: 2,
     },
     filterButtonActive: {
         backgroundColor: 'rgba(0, 0, 0, 0.08)',
     },
+    filterContainer: {
+        zIndex: 2,
+    },
     listContent: {
         padding: 16,
+        paddingBottom: 20, // Reduced padding since we're not using FAB
     },
     loaderContainer: {
         flex: 1,
@@ -197,6 +228,7 @@ const styles = StyleSheet.create({
     resetButton: {
         marginTop: 16,
     },
+    // FAB styles removed as we're using the header button instead
 })
 
 export default withProviders(StockInStoreProvider)(StockInScreen)

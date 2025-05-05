@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import {
     Card,
     TextInput,
@@ -21,6 +21,7 @@ import { Status } from '@/src/Common/Domain/Enums/Status';
 const StockInFilterForm = observer(() => {
     const stockInStore = useStockInStore();
     const masterDataStore = useMasterDataStore();
+    const windowHeight = Dimensions.get('window').height;
     
     const [statusMenuVisible, setStatusMenuVisible] = useState(false);
     const [priorityMenuVisible, setPriorityMenuVisible] = useState(false);
@@ -103,15 +104,31 @@ const StockInFilterForm = observer(() => {
             !!endDate
         );
     };
+
+    // Calculate appropriate scroll height based on screen size
+    const getScrollHeight = () => {
+        // Use 40% of screen height as maximum for the filter form scroll area
+        return Math.min(400, windowHeight * 0.4);
+    };
     
     return (
         <Card style={styles.card}>
             <Card.Content>
-                <Text variant="titleMedium" style={styles.title}>
-                    Filter Stock Ins
-                </Text>
+                <View style={styles.titleContainer}>
+                    <Text variant="titleMedium" style={styles.title}>
+                        Filter Stock Ins
+                    </Text>
+                    <IconButton 
+                        icon="close" 
+                        size={20} 
+                        onPress={() => stockInStore.setFilterVisible(false)}
+                    />
+                </View>
 
-                <ScrollView style={styles.scrollContainer}>
+                <ScrollView 
+                    style={[styles.scrollContainer, { maxHeight: getScrollHeight() }]}
+                    showsVerticalScrollIndicator={true}
+                >
                     {/* Code filter */}
                     <View style={styles.filterRow}>
                         <TextInput
@@ -306,83 +323,89 @@ const StockInFilterForm = observer(() => {
                         <Text variant="bodySmall" style={styles.activeFiltersLabel}>
                             Active Filters:
                         </Text>
-                        <View style={styles.chipContainer}>
-                            {code && (
-                                <Chip
-                                    mode="outlined"
-                                    onClose={() => setCode('')}
-                                    style={styles.filterChip}
-                                >
-                                    Code: {code}
-                                </Chip>
-                            )}
-                            {stockInStore.filters.status && (
-                                <Chip
-                                    mode="outlined"
-                                    onClose={() =>
-                                        stockInStore.mergeFilters({ status: undefined })
-                                    }
-                                    style={styles.filterChip}
-                                >
-                                    Status: {
-                                        statusOptions.find(
-                                            s => s.value === stockInStore.filters.status
-                                        )?.label || stockInStore.filters.status
-                                    }
-                                </Chip>
-                            )}
-                            {stockInStore.filters.priority !== undefined && (
-                                <Chip
-                                    mode="outlined"
-                                    onClose={() =>
-                                        stockInStore.mergeFilters({ priority: undefined })
-                                    }
-                                    style={[
-                                        styles.filterChip,
-                                        { borderColor: getPriorityColor(stockInStore.filters.priority) }
-                                    ]}
-                                >
-                                    Priority: {getPriorityDisplayName(stockInStore.filters.priority)}
-                                </Chip>
-                            )}
-                            {stockInStore.filters.supplierId && (
-                                <Chip
-                                    mode="outlined"
-                                    onClose={() =>
-                                        stockInStore.mergeFilters({ supplierId: undefined })
-                                    }
-                                    style={styles.filterChip}
-                                >
-                                    Supplier: {
-                                        masterDataStore.suppliers.data.find(
-                                            s => s.id === stockInStore.filters.supplierId
-                                        )?.name || 'Selected'
-                                    }
-                                </Chip>
-                            )}
-                            {lotNumber && (
-                                <Chip
-                                    mode="outlined"
-                                    onClose={() => setLotNumber('')}
-                                    style={styles.filterChip}
-                                >
-                                    Lot: {lotNumber}
-                                </Chip>
-                            )}
-                            {(startDate || endDate) && (
-                                <Chip
-                                    mode="outlined"
-                                    onClose={() => {
-                                        setStartDate('');
-                                        setEndDate('');
-                                    }}
-                                    style={styles.filterChip}
-                                >
-                                    Date: {startDate ? formatDate(startDate) : 'Any'} to{' '}
-                                    {endDate ? formatDate(endDate) : 'Any'}
-                                </Chip>
-                            )}
-                        </View>
+                        <ScrollView 
+                            horizontal 
+                            showsHorizontalScrollIndicator={true}
+                            style={styles.chipScrollContainer}
+                        >
+                            <View style={styles.chipContainer}>
+                                {code && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() => setCode('')}
+                                        style={styles.filterChip}
+                                    >
+                                        Code: {code}
+                                    </Chip>
+                                )}
+                                {stockInStore.filters.status && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() =>
+                                            stockInStore.mergeFilters({ status: undefined })
+                                        }
+                                        style={styles.filterChip}
+                                    >
+                                        Status: {
+                                            statusOptions.find(
+                                                s => s.value === stockInStore.filters.status
+                                            )?.label || stockInStore.filters.status
+                                        }
+                                    </Chip>
+                                )}
+                                {stockInStore.filters.priority !== undefined && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() =>
+                                            stockInStore.mergeFilters({ priority: undefined })
+                                        }
+                                        style={[
+                                            styles.filterChip,
+                                            { borderColor: getPriorityColor(stockInStore.filters.priority) }
+                                        ]}
+                                    >
+                                        Priority: {getPriorityDisplayName(stockInStore.filters.priority)}
+                                    </Chip>
+                                )}
+                                {stockInStore.filters.supplierId && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() =>
+                                            stockInStore.mergeFilters({ supplierId: undefined })
+                                        }
+                                        style={styles.filterChip}
+                                    >
+                                        Supplier: {
+                                            masterDataStore.suppliers.data.find(
+                                                s => s.id === stockInStore.filters.supplierId
+                                            )?.name || 'Selected'
+                                        }
+                                    </Chip>
+                                )}
+                                {lotNumber && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() => setLotNumber('')}
+                                        style={styles.filterChip}
+                                    >
+                                        Lot: {lotNumber}
+                                    </Chip>
+                                )}
+                                {(startDate || endDate) && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() => {
+                                            setStartDate('');
+                                            setEndDate('');
+                                        }}
+                                        style={styles.filterChip}
+                                    >
+                                        Date: {startDate ? formatDate(startDate) : 'Any'} to{' '}
+                                        {endDate ? formatDate(endDate) : 'Any'}
+                                    </Chip>
+                                )}
+                            </View>
+                        </ScrollView>
                     </View>
                 )}
 
@@ -411,10 +434,16 @@ const StockInFilterForm = observer(() => {
 const styles = StyleSheet.create({
     card: {
         margin: 8,
-        elevation: 2,
+        elevation: 3,
+        borderRadius: 8,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
     },
     title: {
-        marginBottom: 16,
         fontWeight: 'bold',
     },
     scrollContainer: {
@@ -459,10 +488,12 @@ const styles = StyleSheet.create({
         marginBottom: 4,
         color: '#666',
     },
+    chipScrollContainer: {
+        marginBottom: 8,
+    },
     chipContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
+        flexWrap: 'nowrap',
     },
     filterChip: {
         marginRight: 8,

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { View, StyleSheet, ScrollView, FlatList } from 'react-native'
+import React, { useEffect, useState, useCallback } from 'react'
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native'
 import {
     Appbar,
     Card,
@@ -12,10 +12,11 @@ import {
     Portal,
     Paragraph,
     ActivityIndicator,
+    IconButton,
+    Surface,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
-    RootScreenNavigationProp,
     RootStackScreenProps,
 } from 'src/Core/Presentation/Navigation/Types/Index'
 import { StatusBar } from 'expo-status-bar'
@@ -24,7 +25,7 @@ import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
 import { withProviders } from 'src/Core/Presentation/Utils/WithProviders'
 import { StockInStoreProvider } from '../Stores/StockInStore/StockInStoreProvider'
 import { useTheme } from 'src/Core/Presentation/Theme/ThemeProvider'
-import { StockInProductItem } from '../../Domain/Entities/StockInDetailItem'
+import { RefreshControl } from 'react-native'
 
 const StockInProcessScreen = observer(
     ({ route, navigation }: RootStackScreenProps<'StockInProcess'>) => {
@@ -35,6 +36,8 @@ const StockInProcessScreen = observer(
         const [confirmAction, setConfirmAction] = useState<
             'complete' | 'cancel' | null
         >(null)
+        const [refreshing, setRefreshing] = useState(false)
+        const windowWidth = Dimensions.get('window').width
 
         useEffect(() => {
             // Load stock in details when component mounts
@@ -44,6 +47,13 @@ const StockInProcessScreen = observer(
         const loadStockInDetails = async () => {
             await stockInStore.getStockInDetails(id)
         }
+
+        const onRefresh = useCallback(() => {
+            setRefreshing(true)
+            loadStockInDetails().finally(() => {
+                setRefreshing(false)
+            })
+        }, [id])
 
         const handleGoBack = () => {
             navigation.goBack()
@@ -74,25 +84,6 @@ const StockInProcessScreen = observer(
             setDialogVisible(true)
         }
 
-        const renderProductItem = ({ item }: { item: StockInProductItem }) => (
-            <DataTable.Row>
-                <DataTable.Cell>{item.productId}</DataTable.Cell>
-                <DataTable.Cell style={styles.productNameCell}>
-                    {item.productName}
-                </DataTable.Cell>
-                <DataTable.Cell numeric>{item.quantity}</DataTable.Cell>
-                <DataTable.Cell>{item.unit}</DataTable.Cell>
-                <DataTable.Cell numeric>
-                    {item.price ? `$${item.price.toFixed(2)}` : '-'}
-                </DataTable.Cell>
-                <DataTable.Cell numeric>
-                    {item.price
-                        ? `$${(item.price * item.quantity).toFixed(2)}`
-                        : '-'}
-                </DataTable.Cell>
-            </DataTable.Row>
-        )
-
         const getStatusColor = (status: string) => {
             switch (status) {
                 case 'DRAFT':
@@ -116,9 +107,8 @@ const StockInProcessScreen = observer(
                 maximumFractionDigits: 2,
             })
         }
-        // Calculate total value of the stock in
 
-        if (stockInStore.isLoading) {
+        if (stockInStore.isLoading && !refreshing) {
             return (
                 <View
                     style={[
@@ -172,33 +162,46 @@ const StockInProcessScreen = observer(
                 <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
                     <Appbar.Header>
                         <Appbar.BackAction onPress={handleGoBack} />
-                        <Appbar.Content title="Process Stock In" />
+                        <Appbar.Content title="Process Stock In" subtitle={selectedStockIn.code} />
                     </Appbar.Header>
 
-                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <ScrollView 
+                        contentContainerStyle={styles.scrollContent}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[theme.theme.colors.primary]}
+                            />
+                        }
+                    >
+                        {/* Status Card */}
+                        <Surface style={styles.statusCard} elevation={2}>
+                            <View style={styles.statusContainer}>
+                                <Text variant="bodyMedium">Status:</Text>
+                                <Chip
+                                    style={{
+                                        backgroundColor: getStatusColor(
+                                            selectedStockIn.status
+                                        ),
+                                    }}
+                                    textStyle={{ color: 'white' }}
+                                >
+                                    {selectedStockIn.status}
+                                </Chip>
+                            </View>
+                        </Surface>
+
                         {/* Header Section */}
                         <Card style={styles.headerCard}>
                             <Card.Content>
                                 <View style={styles.headerRow}>
-                                    <View>
-                                        <Text variant="titleLarge">
-                                            {selectedStockIn.code}
-                                        </Text>
-                                        <Text variant="bodyMedium">
-                                            Date:{' '}
-                                            {formatDate(selectedStockIn.inDate)}
-                                        </Text>
-                                    </View>
-                                    <Chip
-                                        style={{
-                                            backgroundColor: getStatusColor(
-                                                selectedStockIn.status
-                                            ),
-                                        }}
-                                        textStyle={{ color: 'white' }}
-                                    >
-                                        {selectedStockIn.status}
-                                    </Chip>
+                                    <Text variant="titleLarge">
+                                        {selectedStockIn.code}
+                                    </Text>
+                                    <Text variant="bodyMedium">
+                                        Date: {formatDate(selectedStockIn.inDate)}
+                                    </Text>
                                 </View>
 
                                 <Divider style={styles.divider} />
@@ -237,10 +240,7 @@ const StockInProcessScreen = observer(
                                             Total Amount:
                                         </Text>
                                         <Text variant="bodyMedium">
-                                            $
-                                            {formatAmount(
-                                                selectedStockIn.totalAmount
-                                            )}
+                                            ${formatAmount(selectedStockIn.totalAmount)}
                                         </Text>
                                     </View>
 
@@ -300,94 +300,70 @@ const StockInProcessScreen = observer(
                                     Items
                                 </Text>
 
-                                <DataTable>
-                                    <DataTable.Header>
-                                        <DataTable.Title>ID</DataTable.Title>
-                                        <DataTable.Title
-                                            style={styles.productNameCell}
-                                        >
-                                            Item
-                                        </DataTable.Title>
-                                        <DataTable.Title numeric>
-                                            Qty
-                                        </DataTable.Title>
-                                        <DataTable.Title numeric>
-                                            Price
-                                        </DataTable.Title>
-                                        <DataTable.Title numeric>
-                                            Subtotal
-                                        </DataTable.Title>
-                                    </DataTable.Header>
+                                {/* Horizontal scroll wrapper for the table */}
+                                <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                                    <View style={{ width: Math.max(windowWidth - 48, 650) }}>
+                                        <DataTable>
+                                            <DataTable.Header>
+                                                <DataTable.Title style={styles.idColumn}>ID</DataTable.Title>
+                                                <DataTable.Title style={styles.productNameColumn}>
+                                                    Item
+                                                </DataTable.Title>
+                                                <DataTable.Title numeric style={styles.quantityColumn}>
+                                                    Qty
+                                                </DataTable.Title>
+                                                <DataTable.Title numeric style={styles.priceColumn}>
+                                                    Price
+                                                </DataTable.Title>
+                                                <DataTable.Title numeric style={styles.subtotalColumn}>
+                                                    Subtotal
+                                                </DataTable.Title>
+                                            </DataTable.Header>
 
-                                    {selectedStockIn.details.map(
-                                        (detail, index) => (
-                                            <DataTable.Row
-                                                key={detail.id || index}
-                                            >
-                                                <DataTable.Cell>
-                                                    {detail.goodsId.substring(
-                                                        0,
-                                                        8
-                                                    )}
-                                                    ...
+                                            {selectedStockIn.details.map(
+                                                (detail, index) => (
+                                                    <DataTable.Row
+                                                        key={detail.id || index}
+                                                    >
+                                                        <DataTable.Cell style={styles.idColumn}>
+                                                            {detail.goodsId.substring(0, 8)}...
+                                                        </DataTable.Cell>
+                                                        <DataTable.Cell style={styles.productNameColumn}>
+                                                            {detail.goods?.name || `Item #${index + 1}`}
+                                                        </DataTable.Cell>
+                                                        <DataTable.Cell numeric style={styles.quantityColumn}>
+                                                            {detail.quantity}
+                                                        </DataTable.Cell>
+                                                        <DataTable.Cell numeric style={styles.priceColumn}>
+                                                            ${formatAmount(detail.price)}
+                                                        </DataTable.Cell>
+                                                        <DataTable.Cell numeric style={styles.subtotalColumn}>
+                                                            ${formatAmount(
+                                                                String(
+                                                                    parseFloat(detail.price) * detail.quantity
+                                                                )
+                                                            )}
+                                                        </DataTable.Cell>
+                                                    </DataTable.Row>
+                                                )
+                                            )}
+
+                                            <DataTable.Row style={styles.totalRow}>
+                                                <DataTable.Cell style={[styles.idColumn, styles.totalLabelContainer]}>
+                                                    <Text style={styles.totalLabel}>Total</Text>
                                                 </DataTable.Cell>
-                                                <DataTable.Cell
-                                                    style={
-                                                        styles.productNameCell
-                                                    }
-                                                >
-                                                    {detail.goods?.name ||
-                                                        `Item #${index + 1}`}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell numeric>
-                                                    {detail.quantity}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell numeric>
-                                                    $
-                                                    {formatAmount(detail.price)}
-                                                </DataTable.Cell>
-                                                <DataTable.Cell numeric>
-                                                    $
-                                                    {formatAmount(
-                                                        String(
-                                                            parseFloat(
-                                                                detail.price
-                                                            ) * detail.quantity
-                                                        )
-                                                    )}
+                                                <DataTable.Cell style={styles.productNameColumn}></DataTable.Cell>
+                                                <DataTable.Cell style={styles.quantityColumn}></DataTable.Cell>
+                                                <DataTable.Cell style={styles.priceColumn}></DataTable.Cell>
+                                                <DataTable.Cell numeric style={styles.subtotalColumn}>
+                                                    <Text style={styles.totalValue}>
+                                                        ${formatAmount(selectedStockIn.totalAmount)}
+                                                    </Text>
                                                 </DataTable.Cell>
                                             </DataTable.Row>
-                                        )
-                                    )}
-
-                                    <DataTable.Row style={styles.totalRow}>
-                                        <DataTable.Cell
-                                            style={styles.productNameCell}
-                                            colSpan={3}
-                                        >
-                                            <Text
-                                                variant="bodyMedium"
-                                                style={styles.totalLabel}
-                                            >
-                                                Total
-                                            </Text>
-                                        </DataTable.Cell>
-                                        <DataTable.Cell
-                                            numeric
-                                        ></DataTable.Cell>
-                                        <DataTable.Cell numeric>
-                                            <Text
-                                                variant="bodyLarge"
-                                                style={styles.totalValue}
-                                            >
-                                                $
-                                                {formatAmount(
-                                                    selectedStockIn.totalAmount
-                                                )}
-                                            </Text>
-                                        </DataTable.Cell>
-                                    </DataTable.Row>
-                                </DataTable>
+                                        </DataTable>
+                                    </View>
+                                </ScrollView>
                             </Card.Content>
                         </Card>
 
@@ -418,6 +394,28 @@ const StockInProcessScreen = observer(
                             </View>
                         )}
                     </ScrollView>
+
+                    {/* Quick Action Buttons */}
+                    {isProcessable && (
+                        <View style={styles.quickActionsContainer}>
+                            <IconButton
+                                icon="close"
+                                size={24}
+                                mode="contained"
+                                containerColor="#f44336"
+                                iconColor="white"
+                                onPress={() => showConfirmDialog('cancel')}
+                            />
+                            <IconButton
+                                icon="check"
+                                size={24}
+                                mode="contained"
+                                containerColor="#4caf50"
+                                iconColor="white"
+                                onPress={() => showConfirmDialog('complete')}
+                            />
+                        </View>
+                    )}
 
                     {/* Confirmation Dialog */}
                     <Portal>
@@ -464,15 +462,24 @@ const StockInProcessScreen = observer(
 const styles = StyleSheet.create({
     scrollContent: {
         padding: 16,
-        paddingBottom: 32,
+        paddingBottom: 80, // Extra space for bottom actions
+    },
+    statusCard: {
+        padding: 8,
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    statusContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     headerCard: {
         marginBottom: 16,
+        borderRadius: 8,
+        elevation: 2,
     },
     headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
         marginBottom: 8,
     },
     divider: {
@@ -486,6 +493,7 @@ const styles = StyleSheet.create({
     infoItem: {
         width: '50%',
         marginBottom: 12,
+        paddingRight: 8,
     },
     infoLabel: {
         color: '#757575',
@@ -493,12 +501,29 @@ const styles = StyleSheet.create({
     },
     productsCard: {
         marginBottom: 16,
+        borderRadius: 8,
+        elevation: 2,
     },
     sectionTitle: {
         marginBottom: 8,
     },
-    productNameCell: {
-        flex: 3,
+    idColumn: {
+        flex: 2,
+    },
+    productNameColumn: {
+        flex: 4,
+    },
+    quantityColumn: {
+        flex: 1,
+    },
+    priceColumn: {
+        flex: 2,
+    },
+    subtotalColumn: {
+        flex: 2,
+    },
+    totalLabelContainer: {
+        justifyContent: 'center',
     },
     totalRow: {
         borderTopWidth: 1,
@@ -521,6 +546,13 @@ const styles = StyleSheet.create({
     },
     cancelButton: {
         borderColor: '#f44336',
+    },
+    quickActionsContainer: {
+        position: 'absolute',
+        right: 16,
+        bottom: 16,
+        flexDirection: 'row',
+        gap: 8,
     },
     loadingContainer: {
         flex: 1,

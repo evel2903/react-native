@@ -95,14 +95,6 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                             </Chip>
                         )}
                     </View>
-                    {/* <Chip
-                        style={{
-                            backgroundColor: getStatusDetails(item.status).color,
-                        }}
-                        textStyle={styles.statusText}
-                    >
-                        {getStatusDetails(item.status).displayName}
-                    </Chip> */}
                 </View>
 
                 {/* Stock information */}
@@ -124,19 +116,30 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                     <Text>Total: {formatAmount(item.totalAmount)}</Text>
                 </View>
 
-                {/* Timestamps */}
-                <View style={styles.timestampsRow}>
-                    {item.createdAt && (
-                        <Text variant="bodySmall" style={styles.timestamp}>
-                            Created: {formatDateTime(item.createdAt)}
-                        </Text>
-                    )}
-                    {item.updatedAt && (
-                        <Text variant="bodySmall" style={styles.timestamp}>
-                            Updated: {formatDateTime(item.updatedAt)}
-                        </Text>
-                    )}
+                {/* Timestamps & status */}
+                <View style={styles.headerRow}>
+                    <View style={styles.timestampsRow}>
+                        {item.createdAt && (
+                            <Text variant="bodySmall" style={styles.timestamp}>
+                                Created: {formatDateTime(item.createdAt)}
+                            </Text>
+                        )}
+                        {item.updatedAt && (
+                            <Text variant="bodySmall" style={styles.timestamp}>
+                                Updated: {formatDateTime(item.updatedAt)}
+                            </Text>
+                        )}
+                    </View>
+                    <Chip
+                        style={{
+                            backgroundColor: getStatusDetails(item.status).color,
+                        }}
+                        textStyle={styles.statusText}
+                    >
+                        {getStatusDetails(item.status).displayName}
+                    </Chip>
                 </View>
+
 
                 <Divider style={styles.divider} />
 
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        alignContent: 'center',
     },
     codeContainer: {
         flexDirection: 'row',
