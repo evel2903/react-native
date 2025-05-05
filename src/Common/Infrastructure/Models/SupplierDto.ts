@@ -1,62 +1,62 @@
 // src/Common/Infrastructure/Models/SupplierDto.ts
-import { Expose } from 'class-transformer';
-import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto';
-import { SupplierEntity } from '../../Domain/Entities/SupplierEntity';
+import { Expose } from 'class-transformer'
+import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
+import { SupplierEntity } from '../../Domain/Entities/SupplierEntity'
 
 export class SupplierDto extends ResponseDto<SupplierEntity> {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    code!: string;
+    code!: string
 
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    legalName?: string;
+    legalName?: string
 
     @Expose()
-    taxId?: string;
+    taxId?: string
 
     @Expose()
-    address?: string;
+    address?: string
 
     @Expose()
-    city?: string;
+    city?: string
 
     @Expose()
-    country?: string;
+    country?: string
 
     @Expose()
-    postalCode?: string;
+    postalCode?: string
 
     @Expose()
-    phone?: string;
+    phone?: string
 
     @Expose()
-    email?: string;
+    email?: string
 
     @Expose()
-    website?: string;
+    website?: string
 
     @Expose()
-    description?: string;
+    description?: string
 
     @Expose()
-    paymentTerms?: string;
+    paymentTerms?: string
 
     @Expose()
-    creditLimit?: string;
+    creditLimit?: string
 
     @Expose()
-    contactPerson?: string;
+    contactPerson?: string
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 
     toDomain(): SupplierEntity {
         return {
@@ -77,7 +77,7 @@ export class SupplierDto extends ResponseDto<SupplierEntity> {
             creditLimit: this.creditLimit,
             contactPerson: this.contactPerson,
             isActive: this.isActive,
-            isDeleted: this.isDeleted
-        };
+            isDeleted: this.isDeleted,
+        }
     }
 }

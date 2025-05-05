@@ -1,8 +1,24 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Card, Text, Divider, Button, IconButton, Chip } from 'react-native-paper'
+import {
+    Card,
+    Text,
+    Divider,
+    Button,
+    IconButton,
+    Chip,
+} from 'react-native-paper'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
-import { Status, getStatusColor, getStatusDisplayName } from '@/src/Common/Domain/Enums/Status'
+import {
+    Status,
+    getStatusColor,
+    getStatusDisplayName,
+} from '@/src/Common/Domain/Enums/Status'
+import {
+    PRIORITY,
+    getPriorityColor,
+    getPriorityDisplayName,
+} from '@/src/Common/Domain/Enums/Priority'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
 
 interface StockInListItemProps {
@@ -18,13 +34,21 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
     onApprove,
     onView,
     onEdit,
-    onDelete
+    onDelete,
 }) => {
-    const authStore = useAuthStore();
-    
+    const authStore = useAuthStore()
+
     // Format date to user-friendly format
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-CA').replace(/-/g, '/')
+        return new Date(dateString)
+            .toLocaleDateString('en-CA')
+            .replace(/-/g, '/')
+    }
+
+    // Format date and time
+    const formatDateTime = (dateString?: string) => {
+        if (!dateString) return 'N/A'
+        return new Date(dateString).toLocaleString()
     }
 
     // Format currency amounts
@@ -33,7 +57,7 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
             minimumFractionDigits: 0,
             maximumFractionDigits: 2,
             style: 'currency',
-            currency: 'USD'
+            currency: 'USD',
         })
     }
 
@@ -41,61 +65,83 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
     const getStatusDetails = (statusStr: string) => {
         // Cast the string to our Status enum type
         const status = statusStr as Status
-        
+
         return {
             color: getStatusColor(status),
-            displayName: getStatusDisplayName(status)
+            displayName: getStatusDisplayName(status),
         }
     }
 
-    // Get the count of items from details array
-    const itemCount = item.details?.length || 0
+    // Get the count of items from details array or count field
+    const itemCount = item.count || item.details?.length || 0
 
     return (
         <Card style={styles.card}>
             <Card.Content>
                 {/* Header section with code and status */}
                 <View style={styles.headerRow}>
-                    <Text style={styles.codeText}>Code: {item.code}</Text>
-                    <Chip
+                    <View style={styles.codeContainer}>
+                        <Text style={styles.codeText}>{item.code}</Text>
+                        {item.priority !== undefined && item.priority > 0 && (
+                            <Chip
+                                style={{
+                                    backgroundColor: getPriorityColor(
+                                        item.priority
+                                    ),
+                                }}
+                                textStyle={styles.priorityChip}
+                            >
+                                {getPriorityDisplayName(item.priority)}
+                            </Chip>
+                        )}
+                    </View>
+                    {/* <Chip
                         style={{
                             backgroundColor: getStatusDetails(item.status).color,
                         }}
                         textStyle={styles.statusText}
                     >
                         {getStatusDetails(item.status).displayName}
-                    </Chip>
+                    </Chip> */}
                 </View>
-                
+
                 {/* Stock information */}
-                <Text style={styles.infoText}>Lot number: {item.lotNumber || 'N/A'}</Text>
-                <Text style={styles.infoText}>Stock in date: {formatDate(item.inDate)}</Text>
                 <Text style={styles.infoText}>
-                    Supplier: {item.supplier?.name || item.supplier?.code || 'N/A'}
+                    Lot number: {item.lotNumber || 'N/A'}
                 </Text>
-                
+                <Text style={styles.infoText}>
+                    Stock in date: {formatDate(item.inDate)}
+                </Text>
+                <Text style={styles.infoText}>
+                    Supplier:{' '}
+                    {`${item.supplier?.code} - ${item.supplier?.name}` ||
+                        'N/A'}
+                </Text>
+
                 {/* Details row with quantity and cost */}
                 <View style={styles.detailsRow}>
                     <Text>Items: {itemCount}</Text>
                     <Text>Total: {formatAmount(item.totalAmount)}</Text>
                 </View>
-                
+
+                {/* Timestamps */}
+                <View style={styles.timestampsRow}>
+                    {item.createdAt && (
+                        <Text variant="bodySmall" style={styles.timestamp}>
+                            Created: {formatDateTime(item.createdAt)}
+                        </Text>
+                    )}
+                    {item.updatedAt && (
+                        <Text variant="bodySmall" style={styles.timestamp}>
+                            Updated: {formatDateTime(item.updatedAt)}
+                        </Text>
+                    )}
+                </View>
+
                 <Divider style={styles.divider} />
-                
+
                 {/* Action buttons */}
                 <View style={styles.actionsRow}>
-                    {/* Only show Approve button for pending status and if user has approval permission */}
-                    {item.status === Status.Pending && 
-                     authStore.hasPermission('stockIn:approve') && (
-                        <Button
-                            mode="contained"
-                            style={styles.approveButton}
-                            onPress={() => onApprove(item.id)}
-                        >
-                            Approve
-                        </Button>
-                    )}
-                    
                     <View style={styles.iconButtons}>
                         {/* View button - available to anyone with view permission */}
                         {authStore.hasPermission('stockIn:read') && (
@@ -103,32 +149,40 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                                 icon="eye"
                                 size={20}
                                 onPress={() => onView(item.id)}
-                                tooltip="View details"
                             />
                         )}
-                        
+
                         {/* Only show edit for draft status and if user has edit permission */}
-                        {item.status === Status.Draft && 
-                         authStore.hasPermission('stockIn:update') && (
-                            <IconButton
-                                icon="pencil"
-                                size={20}
-                                onPress={() => onEdit(item.id)}
-                                tooltip="Edit"
-                            />
-                        )}
-                        
+                        {item.status === Status.Draft &&
+                            authStore.hasPermission('stockIn:update') && (
+                                <IconButton
+                                    icon="pencil"
+                                    size={20}
+                                    onPress={() => onEdit(item.id)}
+                                />
+                            )}
+
                         {/* Only show delete for draft status and if user has delete permission */}
-                        {item.status === Status.Draft && 
-                         authStore.hasPermission('stockIn:delete') && (
-                            <IconButton
-                                icon="delete"
-                                size={20}
-                                onPress={() => onDelete(item.id)}
-                                tooltip="Delete"
-                            />
-                        )}
+                        {item.status === Status.Draft &&
+                            authStore.hasPermission('stockIn:delete') && (
+                                <IconButton
+                                    icon="delete"
+                                    size={20}
+                                    onPress={() => onDelete(item.id)}
+                                />
+                            )}
                     </View>
+                    {/* Only show Approve button for pending status and if user has approval permission */}
+                    {item.status === Status.Pending &&
+                        authStore.hasPermission('stockIn:approve') && (
+                            <Button
+                                mode="contained"
+                                style={styles.approveButton}
+                                onPress={() => onApprove(item.id)}
+                            >
+                                Approve
+                            </Button>
+                        )}
                 </View>
             </Card.Content>
         </Card>
@@ -147,9 +201,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 8,
     },
+    codeContainer: {
+        flexDirection: 'row',
+        flex: 1,
+        alignItems: 'center',
+        alignContent: 'center',
+        justifyContent: 'space-between',
+    },
     codeText: {
         fontWeight: 'bold',
         fontSize: 16,
+        marginRight: 8,
+    },
+    priorityChip: {
+        color: 'white',
+        fontSize: 12,
     },
     statusText: {
         color: 'white',
@@ -162,6 +228,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 8,
+    },
+    timestampsRow: {
+        flexDirection: 'column',
+        marginTop: 8,
+    },
+    timestamp: {
+        color: '#666',
+        fontSize: 11,
     },
     divider: {
         marginVertical: 8,

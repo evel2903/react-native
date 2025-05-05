@@ -7,6 +7,9 @@ import {
     Text,
     Button,
     IconButton,
+    Divider,
+    Portal,
+    Modal,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -18,6 +21,7 @@ import { StockInStoreProvider } from '../Stores/StockInStore/StockInStoreProvide
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { StatusBar } from 'expo-status-bar'
 import StockInListItem from '../Components/StockInListItem'
+import StockInFilterForm from '../Components/StockInFilterForm'
 
 const StockInScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
@@ -50,6 +54,10 @@ const StockInScreen = observer(() => {
         stockInStore.search('')
     }
 
+    const handleToggleFilter = () => {
+        stockInStore.toggleFilterVisible()
+    }
+
     const handleApprove = (id: string) => {
         // Approve functionality would be implemented here
         console.log('Approve stock in:', id)
@@ -79,7 +87,7 @@ const StockInScreen = observer(() => {
                     <Appbar.Action icon="plus" onPress={handleAddStockIn} />
                 </Appbar.Header>
 
-                {/* Search Bar */}
+                {/* Search and Filter Bar */}
                 <View style={styles.searchContainer}>
                     <Searchbar
                         placeholder="Search"
@@ -88,11 +96,21 @@ const StockInScreen = observer(() => {
                         onSubmitEditing={handleSearch}
                         onClearIconPress={handleClearSearch}
                         style={styles.searchbar}
-                        right={() => (
-                            <IconButton icon="filter-variant" onPress={() => {}} />
-                        )}
+                    />
+                    <IconButton 
+                        icon="filter-variant" 
+                        onPress={handleToggleFilter}
+                        style={[
+                            styles.filterButton,
+                            stockInStore.filterVisible ? styles.filterButtonActive : {}
+                        ]}
                     />
                 </View>
+
+                {/* Filter Form */}
+                {stockInStore.filterVisible && (
+                    <StockInFilterForm />
+                )}
 
                 {/* Stock In List */}
                 {stockInStore.isLoading ? (
@@ -146,9 +164,18 @@ const styles = StyleSheet.create({
     searchContainer: {
         padding: 16,
         paddingBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     searchbar: {
+        flex: 1,
         elevation: 0,
+    },
+    filterButton: {
+        marginLeft: 8,
+    },
+    filterButtonActive: {
+        backgroundColor: 'rgba(0, 0, 0, 0.08)',
     },
     listContent: {
         padding: 16,

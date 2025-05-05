@@ -1,8 +1,11 @@
 // src/Common/Application/UseCases/GetGoodsUseCase.ts
-import { injectable, inject } from 'inversiland';
-import { UseCase } from '@/src/Core/Application/UseCase';
-import { IMasterDataRepository, IMasterDataRepositoryToken } from '../../Domain/Specifications/IMasterDataRepository';
-import { GoodsEntity } from '../../Domain/Entities/GoodsEntity';
+import { injectable, inject } from 'inversiland'
+import { UseCase } from '@/src/Core/Application/UseCase'
+import {
+    IMasterDataRepository,
+    IMasterDataRepositoryToken,
+} from '../../Domain/Specifications/IMasterDataRepository'
+import { GoodsEntity } from '../../Domain/Entities/GoodsEntity'
 
 @injectable()
 export class GetGoodsUseCase implements UseCase<void, Promise<GoodsEntity[]>> {
@@ -12,6 +15,6 @@ export class GetGoodsUseCase implements UseCase<void, Promise<GoodsEntity[]>> {
     ) {}
 
     public execute(): Promise<GoodsEntity[]> {
-        return this.masterDataRepository.getGoods();
+        return this.masterDataRepository.getGoods()
     }
 }

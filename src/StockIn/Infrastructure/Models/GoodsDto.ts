@@ -1,11 +1,11 @@
-import { Expose } from 'class-transformer';
+import { Expose } from 'class-transformer'
 
 export class GoodsDto {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    name!: string;
-    
+    name!: string
+
     // Add other properties as needed
 }

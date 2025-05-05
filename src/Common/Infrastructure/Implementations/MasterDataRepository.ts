@@ -1,16 +1,18 @@
 // src/Common/Infrastructure/Implementations/MasterDataRepository.ts
-import { injectable, inject } from 'inversiland';
-import { IMasterDataRepository } from '../../Domain/Specifications/IMasterDataRepository';
-import { CategoryEntity } from '../../Domain/Entities/CategoryEntity';
-import { UnitEntity } from '../../Domain/Entities/UnitEntity';
-import { SupplierEntity } from '../../Domain/Entities/SupplierEntity';
-import { GoodsEntity } from '../../Domain/Entities/GoodsEntity';
-import IHttpClient, { IHttpClientToken } from '@/src/Core/Domain/Specifications/IHttpClient';
-import { plainToInstance } from 'class-transformer';
-import { CategoryDto } from '../Models/CategoryDto';
-import { UnitDto } from '../Models/UnitDto';
-import { SupplierDto } from '../Models/SupplierDto';
-import { GoodsDto } from '../Models/GoodsDto';
+import { injectable, inject } from 'inversiland'
+import { IMasterDataRepository } from '../../Domain/Specifications/IMasterDataRepository'
+import { CategoryEntity } from '../../Domain/Entities/CategoryEntity'
+import { UnitEntity } from '../../Domain/Entities/UnitEntity'
+import { SupplierEntity } from '../../Domain/Entities/SupplierEntity'
+import { GoodsEntity } from '../../Domain/Entities/GoodsEntity'
+import IHttpClient, {
+    IHttpClientToken,
+} from '@/src/Core/Domain/Specifications/IHttpClient'
+import { plainToInstance } from 'class-transformer'
+import { CategoryDto } from '../Models/CategoryDto'
+import { UnitDto } from '../Models/UnitDto'
+import { SupplierDto } from '../Models/SupplierDto'
+import { GoodsDto } from '../Models/GoodsDto'
 
 @injectable()
 class MasterDataRepository implements IMasterDataRepository {
@@ -20,131 +22,135 @@ class MasterDataRepository implements IMasterDataRepository {
 
     public async getCategories(): Promise<CategoryEntity[]> {
         try {
-            const response: any = await this.httpClient.get('/api/categories');
-            
+            const response: any = await this.httpClient.get('/api/categories')
+
             if (!response.data || !Array.isArray(response.data)) {
-                throw new Error('Unexpected API response format for categories');
+                throw new Error('Unexpected API response format for categories')
             }
-            
-            return response.data.map((item: any) => 
+
+            return response.data.map((item: any) =>
                 plainToInstance(CategoryDto, item).toDomain()
-            );
+            )
         } catch (error) {
-            console.error('Error fetching categories:', error);
-            throw error;
+            console.error('Error fetching categories:', error)
+            throw error
         }
     }
 
     public async getUnits(): Promise<UnitEntity[]> {
         try {
-            const response: any = await this.httpClient.get('/api/units');
-            
+            const response: any = await this.httpClient.get('/api/units')
+
             if (!response.data || !Array.isArray(response.data)) {
-                throw new Error('Unexpected API response format for units');
+                throw new Error('Unexpected API response format for units')
             }
-            
-            return response.data.map((item: any) => 
+
+            return response.data.map((item: any) =>
                 plainToInstance(UnitDto, item).toDomain()
-            );
+            )
         } catch (error) {
-            console.error('Error fetching units:', error);
-            throw error;
+            console.error('Error fetching units:', error)
+            throw error
         }
     }
 
     public async getSuppliers(): Promise<SupplierEntity[]> {
         try {
-            const response: any = await this.httpClient.get('/api/suppliers');
-            
+            const response: any = await this.httpClient.get('/api/suppliers')
+
             if (!response.data || !Array.isArray(response.data)) {
-                throw new Error('Unexpected API response format for suppliers');
+                throw new Error('Unexpected API response format for suppliers')
             }
-            
-            return response.data.map((item: any) => 
+
+            return response.data.map((item: any) =>
                 plainToInstance(SupplierDto, item).toDomain()
-            );
+            )
         } catch (error) {
-            console.error('Error fetching suppliers:', error);
-            throw error;
+            console.error('Error fetching suppliers:', error)
+            throw error
         }
     }
 
     public async getGoods(): Promise<GoodsEntity[]> {
         try {
-            const response: any = await this.httpClient.get('/api/goods');
-            
+            const response: any = await this.httpClient.get('/api/goods')
+
             if (!response.data || !Array.isArray(response.data)) {
-                throw new Error('Unexpected API response format for goods');
+                throw new Error('Unexpected API response format for goods')
             }
-            
-            return response.data.map((item: any) => 
+
+            return response.data.map((item: any) =>
                 plainToInstance(GoodsDto, item).toDomain()
-            );
+            )
         } catch (error) {
-            console.error('Error fetching goods:', error);
-            throw error;
+            console.error('Error fetching goods:', error)
+            throw error
         }
     }
 
     public async getCategoryById(id: string): Promise<CategoryEntity | null> {
         try {
-            const response: any = await this.httpClient.get(`/api/categories/${id}`);
-            
+            const response: any = await this.httpClient.get(
+                `/api/categories/${id}`
+            )
+
             if (!response.data) {
-                return null;
+                return null
             }
-            
-            return plainToInstance(CategoryDto, response.data).toDomain();
+
+            return plainToInstance(CategoryDto, response.data).toDomain()
         } catch (error) {
-            console.error(`Error fetching category with ID ${id}:`, error);
-            return null;
+            console.error(`Error fetching category with ID ${id}:`, error)
+            return null
         }
     }
 
     public async getUnitById(id: string): Promise<UnitEntity | null> {
         try {
-            const response: any = await this.httpClient.get(`/api/units/${id}`);
-            
+            const response: any = await this.httpClient.get(`/api/units/${id}`)
+
             if (!response.data) {
-                return null;
+                return null
             }
-            
-            return plainToInstance(UnitDto, response.data).toDomain();
+
+            return plainToInstance(UnitDto, response.data).toDomain()
         } catch (error) {
-            console.error(`Error fetching unit with ID ${id}:`, error);
-            return null;
+            console.error(`Error fetching unit with ID ${id}:`, error)
+            return null
         }
     }
 
     public async getSupplierById(id: string): Promise<SupplierEntity | null> {
         try {
-            const response: any = await this.httpClient.get(`/api/suppliers/${id}`);
-            
+            const response: any = await this.httpClient.get(
+                `/api/suppliers/${id}`
+            )
+
             if (!response.data) {
-                return null;
+                return null
             }
-            
-            return plainToInstance(SupplierDto, response.data).toDomain();
+
+            return plainToInstance(SupplierDto, response.data).toDomain()
         } catch (error) {
-            console.error(`Error fetching supplier with ID ${id}:`, error);
-            return null;
+            console.error(`Error fetching supplier with ID ${id}:`, error)
+            return null
         }
     }
 
     public async getGoodsById(id: string): Promise<GoodsEntity | null> {
         try {
-            const response: any = await this.httpClient.get(`/api/goods/${id}`);
-            
+            const response: any = await this.httpClient.get(`/api/goods/${id}`)
+
             if (!response.data) {
-                return null;
+                return null
             }
-            
-            return plainToInstance(GoodsDto, response.data).toDomain();
+
+            return plainToInstance(GoodsDto, response.data).toDomain()
         } catch (error) {
-            console.error(`Error fetching goods with ID ${id}:`, error);
-            return null;
+            console.error(`Error fetching goods with ID ${id}:`, error)
+            return null
         }
     }
 }
 
-export default MasterDataRepository;
+export default MasterDataRepository

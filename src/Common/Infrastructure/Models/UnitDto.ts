@@ -1,23 +1,23 @@
 // src/Common/Infrastructure/Models/UnitDto.ts
-import { Expose } from 'class-transformer';
-import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto';
-import { UnitEntity } from '../../Domain/Entities/UnitEntity';
+import { Expose } from 'class-transformer'
+import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
+import { UnitEntity } from '../../Domain/Entities/UnitEntity'
 
 export class UnitDto extends ResponseDto<UnitEntity> {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    description?: string | null;
+    description?: string | null
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 
     toDomain(): UnitEntity {
         return {
@@ -25,7 +25,7 @@ export class UnitDto extends ResponseDto<UnitEntity> {
             name: this.name,
             description: this.description,
             isActive: this.isActive,
-            isDeleted: this.isDeleted
-        };
+            isDeleted: this.isDeleted,
+        }
     }
 }

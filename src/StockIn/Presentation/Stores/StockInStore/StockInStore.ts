@@ -7,6 +7,7 @@ import {
     IStockInRepository,
     IStockInRepositoryToken,
 } from '@/src/StockIn/Domain/Specifications/IStockInRepository';
+import { PriorityType } from '@/src/Common/Domain/Enums/Priority';
 
 @injectable()
 export class StockInStore implements StockInStoreState {
@@ -14,6 +15,7 @@ export class StockInStore implements StockInStoreState {
     results: StockInEntity[] = [];
     count = 0;
     filters = {
+        code: undefined as string | undefined,
         status: undefined as
             | undefined
             | 'DRAFT'
@@ -21,9 +23,12 @@ export class StockInStore implements StockInStoreState {
             | 'APPROVED'
             | 'REJECTED'
             | 'CANCELLED',
-        startDate: undefined,
-        endDate: undefined,
-        search: undefined,
+        priority: undefined as PriorityType | undefined,
+        supplierId: undefined as string | undefined,
+        lotNumber: undefined as string | undefined,
+        startDate: undefined as string | undefined,
+        endDate: undefined as string | undefined,
+        search: undefined as string | undefined,
     };
     pagination = {
         page: 1,
@@ -32,6 +37,7 @@ export class StockInStore implements StockInStoreState {
 
     selectedStockIn: StockInEntity | null = null;
     error: string | null = null;
+    filterVisible = false;
 
     constructor(
         @inject(IStockInRepositoryToken)
@@ -60,6 +66,14 @@ export class StockInStore implements StockInStoreState {
         this.count = count;
     };
 
+    setFilterVisible = (visible: boolean) => {
+        this.filterVisible = visible;
+    };
+
+    toggleFilterVisible = () => {
+        this.filterVisible = !this.filterVisible;
+    };
+
     mergeFilters = (payload: Partial<StockInStoreState['filters']>) => {
         Object.assign(this.filters, payload);
     };
@@ -83,7 +97,11 @@ export class StockInStore implements StockInStoreState {
         const payload: GetStockInsPayload = {
             page: this.pagination.page,
             pageSize: this.pagination.pageSize,
+            code: this.filters.code,
             status: this.filters.status,
+            priority: this.filters.priority,
+            supplierId: this.filters.supplierId,
+            lotNumber: this.filters.lotNumber,
             startDate: this.filters.startDate,
             endDate: this.filters.endDate,
             search: this.filters.search,
@@ -94,8 +112,6 @@ export class StockInStore implements StockInStoreState {
 
         try {
             const response = await this.stockInRepository.getStockIns(payload);
-
-            console.log(response);
             
             runInAction(() => {
                 this.setResults(response.results);
@@ -201,9 +217,33 @@ export class StockInStore implements StockInStoreState {
         }
     }
 
-    // Filter by status
+    // Filter methods for each filter type
+    filterByCode(code?: string) {
+        this.filters.code = code;
+        this.pagination.page = 1;
+        this.getStockIns();
+    }
+
     filterByStatus(status?: StockInEntity['status']) {
         this.filters.status = status;
+        this.pagination.page = 1;
+        this.getStockIns();
+    }
+
+    filterByPriority(priority?: PriorityType) {
+        this.filters.priority = priority;
+        this.pagination.page = 1;
+        this.getStockIns();
+    }
+
+    filterBySupplier(supplierId?: string) {
+        this.filters.supplierId = supplierId;
+        this.pagination.page = 1;
+        this.getStockIns();
+    }
+
+    filterByLotNumber(lotNumber?: string) {
+        this.filters.lotNumber = lotNumber;
         this.pagination.page = 1;
         this.getStockIns();
     }
@@ -212,6 +252,13 @@ export class StockInStore implements StockInStoreState {
     filterByDateRange(startDate?: string, endDate?: string) {
         this.filters.startDate = startDate;
         this.filters.endDate = endDate;
+        this.pagination.page = 1;
+        this.getStockIns();
+    }
+
+    // Apply all filters at once
+    applyFilters(filters: Partial<StockInStoreState['filters']>) {
+        this.mergeFilters(filters);
         this.pagination.page = 1;
         this.getStockIns();
     }
@@ -226,7 +273,11 @@ export class StockInStore implements StockInStoreState {
     // Reset filters
     resetFilters() {
         this.filters = {
+            code: undefined,
             status: undefined,
+            priority: undefined,
+            supplierId: undefined,
+            lotNumber: undefined,
             startDate: undefined,
             endDate: undefined,
             search: undefined,

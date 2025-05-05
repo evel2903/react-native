@@ -1,26 +1,26 @@
 // src/Common/Infrastructure/Models/CategoryDto.ts
-import { Expose } from 'class-transformer';
-import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto';
-import { CategoryEntity } from '../../Domain/Entities/CategoryEntity';
+import { Expose } from 'class-transformer'
+import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
+import { CategoryEntity } from '../../Domain/Entities/CategoryEntity'
 
 export class CategoryDto extends ResponseDto<CategoryEntity> {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    code!: string;
+    code!: string
 
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    description?: string;
+    description?: string
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 
     toDomain(): CategoryEntity {
         return {
@@ -29,7 +29,7 @@ export class CategoryDto extends ResponseDto<CategoryEntity> {
             name: this.name,
             description: this.description,
             isActive: this.isActive,
-            isDeleted: this.isDeleted
-        };
+            isDeleted: this.isDeleted,
+        }
     }
 }

@@ -1,14 +1,16 @@
-import { injectable, inject } from 'inversiland';
-import { IStockInRepository } from '../../Domain/Specifications/IStockInRepository';
-import GetStockInsPayload from '../../Application/Types/GetStockInsPayload';
-import StockInEntity from '../../Domain/Entities/StockInEntity';
-import StockInDto from '../Models/StockInDto';
-import { plainToInstance } from 'class-transformer';
-import IHttpClient, { IHttpClientToken } from '@/src/Core/Domain/Specifications/IHttpClient';
+import { injectable, inject } from 'inversiland'
+import { IStockInRepository } from '../../Domain/Specifications/IStockInRepository'
+import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
+import StockInEntity from '../../Domain/Entities/StockInEntity'
+import StockInDto from '../Models/StockInDto'
+import { plainToInstance } from 'class-transformer'
+import IHttpClient, {
+    IHttpClientToken,
+} from '@/src/Core/Domain/Specifications/IHttpClient'
 
 @injectable()
 class StockInRepository implements IStockInRepository {
-    private readonly baseUrl = '/api/stock-in';
+    private readonly baseUrl = '/api/stock-in'
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
@@ -21,6 +23,7 @@ class StockInRepository implements IStockInRepository {
             // Build query parameters
             const queryParams = new URLSearchParams();
             
+            // Pagination parameters
             if (payload.page) {
                 queryParams.append('page', payload.page.toString());
             }
@@ -29,8 +32,25 @@ class StockInRepository implements IStockInRepository {
                 queryParams.append('pageSize', payload.pageSize.toString());
             }
             
+            // Filter parameters
+            if (payload.code) {
+                queryParams.append('code', payload.code);
+            }
+            
             if (payload.status) {
                 queryParams.append('status', payload.status);
+            }
+            
+            if (payload.priority !== undefined) {
+                queryParams.append('priority', payload.priority.toString());
+            }
+            
+            if (payload.supplierId) {
+                queryParams.append('supplierId', payload.supplierId);
+            }
+            
+            if (payload.lotNumber) {
+                queryParams.append('lotNumber', payload.lotNumber);
             }
             
             if (payload.startDate) {
@@ -67,6 +87,10 @@ class StockInRepository implements IStockInRepository {
                     notes: item.notes || '',
                     lotNumber: item.lotNumber,
                     totalAmount: item.totalAmount,
+                    priority: item.priority || 0,
+                    createdAt: item.createdAt,
+                    updatedAt: item.updatedAt,
+                    count: item.count || 0,
                     createdBy: null,
                     approvedBy: null,
                     details: [], // Will be populated when getting individual stock in details
@@ -80,9 +104,12 @@ class StockInRepository implements IStockInRepository {
                 } as StockInEntity;
             });
             
+            // Use the count from the first item or default to items length
+            const totalCount = response.total || (stockInItems.length > 0 ? stockInItems[0].count : stockInItems.length);
+            
             return {
                 results: stockInItems,
-                count: response.total || stockInItems.length,
+                count: totalCount,
             };
         } catch (error) {
             console.error('Error fetching stock ins:', error);
@@ -92,15 +119,17 @@ class StockInRepository implements IStockInRepository {
 
     public async getStockInById(id: string): Promise<StockInEntity> {
         try {
-            const response: any = await this.httpClient.get(`${this.baseUrl}/${id}`);
-            
+            const response: any = await this.httpClient.get(
+                `${this.baseUrl}/${id}`
+            )
+
             // Check if the response has the expected structure
             if (!response || !response.data) {
-                throw new Error('Stock in record not found');
+                throw new Error('Stock in record not found')
             }
-            
-            const item = response.data;
-            
+
+            const item = response.data
+
             // Transform the item to match our domain model
             return {
                 id: item.id,
@@ -112,6 +141,10 @@ class StockInRepository implements IStockInRepository {
                 notes: item.notes || '',
                 lotNumber: item.lotNumber,
                 totalAmount: item.totalAmount,
+                priority: item.priority || 0,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+                count: item.count || 0,
                 createdBy: item.createdBy || null,
                 approvedBy: item.approvedBy || null,
                 details: item.details || [], // Assuming details are included in the single item response
@@ -120,12 +153,12 @@ class StockInRepository implements IStockInRepository {
                     code: item.supplierCode,
                     name: item.supplierName,
                     isActive: !item.isDeleted,
-                    isDeleted: item.isDeleted
-                }
-            } as StockInEntity;
+                    isDeleted: item.isDeleted,
+                },
+            } as StockInEntity
         } catch (error) {
-            console.error(`Error fetching stock in with ID ${id}:`, error);
-            throw error;
+            console.error(`Error fetching stock in with ID ${id}:`, error)
+            throw error
         }
     }
 
@@ -138,15 +171,15 @@ class StockInRepository implements IStockInRepository {
             const response: any = await this.httpClient.patch(
                 `${this.baseUrl}/${id}/status`,
                 { status }
-            );
-            
+            )
+
             // Check if the response has the expected structure
             if (!response || !response.data) {
-                throw new Error('Failed to update stock in status');
+                throw new Error('Failed to update stock in status')
             }
-            
-            const item = response.data;
-            
+
+            const item = response.data
+
             // Transform the updated item to match our domain model
             return {
                 id: item.id,
@@ -158,6 +191,10 @@ class StockInRepository implements IStockInRepository {
                 notes: item.notes || '',
                 lotNumber: item.lotNumber,
                 totalAmount: item.totalAmount,
+                priority: item.priority || 0,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+                count: item.count || 0,
                 createdBy: item.createdBy || null,
                 approvedBy: item.approvedBy || null,
                 details: item.details || [], // Assuming details are included in the response
@@ -166,14 +203,14 @@ class StockInRepository implements IStockInRepository {
                     code: item.supplierCode,
                     name: item.supplierName,
                     isActive: !item.isDeleted,
-                    isDeleted: item.isDeleted
-                }
-            } as StockInEntity;
+                    isDeleted: item.isDeleted,
+                },
+            } as StockInEntity
         } catch (error) {
-            console.error(`Error updating stock in status for ID ${id}:`, error);
-            throw error;
+            console.error(`Error updating stock in status for ID ${id}:`, error)
+            throw error
         }
     }
 }
 
-export default StockInRepository;
+export default StockInRepository

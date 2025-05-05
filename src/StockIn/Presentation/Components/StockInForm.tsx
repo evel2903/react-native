@@ -25,7 +25,7 @@ interface StockInFormProps {
 const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     const stockInStore = useStockInStore()
     const masterDataStore = useMasterDataStore()
-    
+
     const [unitMenuVisible, setUnitMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
@@ -42,7 +42,7 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                 await Promise.all([
                     masterDataStore.loadUnits(),
                     masterDataStore.loadSuppliers(),
-                    masterDataStore.loadGoods()
+                    masterDataStore.loadGoods(),
                 ])
             } catch (error) {
                 console.error('Error loading master data:', error)
@@ -50,7 +50,7 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                 setIsLoading(false)
             }
         }
-        
+
         loadData()
     }, [masterDataStore])
 
@@ -66,7 +66,10 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
             newErrors.productId = 'Product is required'
         }
 
-        if (!stockInStore.formData.quantity || stockInStore.formData.quantity <= 0) {
+        if (
+            !stockInStore.formData.quantity ||
+            stockInStore.formData.quantity <= 0
+        ) {
             newErrors.quantity = 'Quantity must be greater than 0'
         }
 
@@ -116,10 +119,12 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
         if (goods) {
             updateField('productId', goods.id)
             updateField('productName', goods.name)
-            
+
             // Set the unit based on the goods unit if available
             if (goods.unit) {
-                const unit = masterDataStore.units.data.find(u => u.name === goods.unit?.name)
+                const unit = masterDataStore.units.data.find(
+                    u => u.name === goods.unit?.name
+                )
                 if (unit) {
                     updateField('unit', unit.name)
                 }
@@ -153,7 +158,9 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                 </Text>
 
                 {/* Product/Goods selection */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>Product Information</Text>
+                <Text variant="titleMedium" style={styles.sectionTitle}>
+                    Product Information
+                </Text>
                 <Menu
                     visible={goodsMenuVisible}
                     onDismiss={() => setGoodsMenuVisible(false)}
@@ -164,7 +171,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             style={styles.selectButton}
                             icon="package-variant"
                         >
-                            {stockInStore.formData.productName || 'Select Product'}
+                            {stockInStore.formData.productName ||
+                                'Select Product'}
                         </Button>
                     }
                     style={styles.menuContainer}
@@ -222,7 +230,9 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             }
                         >
                             {masterDataStore.units.data
-                                .filter(unit => unit.isActive && !unit.isDeleted)
+                                .filter(
+                                    unit => unit.isActive && !unit.isDeleted
+                                )
                                 .map(unit => (
                                     <Menu.Item
                                         key={unit.id}
@@ -241,10 +251,12 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                 </View>
 
                 <Divider style={styles.divider} />
-                
+
                 {/* Supplier information */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>Supplier Information</Text>
-                
+                <Text variant="titleMedium" style={styles.sectionTitle}>
+                    Supplier Information
+                </Text>
+
                 <Menu
                     visible={supplierMenuVisible}
                     onDismiss={() => setSupplierMenuVisible(false)}
@@ -255,14 +267,18 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             style={styles.selectButton}
                             icon="truck-delivery"
                         >
-                            {stockInStore.formData.supplierName || 'Select Supplier'}
+                            {stockInStore.formData.supplierName ||
+                                'Select Supplier'}
                         </Button>
                     }
                     style={styles.menuContainer}
                 >
                     <ScrollView style={styles.menuScrollView}>
                         {masterDataStore.suppliers.data
-                            .filter(supplier => supplier.isActive && !supplier.isDeleted)
+                            .filter(
+                                supplier =>
+                                    supplier.isActive && !supplier.isDeleted
+                            )
                             .map(supplier => (
                                 <Menu.Item
                                     key={supplier.id}
@@ -285,10 +301,12 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                 />
 
                 <Divider style={styles.divider} />
-                
+
                 {/* Stock in details */}
-                <Text variant="titleMedium" style={styles.sectionTitle}>Stock In Details</Text>
-                
+                <Text variant="titleMedium" style={styles.sectionTitle}>
+                    Stock In Details
+                </Text>
+
                 <TextInput
                     label="Date *"
                     value={stockInStore.formData.date}

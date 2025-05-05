@@ -1,18 +1,18 @@
-import { Expose } from 'class-transformer';
+import { Expose } from 'class-transformer'
 
 export class SupplierDto {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    code!: string;
+    code!: string
 
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 }

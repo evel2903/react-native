@@ -1,50 +1,67 @@
-import { Expose, Type } from 'class-transformer';
-import ResponseDto from 'src/Core/Infrastructure/Models/ResponseDto';
-import StockInEntity from '../../Domain/Entities/StockInEntity';
-import { StockInDetailItemDto } from './StockInDetailItemDto';
-import { SupplierDto } from './SupplierDto';
+import { Expose, Type } from 'class-transformer'
+import ResponseDto from 'src/Core/Infrastructure/Models/ResponseDto'
+import StockInEntity from '../../Domain/Entities/StockInEntity'
+import { StockInDetailItemDto } from './StockInDetailItemDto'
+import { SupplierDto } from './SupplierDto'
+import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 
 export default class StockInDto extends ResponseDto<StockInEntity> {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    code!: string;
+    code!: string
 
     @Expose()
-    supplierId!: string;
+    supplierId!: string
 
     @Expose()
-    inDate!: string;
+    inDate!: string
 
     @Expose()
-    description?: string;
+    description?: string
 
     @Expose()
-    status!: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+    status!: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
 
     @Expose()
-    notes?: string;
+    notes?: string
 
     @Expose()
-    lotNumber?: string;
+    lotNumber?: string
 
     @Expose()
-    totalAmount!: string;
+    totalAmount!: string
 
     @Expose()
-    createdBy?: string | null;
+    createdBy?: string | null
 
     @Expose()
-    approvedBy?: string | null;
+    approvedBy?: string | null
 
     @Expose()
     @Type(() => StockInDetailItemDto)
-    details!: StockInDetailItemDto[];
+    details!: StockInDetailItemDto[]
 
     @Expose()
     @Type(() => SupplierDto)
-    supplier?: SupplierDto;
+    supplier?: SupplierDto
+
+    // New fields from API response
+    @Expose()
+    priority?: PriorityType
+
+    @Expose()
+    createdAt?: string
+
+    @Expose()
+    updatedAt?: string
+
+    @Expose()
+    count?: number
+
+    @Expose()
+    isDeleted?: boolean
 
     toDomain(): StockInEntity {
         return {
@@ -59,6 +76,11 @@ export default class StockInDto extends ResponseDto<StockInEntity> {
             totalAmount: this.totalAmount,
             createdBy: this.createdBy,
             approvedBy: this.approvedBy,
+            priority: this.priority,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
+            count: this.count,
+            isDeleted: this.isDeleted,
             details: this.details.map(detail => ({
                 id: detail.id,
                 goodsId: detail.goodsId,
@@ -66,15 +88,17 @@ export default class StockInDto extends ResponseDto<StockInEntity> {
                 price: detail.price,
                 expiryDate: detail.expiryDate,
                 notes: detail.notes,
-                goods: detail.goods
+                goods: detail.goods,
             })),
-            supplier: this.supplier ? {
-                id: this.supplier.id,
-                code: this.supplier.code,
-                name: this.supplier.name,
-                isActive: this.supplier.isActive,
-                isDeleted: this.supplier.isDeleted
-            } : undefined
-        };
+            supplier: this.supplier
+                ? {
+                      id: this.supplier.id,
+                      code: this.supplier.code,
+                      name: this.supplier.name,
+                      isActive: this.supplier.isActive,
+                      isDeleted: this.supplier.isDeleted,
+                  }
+                : undefined,
+        }
     }
 }

@@ -6,11 +6,6 @@ import { StockInModule } from './StockIn/StockInModule'
 import { CommonModule } from './Common/CommonModule'
 
 @module({
-    imports: [
-        CoreModule,
-        CommonModule,
-        AuthModule,
-        StockInModule,
-    ],
+    imports: [CoreModule, CommonModule, AuthModule, StockInModule],
 })
 export default class AppModule {}

@@ -96,26 +96,26 @@ const StockInProcessScreen = observer(
         const getStatusColor = (status: string) => {
             switch (status) {
                 case 'DRAFT':
-                    return '#ff9800'; // Orange
+                    return '#ff9800' // Orange
                 case 'PENDING':
-                    return '#2196f3'; // Blue
+                    return '#2196f3' // Blue
                 case 'APPROVED':
-                    return '#4caf50'; // Green
+                    return '#4caf50' // Green
                 case 'REJECTED':
                 case 'CANCELLED':
-                    return '#f44336'; // Red
+                    return '#f44336' // Red
                 default:
-                    return '#757575'; // Grey
+                    return '#757575' // Grey
             }
-        };
+        }
 
         // Include the formatAmount function
         const formatAmount = (amount: string) => {
             return parseFloat(amount).toLocaleString('en-US', {
                 minimumFractionDigits: 0,
-                maximumFractionDigits: 2
-            });
-        };
+                maximumFractionDigits: 2,
+            })
+        }
         // Calculate total value of the stock in
 
         if (stockInStore.isLoading) {
@@ -157,7 +157,9 @@ const StockInProcessScreen = observer(
         }
 
         const { selectedStockIn } = stockInStore
-        const isProcessable = ['DRAFT', 'PENDING'].includes(selectedStockIn.status);
+        const isProcessable = ['DRAFT', 'PENDING'].includes(
+            selectedStockIn.status
+        )
 
         return (
             <View
@@ -170,191 +172,224 @@ const StockInProcessScreen = observer(
                 <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
                     <Appbar.Header>
                         <Appbar.BackAction onPress={handleGoBack} />
-                        <Appbar.Content
-                            title="Process Stock In"
-                        />
+                        <Appbar.Content title="Process Stock In" />
                     </Appbar.Header>
 
                     <ScrollView contentContainerStyle={styles.scrollContent}>
                         {/* Header Section */}
                         <Card style={styles.headerCard}>
-    <Card.Content>
-        <View style={styles.headerRow}>
-            <View>
-                <Text variant="titleLarge">
-                    {selectedStockIn.code}
-                </Text>
-                <Text variant="bodyMedium">
-                    Date: {formatDate(selectedStockIn.inDate)}
-                </Text>
-            </View>
-            <Chip
-                style={{
-                    backgroundColor: getStatusColor(selectedStockIn.status),
-                }}
-                textStyle={{ color: 'white' }}
-            >
-                {selectedStockIn.status}
-            </Chip>
-        </View>
+                            <Card.Content>
+                                <View style={styles.headerRow}>
+                                    <View>
+                                        <Text variant="titleLarge">
+                                            {selectedStockIn.code}
+                                        </Text>
+                                        <Text variant="bodyMedium">
+                                            Date:{' '}
+                                            {formatDate(selectedStockIn.inDate)}
+                                        </Text>
+                                    </View>
+                                    <Chip
+                                        style={{
+                                            backgroundColor: getStatusColor(
+                                                selectedStockIn.status
+                                            ),
+                                        }}
+                                        textStyle={{ color: 'white' }}
+                                    >
+                                        {selectedStockIn.status}
+                                    </Chip>
+                                </View>
 
-        <Divider style={styles.divider} />
+                                <Divider style={styles.divider} />
 
-        <View style={styles.infoGrid}>
-            <View style={styles.infoItem}>
-                <Text
-                    variant="bodySmall"
-                    style={styles.infoLabel}
-                >
-                    Supplier:
-                </Text>
-                <Text variant="bodyMedium">
-                    {selectedStockIn.supplier?.name || 'N/A'}
-                </Text>
-            </View>
+                                <View style={styles.infoGrid}>
+                                    <View style={styles.infoItem}>
+                                        <Text
+                                            variant="bodySmall"
+                                            style={styles.infoLabel}
+                                        >
+                                            Supplier:
+                                        </Text>
+                                        <Text variant="bodyMedium">
+                                            {selectedStockIn.supplier?.name ||
+                                                'N/A'}
+                                        </Text>
+                                    </View>
 
-            <View style={styles.infoItem}>
-                <Text
-                    variant="bodySmall"
-                    style={styles.infoLabel}
-                >
-                    Lot Number:
-                </Text>
-                <Text variant="bodyMedium">
-                    {selectedStockIn.lotNumber || 'N/A'}
-                </Text>
-            </View>
+                                    <View style={styles.infoItem}>
+                                        <Text
+                                            variant="bodySmall"
+                                            style={styles.infoLabel}
+                                        >
+                                            Lot Number:
+                                        </Text>
+                                        <Text variant="bodyMedium">
+                                            {selectedStockIn.lotNumber || 'N/A'}
+                                        </Text>
+                                    </View>
 
-            <View style={styles.infoItem}>
-                <Text
-                    variant="bodySmall"
-                    style={styles.infoLabel}
-                >
-                    Total Amount:
-                </Text>
-                <Text variant="bodyMedium">
-                    ${formatAmount(selectedStockIn.totalAmount)}
-                </Text>
-            </View>
+                                    <View style={styles.infoItem}>
+                                        <Text
+                                            variant="bodySmall"
+                                            style={styles.infoLabel}
+                                        >
+                                            Total Amount:
+                                        </Text>
+                                        <Text variant="bodyMedium">
+                                            $
+                                            {formatAmount(
+                                                selectedStockIn.totalAmount
+                                            )}
+                                        </Text>
+                                    </View>
 
-            <View style={styles.infoItem}>
-                <Text
-                    variant="bodySmall"
-                    style={styles.infoLabel}
-                >
-                    Items Count:
-                </Text>
-                <Text variant="bodyMedium">
-                    {selectedStockIn.details.length}
-                </Text>
-            </View>
-        </View>
+                                    <View style={styles.infoItem}>
+                                        <Text
+                                            variant="bodySmall"
+                                            style={styles.infoLabel}
+                                        >
+                                            Items Count:
+                                        </Text>
+                                        <Text variant="bodyMedium">
+                                            {selectedStockIn.details.length}
+                                        </Text>
+                                    </View>
+                                </View>
 
-        {selectedStockIn.description && (
-            <View style={styles.infoItem}>
-                <Text
-                    variant="bodySmall"
-                    style={styles.infoLabel}
-                >
-                    Description:
-                </Text>
-                <Text variant="bodyMedium">
-                    {selectedStockIn.description}
-                </Text>
-            </View>
-        )}
+                                {selectedStockIn.description && (
+                                    <View style={styles.infoItem}>
+                                        <Text
+                                            variant="bodySmall"
+                                            style={styles.infoLabel}
+                                        >
+                                            Description:
+                                        </Text>
+                                        <Text variant="bodyMedium">
+                                            {selectedStockIn.description}
+                                        </Text>
+                                    </View>
+                                )}
 
-        {selectedStockIn.notes && (
-            <>
-                <Divider style={styles.divider} />
-                <View>
-                    <Text
-                        variant="bodySmall"
-                        style={styles.infoLabel}
-                    >
-                        Notes:
-                    </Text>
-                    <Text variant="bodyMedium">
-                        {selectedStockIn.notes}
-                    </Text>
-                </View>
-            </>
-        )}
-    </Card.Content>
-</Card>
+                                {selectedStockIn.notes && (
+                                    <>
+                                        <Divider style={styles.divider} />
+                                        <View>
+                                            <Text
+                                                variant="bodySmall"
+                                                style={styles.infoLabel}
+                                            >
+                                                Notes:
+                                            </Text>
+                                            <Text variant="bodyMedium">
+                                                {selectedStockIn.notes}
+                                            </Text>
+                                        </View>
+                                    </>
+                                )}
+                            </Card.Content>
+                        </Card>
 
                         {/* Products Table */}
                         <Card style={styles.productsCard}>
-    <Card.Content>
-        <Text
-            variant="titleMedium"
-            style={styles.sectionTitle}
-        >
-            Items
-        </Text>
+                            <Card.Content>
+                                <Text
+                                    variant="titleMedium"
+                                    style={styles.sectionTitle}
+                                >
+                                    Items
+                                </Text>
 
-        <DataTable>
-            <DataTable.Header>
-                <DataTable.Title>ID</DataTable.Title>
-                <DataTable.Title style={styles.productNameCell}>
-                    Item
-                </DataTable.Title>
-                <DataTable.Title numeric>
-                    Qty
-                </DataTable.Title>
-                <DataTable.Title numeric>
-                    Price
-                </DataTable.Title>
-                <DataTable.Title numeric>
-                    Subtotal
-                </DataTable.Title>
-            </DataTable.Header>
+                                <DataTable>
+                                    <DataTable.Header>
+                                        <DataTable.Title>ID</DataTable.Title>
+                                        <DataTable.Title
+                                            style={styles.productNameCell}
+                                        >
+                                            Item
+                                        </DataTable.Title>
+                                        <DataTable.Title numeric>
+                                            Qty
+                                        </DataTable.Title>
+                                        <DataTable.Title numeric>
+                                            Price
+                                        </DataTable.Title>
+                                        <DataTable.Title numeric>
+                                            Subtotal
+                                        </DataTable.Title>
+                                    </DataTable.Header>
 
-            {selectedStockIn.details.map((detail, index) => (
-                <DataTable.Row key={detail.id || index}>
-                    <DataTable.Cell>
-                        {detail.goodsId.substring(0, 8)}...
-                    </DataTable.Cell>
-                    <DataTable.Cell style={styles.productNameCell}>
-                        {detail.goods?.name || `Item #${index + 1}`}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                        {detail.quantity}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                        ${formatAmount(detail.price)}
-                    </DataTable.Cell>
-                    <DataTable.Cell numeric>
-                        ${formatAmount(String(parseFloat(detail.price) * detail.quantity))}
-                    </DataTable.Cell>
-                </DataTable.Row>
-            ))}
+                                    {selectedStockIn.details.map(
+                                        (detail, index) => (
+                                            <DataTable.Row
+                                                key={detail.id || index}
+                                            >
+                                                <DataTable.Cell>
+                                                    {detail.goodsId.substring(
+                                                        0,
+                                                        8
+                                                    )}
+                                                    ...
+                                                </DataTable.Cell>
+                                                <DataTable.Cell
+                                                    style={
+                                                        styles.productNameCell
+                                                    }
+                                                >
+                                                    {detail.goods?.name ||
+                                                        `Item #${index + 1}`}
+                                                </DataTable.Cell>
+                                                <DataTable.Cell numeric>
+                                                    {detail.quantity}
+                                                </DataTable.Cell>
+                                                <DataTable.Cell numeric>
+                                                    $
+                                                    {formatAmount(detail.price)}
+                                                </DataTable.Cell>
+                                                <DataTable.Cell numeric>
+                                                    $
+                                                    {formatAmount(
+                                                        String(
+                                                            parseFloat(
+                                                                detail.price
+                                                            ) * detail.quantity
+                                                        )
+                                                    )}
+                                                </DataTable.Cell>
+                                            </DataTable.Row>
+                                        )
+                                    )}
 
-            <DataTable.Row style={styles.totalRow}>
-                <DataTable.Cell
-                    style={styles.productNameCell}
-                    colSpan={3}
-                >
-                    <Text
-                        variant="bodyMedium"
-                        style={styles.totalLabel}
-                    >
-                        Total
-                    </Text>
-                </DataTable.Cell>
-                <DataTable.Cell numeric></DataTable.Cell>
-                <DataTable.Cell numeric>
-                    <Text
-                        variant="bodyLarge"
-                        style={styles.totalValue}
-                    >
-                        ${formatAmount(selectedStockIn.totalAmount)}
-                    </Text>
-                </DataTable.Cell>
-            </DataTable.Row>
-        </DataTable>
-    </Card.Content>
-</Card>
+                                    <DataTable.Row style={styles.totalRow}>
+                                        <DataTable.Cell
+                                            style={styles.productNameCell}
+                                            colSpan={3}
+                                        >
+                                            <Text
+                                                variant="bodyMedium"
+                                                style={styles.totalLabel}
+                                            >
+                                                Total
+                                            </Text>
+                                        </DataTable.Cell>
+                                        <DataTable.Cell
+                                            numeric
+                                        ></DataTable.Cell>
+                                        <DataTable.Cell numeric>
+                                            <Text
+                                                variant="bodyLarge"
+                                                style={styles.totalValue}
+                                            >
+                                                $
+                                                {formatAmount(
+                                                    selectedStockIn.totalAmount
+                                                )}
+                                            </Text>
+                                        </DataTable.Cell>
+                                    </DataTable.Row>
+                                </DataTable>
+                            </Card.Content>
+                        </Card>
 
                         {/* Action Buttons */}
                         {isProcessable && (

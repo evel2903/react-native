@@ -1,77 +1,77 @@
 // src/Common/Infrastructure/Models/GoodsDto.ts
-import { Expose, Type } from 'class-transformer';
-import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto';
-import { GoodsEntity } from '../../Domain/Entities/GoodsEntity';
+import { Expose, Type } from 'class-transformer'
+import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
+import { GoodsEntity } from '../../Domain/Entities/GoodsEntity'
 
 export class GoodsUnitDto {
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 }
 
 export class GoodsCategoryDto {
     @Expose()
-    code!: string;
+    code!: string
 
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 }
 
 export class GoodsDto extends ResponseDto<GoodsEntity> {
     @Expose()
-    id!: string;
+    id!: string
 
     @Expose()
-    code!: string;
+    code!: string
 
     @Expose()
-    name!: string;
+    name!: string
 
     @Expose()
-    customCode?: string | null;
+    customCode?: string | null
 
     @Expose()
-    description?: string;
+    description?: string
 
     @Expose()
-    imageName?: string | null;
+    imageName?: string | null
 
     @Expose()
-    imageUrl?: string | null;
+    imageUrl?: string | null
 
     @Expose()
-    unitId!: string;
+    unitId!: string
 
     @Expose()
     @Type(() => GoodsUnitDto)
-    unit?: GoodsUnitDto;
+    unit?: GoodsUnitDto
 
     @Expose()
-    categoryId!: string;
+    categoryId!: string
 
     @Expose()
     @Type(() => GoodsCategoryDto)
-    category?: GoodsCategoryDto;
+    category?: GoodsCategoryDto
 
     @Expose()
-    isActive!: boolean;
+    isActive!: boolean
 
     @Expose()
-    isDeleted!: boolean;
+    isDeleted!: boolean
 
     @Expose()
-    stockInAlertQuantity?: number;
+    stockInAlertQuantity?: number
 
     toDomain(): GoodsEntity {
         return {
@@ -88,7 +88,7 @@ export class GoodsDto extends ResponseDto<GoodsEntity> {
             category: this.category,
             isActive: this.isActive,
             isDeleted: this.isDeleted,
-            stockInAlertQuantity: this.stockInAlertQuantity
-        };
+            stockInAlertQuantity: this.stockInAlertQuantity,
+        }
     }
 }

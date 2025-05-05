@@ -1,5 +1,5 @@
 export interface GoodsEntity {
-    id: string;
-    name: string;
+    id: string
+    name: string
     // Other properties as needed
 }
