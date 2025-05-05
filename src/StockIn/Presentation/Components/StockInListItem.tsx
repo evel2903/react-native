@@ -106,8 +106,7 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                 </Text>
                 <Text style={styles.infoText}>
                     Supplier:{' '}
-                    {`${item.supplier?.code} - ${item.supplier?.name}` ||
-                        'N/A'}
+                    {`${item.supplier?.code} - ${item.supplier?.name}` || 'N/A'}
                 </Text>
 
                 {/* Details row with quantity and cost */}
@@ -133,7 +132,10 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                     <Chip
                         style={[
                             styles.statusChip,
-                            { backgroundColor: getStatusDetails(item.status).color }
+                            {
+                                backgroundColor: getStatusDetails(item.status)
+                                    .color,
+                            },
                         ]}
                         textStyle={styles.statusText}
                     >

@@ -20,6 +20,7 @@ export type RootStackParamList = {
     Inventory: undefined
     InventoryProcess: { id: string }
     StockIn: undefined
+    StockInAdd: undefined // Added StockInAdd route
     StockInProcess: { id: string }
     StockOut: undefined
     StockOutProcess: { id: string }

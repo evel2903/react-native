@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react'
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native'
 import {
     Card,
     TextInput,
@@ -9,29 +9,37 @@ import {
     Text,
     Chip,
     IconButton,
-} from 'react-native-paper';
-import { observer } from 'mobx-react';
-import { useStockInStore } from '../Stores/StockInStore/UseStockInStore';
-import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore';
-import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders';
-import { MasterDataStoreProvider } from '@/src/Common/Presentation/Stores/MasterDataStore/MasterDataStoreProvider';
-import { PRIORITY, getPriorityColor, getPriorityDisplayName } from '@/src/Common/Domain/Enums/Priority';
-import { Status } from '@/src/Common/Domain/Enums/Status';
+} from 'react-native-paper'
+import { observer } from 'mobx-react'
+import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
+import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
+import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
+import { MasterDataStoreProvider } from '@/src/Common/Presentation/Stores/MasterDataStore/MasterDataStoreProvider'
+import {
+    PRIORITY,
+    getPriorityColor,
+    getPriorityDisplayName,
+} from '@/src/Common/Domain/Enums/Priority'
+import { Status } from '@/src/Common/Domain/Enums/Status'
 
 const StockInFilterForm = observer(() => {
-    const stockInStore = useStockInStore();
-    const masterDataStore = useMasterDataStore();
-    const windowHeight = Dimensions.get('window').height;
-    
-    const [statusMenuVisible, setStatusMenuVisible] = useState(false);
-    const [priorityMenuVisible, setPriorityMenuVisible] = useState(false);
-    const [supplierMenuVisible, setSupplierMenuVisible] = useState(false);
-    
-    const [code, setCode] = useState(stockInStore.filters.code || '');
-    const [lotNumber, setLotNumber] = useState(stockInStore.filters.lotNumber || '');
-    const [startDate, setStartDate] = useState(stockInStore.filters.startDate || '');
-    const [endDate, setEndDate] = useState(stockInStore.filters.endDate || '');
-    
+    const stockInStore = useStockInStore()
+    const masterDataStore = useMasterDataStore()
+    const windowHeight = Dimensions.get('window').height
+
+    const [statusMenuVisible, setStatusMenuVisible] = useState(false)
+    const [priorityMenuVisible, setPriorityMenuVisible] = useState(false)
+    const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
+
+    const [code, setCode] = useState(stockInStore.filters.code || '')
+    const [lotNumber, setLotNumber] = useState(
+        stockInStore.filters.lotNumber || ''
+    )
+    const [startDate, setStartDate] = useState(
+        stockInStore.filters.startDate || ''
+    )
+    const [endDate, setEndDate] = useState(stockInStore.filters.endDate || '')
+
     // Status options for dropdown
     const statusOptions = [
         { value: Status.Draft, label: 'Draft' },
@@ -39,37 +47,37 @@ const StockInFilterForm = observer(() => {
         { value: Status.Approved, label: 'Approved' },
         { value: Status.Rejected, label: 'Rejected' },
         { value: Status.Cancelled, label: 'Cancelled' },
-    ];
-    
+    ]
+
     // Priority options for dropdown
     const priorityOptions = [
         { value: PRIORITY.High, label: 'High' },
         { value: PRIORITY.Medium, label: 'Medium' },
         { value: PRIORITY.Low, label: 'Low' },
-    ];
-    
+    ]
+
     // Load suppliers for filter
     useEffect(() => {
         const loadData = async () => {
             if (masterDataStore.suppliers.data.length === 0) {
-                await masterDataStore.loadSuppliers();
+                await masterDataStore.loadSuppliers()
             }
-        };
-        
-        loadData();
-    }, [masterDataStore]);
-    
+        }
+
+        loadData()
+    }, [masterDataStore])
+
     // Format date for display
     const formatDate = (dateString: string) => {
-        if (!dateString) return '';
+        if (!dateString) return ''
         try {
-            const date = new Date(dateString);
-            return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const date = new Date(dateString)
+            return date.toISOString().split('T')[0] // YYYY-MM-DD format
         } catch (e) {
-            return dateString;
+            return dateString
         }
-    };
-    
+    }
+
     // Apply all filters
     const applyFilters = () => {
         stockInStore.applyFilters({
@@ -80,18 +88,18 @@ const StockInFilterForm = observer(() => {
             lotNumber: lotNumber || undefined,
             startDate: startDate || undefined,
             endDate: endDate || undefined,
-        });
-    };
-    
+        })
+    }
+
     // Clear all filters
     const clearFilters = () => {
-        setCode('');
-        setLotNumber('');
-        setStartDate('');
-        setEndDate('');
-        stockInStore.resetFilters();
-    };
-    
+        setCode('')
+        setLotNumber('')
+        setStartDate('')
+        setEndDate('')
+        stockInStore.resetFilters()
+    }
+
     // Check if any filters are active
     const hasActiveFilters = () => {
         return (
@@ -102,15 +110,15 @@ const StockInFilterForm = observer(() => {
             !!lotNumber ||
             !!startDate ||
             !!endDate
-        );
-    };
+        )
+    }
 
     // Calculate appropriate scroll height based on screen size
     const getScrollHeight = () => {
         // Use 40% of screen height as maximum for the filter form scroll area
-        return Math.min(400, windowHeight * 0.4);
-    };
-    
+        return Math.min(400, windowHeight * 0.4)
+    }
+
     return (
         <Card style={styles.card}>
             <Card.Content>
@@ -118,15 +126,18 @@ const StockInFilterForm = observer(() => {
                     <Text variant="titleMedium" style={styles.title}>
                         Filter Stock Ins
                     </Text>
-                    <IconButton 
-                        icon="close" 
-                        size={20} 
+                    <IconButton
+                        icon="close"
+                        size={20}
                         onPress={() => stockInStore.setFilterVisible(false)}
                     />
                 </View>
 
-                <ScrollView 
-                    style={[styles.scrollContainer, { maxHeight: getScrollHeight() }]}
+                <ScrollView
+                    style={[
+                        styles.scrollContainer,
+                        { maxHeight: getScrollHeight() },
+                    ]}
                     showsVerticalScrollIndicator={true}
                 >
                     {/* Code filter */}
@@ -163,17 +174,25 @@ const StockInFilterForm = observer(() => {
                                     style={styles.dropdownButton}
                                 >
                                     {stockInStore.filters.status
-                                        ? `Status: ${statusOptions.find(
-                                              s => s.value === stockInStore.filters.status
-                                          )?.label || stockInStore.filters.status}`
+                                        ? `Status: ${
+                                              statusOptions.find(
+                                                  s =>
+                                                      s.value ===
+                                                      stockInStore.filters
+                                                          .status
+                                              )?.label ||
+                                              stockInStore.filters.status
+                                          }`
                                         : 'Select Status'}
                                 </Button>
                             }
                         >
                             <Menu.Item
                                 onPress={() => {
-                                    stockInStore.mergeFilters({ status: undefined });
-                                    setStatusMenuVisible(false);
+                                    stockInStore.mergeFilters({
+                                        status: undefined,
+                                    })
+                                    setStatusMenuVisible(false)
                                 }}
                                 title="All Statuses"
                             />
@@ -184,8 +203,8 @@ const StockInFilterForm = observer(() => {
                                     onPress={() => {
                                         stockInStore.mergeFilters({
                                             status: status.value as any,
-                                        });
-                                        setStatusMenuVisible(false);
+                                        })
+                                        setStatusMenuVisible(false)
                                     }}
                                     title={status.label}
                                 />
@@ -209,8 +228,10 @@ const StockInFilterForm = observer(() => {
                                               priorityOptions.find(
                                                   p =>
                                                       p.value ===
-                                                      stockInStore.filters.priority
-                                              )?.label || stockInStore.filters.priority
+                                                      stockInStore.filters
+                                                          .priority
+                                              )?.label ||
+                                              stockInStore.filters.priority
                                           }`
                                         : 'Select Priority'}
                                 </Button>
@@ -218,8 +239,10 @@ const StockInFilterForm = observer(() => {
                         >
                             <Menu.Item
                                 onPress={() => {
-                                    stockInStore.mergeFilters({ priority: undefined });
-                                    setPriorityMenuVisible(false);
+                                    stockInStore.mergeFilters({
+                                        priority: undefined,
+                                    })
+                                    setPriorityMenuVisible(false)
                                 }}
                                 title="All Priorities"
                             />
@@ -230,8 +253,8 @@ const StockInFilterForm = observer(() => {
                                     onPress={() => {
                                         stockInStore.mergeFilters({
                                             priority: priority.value as any,
-                                        });
-                                        setPriorityMenuVisible(false);
+                                        })
+                                        setPriorityMenuVisible(false)
                                     }}
                                     title={priority.label}
                                 />
@@ -255,7 +278,8 @@ const StockInFilterForm = observer(() => {
                                               masterDataStore.suppliers.data.find(
                                                   s =>
                                                       s.id ===
-                                                      stockInStore.filters.supplierId
+                                                      stockInStore.filters
+                                                          .supplierId
                                               )?.name || 'Selected'
                                           }`
                                         : 'Select Supplier'}
@@ -266,8 +290,10 @@ const StockInFilterForm = observer(() => {
                             <ScrollView style={styles.menuScrollView}>
                                 <Menu.Item
                                     onPress={() => {
-                                        stockInStore.mergeFilters({ supplierId: undefined });
-                                        setSupplierMenuVisible(false);
+                                        stockInStore.mergeFilters({
+                                            supplierId: undefined,
+                                        })
+                                        setSupplierMenuVisible(false)
                                     }}
                                     title="All Suppliers"
                                 />
@@ -280,8 +306,8 @@ const StockInFilterForm = observer(() => {
                                             onPress={() => {
                                                 stockInStore.mergeFilters({
                                                     supplierId: supplier.id,
-                                                });
-                                                setSupplierMenuVisible(false);
+                                                })
+                                                setSupplierMenuVisible(false)
                                             }}
                                             title={`${supplier.name} (${supplier.code})`}
                                         />
@@ -292,7 +318,10 @@ const StockInFilterForm = observer(() => {
 
                     {/* Date range filters */}
                     <View style={styles.dateRangeContainer}>
-                        <Text variant="bodyMedium" style={styles.dateRangeLabel}>
+                        <Text
+                            variant="bodyMedium"
+                            style={styles.dateRangeLabel}
+                        >
                             Date Range:
                         </Text>
                         <View style={styles.dateInputsRow}>
@@ -320,11 +349,14 @@ const StockInFilterForm = observer(() => {
                 {/* Active filters display */}
                 {hasActiveFilters() && (
                     <View style={styles.activeFiltersContainer}>
-                        <Text variant="bodySmall" style={styles.activeFiltersLabel}>
+                        <Text
+                            variant="bodySmall"
+                            style={styles.activeFiltersLabel}
+                        >
                             Active Filters:
                         </Text>
-                        <ScrollView 
-                            horizontal 
+                        <ScrollView
+                            horizontal
                             showsHorizontalScrollIndicator={true}
                             style={styles.chipScrollContainer}
                         >
@@ -342,44 +374,61 @@ const StockInFilterForm = observer(() => {
                                     <Chip
                                         mode="outlined"
                                         onClose={() =>
-                                            stockInStore.mergeFilters({ status: undefined })
+                                            stockInStore.mergeFilters({
+                                                status: undefined,
+                                            })
                                         }
                                         style={styles.filterChip}
                                     >
-                                        Status: {
-                                            statusOptions.find(
-                                                s => s.value === stockInStore.filters.status
-                                            )?.label || stockInStore.filters.status
-                                        }
+                                        Status:{' '}
+                                        {statusOptions.find(
+                                            s =>
+                                                s.value ===
+                                                stockInStore.filters.status
+                                        )?.label || stockInStore.filters.status}
                                     </Chip>
                                 )}
-                                {stockInStore.filters.priority !== undefined && (
+                                {stockInStore.filters.priority !==
+                                    undefined && (
                                     <Chip
                                         mode="outlined"
                                         onClose={() =>
-                                            stockInStore.mergeFilters({ priority: undefined })
+                                            stockInStore.mergeFilters({
+                                                priority: undefined,
+                                            })
                                         }
                                         style={[
                                             styles.filterChip,
-                                            { borderColor: getPriorityColor(stockInStore.filters.priority) }
+                                            {
+                                                borderColor: getPriorityColor(
+                                                    stockInStore.filters
+                                                        .priority
+                                                ),
+                                            },
                                         ]}
                                     >
-                                        Priority: {getPriorityDisplayName(stockInStore.filters.priority)}
+                                        Priority:{' '}
+                                        {getPriorityDisplayName(
+                                            stockInStore.filters.priority
+                                        )}
                                     </Chip>
                                 )}
                                 {stockInStore.filters.supplierId && (
                                     <Chip
                                         mode="outlined"
                                         onClose={() =>
-                                            stockInStore.mergeFilters({ supplierId: undefined })
+                                            stockInStore.mergeFilters({
+                                                supplierId: undefined,
+                                            })
                                         }
                                         style={styles.filterChip}
                                     >
-                                        Supplier: {
-                                            masterDataStore.suppliers.data.find(
-                                                s => s.id === stockInStore.filters.supplierId
-                                            )?.name || 'Selected'
-                                        }
+                                        Supplier:{' '}
+                                        {masterDataStore.suppliers.data.find(
+                                            s =>
+                                                s.id ===
+                                                stockInStore.filters.supplierId
+                                        )?.name || 'Selected'}
                                     </Chip>
                                 )}
                                 {lotNumber && (
@@ -395,12 +444,16 @@ const StockInFilterForm = observer(() => {
                                     <Chip
                                         mode="outlined"
                                         onClose={() => {
-                                            setStartDate('');
-                                            setEndDate('');
+                                            setStartDate('')
+                                            setEndDate('')
                                         }}
                                         style={styles.filterChip}
                                     >
-                                        Date: {startDate ? formatDate(startDate) : 'Any'} to{' '}
+                                        Date:{' '}
+                                        {startDate
+                                            ? formatDate(startDate)
+                                            : 'Any'}{' '}
+                                        to{' '}
                                         {endDate ? formatDate(endDate) : 'Any'}
                                     </Chip>
                                 )}
@@ -428,8 +481,8 @@ const StockInFilterForm = observer(() => {
                 </View>
             </Card.Content>
         </Card>
-    );
-});
+    )
+})
 
 const styles = StyleSheet.create({
     card: {
@@ -511,6 +564,6 @@ const styles = StyleSheet.create({
     applyButton: {
         flex: 2,
     },
-});
+})
 
-export default withProviders(MasterDataStoreProvider)(StockInFilterForm);
+export default withProviders(MasterDataStoreProvider)(StockInFilterForm)

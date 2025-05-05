@@ -3,6 +3,7 @@ import { StockInStore } from './Presentation/Stores/StockInStore/StockInStore'
 import { IStockInRepositoryToken } from './Domain/Specifications/IStockInRepository'
 import StockInRepository from './Infrastructure/Implementations/StockInRepository'
 import GetStockInsUseCase from './Application/UseCases/GetStockInsUseCase'
+import CreateStockInUseCase from './Application/UseCases/CreateStockInUseCase'
 
 @module({
     providers: [
@@ -11,6 +12,7 @@ import GetStockInsUseCase from './Application/UseCases/GetStockInsUseCase'
             useClass: StockInRepository,
         },
         GetStockInsUseCase,
+        CreateStockInUseCase, // Added CreateStockInUseCase
         {
             useClass: StockInStore,
             scope: 'Transient',

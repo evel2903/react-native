@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { View, StyleSheet, FlatList, RefreshControl, Dimensions } from 'react-native'
+import {
+    View,
+    StyleSheet,
+    FlatList,
+    RefreshControl,
+    Dimensions,
+} from 'react-native'
 import {
     Appbar,
     Searchbar,
@@ -39,8 +45,7 @@ const StockInScreen = observer(() => {
 
     const handleAddStockIn = () => {
         // Navigate to add stock in screen
-        // This would be implemented in a real app
-        console.log('Add stock in pressed')
+        navigation.navigate('StockInAdd')
     }
 
     const handleSearch = () => {
@@ -89,7 +94,12 @@ const StockInScreen = observer(() => {
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.theme.colors.background }]}>
+        <View
+            style={[
+                styles.container,
+                { backgroundColor: theme.theme.colors.background },
+            ]}
+        >
             <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
             <SafeAreaView style={styles.safeArea} edges={['right', 'left']}>
                 <Appbar.Header>
@@ -108,12 +118,14 @@ const StockInScreen = observer(() => {
                         onClearIconPress={handleClearSearch}
                         style={styles.searchbar}
                     />
-                    <IconButton 
-                        icon="filter-variant" 
+                    <IconButton
+                        icon="filter-variant"
                         onPress={handleToggleFilter}
                         style={[
                             styles.filterButton,
-                            stockInStore.filterVisible ? styles.filterButtonActive : {}
+                            stockInStore.filterVisible
+                                ? styles.filterButtonActive
+                                : {},
                         ]}
                     />
                 </View>
@@ -161,7 +173,7 @@ const StockInScreen = observer(() => {
                         )}
                         contentContainerStyle={[
                             styles.listContent,
-                            { minHeight: getListHeight() }
+                            { minHeight: getListHeight() },
                         ]}
                         refreshControl={
                             <RefreshControl

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { 
-    View, 
-    StyleSheet, 
-    ScrollView, 
-    KeyboardAvoidingView, 
-    Platform, 
+import {
+    View,
+    StyleSheet,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
     Keyboard,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback,
 } from 'react-native'
 import {
     TextInput,
@@ -46,7 +46,9 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [dialogVisible, setDialogVisible] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [currentFocusedField, setCurrentFocusedField] = useState<string | null>(null)
+    const [currentFocusedField, setCurrentFocusedField] = useState<
+        string | null
+    >(null)
 
     // Load master data when component mounts
     useEffect(() => {
@@ -77,7 +79,7 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     // Handle scroll to focused input
     const handleFocus = (fieldName: string) => {
         setCurrentFocusedField(fieldName)
-        
+
         // Add a small delay to ensure the keyboard is shown before scrolling
         setTimeout(() => {
             scrollViewRef.current?.scrollTo({
@@ -147,7 +149,7 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
 
     const handleSubmit = async () => {
         dismissKeyboard()
-        
+
         if (!validateForm()) {
             return
         }
@@ -201,8 +203,16 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
 
     if (isLoading) {
         return (
-            <View style={[styles.loadingContainer, { backgroundColor: theme.theme.colors.background }]}>
-                <ActivityIndicator size="large" color={theme.theme.colors.primary} />
+            <View
+                style={[
+                    styles.loadingContainer,
+                    { backgroundColor: theme.theme.colors.background },
+                ]}
+            >
+                <ActivityIndicator
+                    size="large"
+                    color={theme.theme.colors.primary}
+                />
                 <Text style={styles.loadingText}>Loading master data...</Text>
             </View>
         )
@@ -211,7 +221,10 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={[styles.container, { backgroundColor: theme.theme.colors.background }]}
+            style={[
+                styles.container,
+                { backgroundColor: theme.theme.colors.background },
+            ]}
         >
             <TouchableWithoutFeedback onPress={dismissKeyboard}>
                 <View style={styles.innerContainer}>
@@ -219,14 +232,10 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                         <Text variant="titleLarge" style={styles.title}>
                             Create Stock In Record
                         </Text>
-                        <IconButton
-                            icon="close"
-                            size={24}
-                            onPress={onCancel}
-                        />
+                        <IconButton icon="close" size={24} onPress={onCancel} />
                     </Surface>
 
-                    <ScrollView 
+                    <ScrollView
                         ref={scrollViewRef}
                         style={styles.scrollView}
                         contentContainerStyle={styles.scrollContent}
@@ -257,18 +266,24 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                         >
                             <ScrollView style={styles.menuScrollView}>
                                 {masterDataStore.goods.data
-                                    .filter(item => item.isActive && !item.isDeleted)
+                                    .filter(
+                                        item => item.isActive && !item.isDeleted
+                                    )
                                     .map(goods => (
                                         <Menu.Item
                                             key={goods.id}
-                                            onPress={() => selectGoods(goods.id)}
+                                            onPress={() =>
+                                                selectGoods(goods.id)
+                                            }
                                             title={`${goods.name} (${goods.code})`}
                                         />
                                     ))}
                             </ScrollView>
                         </Menu>
                         {errors.productId && (
-                            <HelperText type="error">{errors.productId}</HelperText>
+                            <HelperText type="error">
+                                {errors.productId}
+                            </HelperText>
                         )}
 
                         <View style={styles.row}>
@@ -278,7 +293,10 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                                     value={stockInStore.formData.quantity.toString()}
                                     onChangeText={text => {
                                         const num = parseFloat(text)
-                                        updateField('quantity', isNaN(num) ? 0 : num)
+                                        updateField(
+                                            'quantity',
+                                            isNaN(num) ? 0 : num
+                                        )
                                     }}
                                     keyboardType="numeric"
                                     mode="outlined"
@@ -314,13 +332,17 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                                 >
                                     {masterDataStore.units.data
                                         .filter(
-                                            unit => unit.isActive && !unit.isDeleted
+                                            unit =>
+                                                unit.isActive && !unit.isDeleted
                                         )
                                         .map(unit => (
                                             <Menu.Item
                                                 key={unit.id}
                                                 onPress={() => {
-                                                    updateField('unit', unit.name)
+                                                    updateField(
+                                                        'unit',
+                                                        unit.name
+                                                    )
                                                     setUnitMenuVisible(false)
                                                 }}
                                                 title={unit.name}
@@ -328,7 +350,9 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                                         ))}
                                 </Menu>
                                 {errors.unit && (
-                                    <HelperText type="error">{errors.unit}</HelperText>
+                                    <HelperText type="error">
+                                        {errors.unit}
+                                    </HelperText>
                                 )}
                             </View>
                         </View>
@@ -364,25 +388,32 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                                 {masterDataStore.suppliers.data
                                     .filter(
                                         supplier =>
-                                            supplier.isActive && !supplier.isDeleted
+                                            supplier.isActive &&
+                                            !supplier.isDeleted
                                     )
                                     .map(supplier => (
                                         <Menu.Item
                                             key={supplier.id}
-                                            onPress={() => selectSupplier(supplier.id)}
+                                            onPress={() =>
+                                                selectSupplier(supplier.id)
+                                            }
                                             title={`${supplier.name} (${supplier.code})`}
                                         />
                                     ))}
                             </ScrollView>
                         </Menu>
                         {errors.supplierName && (
-                            <HelperText type="error">{errors.supplierName}</HelperText>
+                            <HelperText type="error">
+                                {errors.supplierName}
+                            </HelperText>
                         )}
 
                         <TextInput
                             label="Supplier Invoice"
                             value={stockInStore.formData.supplierInvoice || ''}
-                            onChangeText={text => updateField('supplierInvoice', text)}
+                            onChangeText={text =>
+                                updateField('supplierInvoice', text)
+                            }
                             mode="outlined"
                             style={styles.input}
                             onFocus={() => handleFocus('invoice')}
@@ -408,14 +439,18 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                         <TextInput
                             label="Received By *"
                             value={stockInStore.formData.receivedBy}
-                            onChangeText={text => updateField('receivedBy', text)}
+                            onChangeText={text =>
+                                updateField('receivedBy', text)
+                            }
                             mode="outlined"
                             style={styles.input}
                             error={!!errors.receivedBy}
                             onFocus={() => handleFocus('receivedBy')}
                         />
                         {errors.receivedBy && (
-                            <HelperText type="error">{errors.receivedBy}</HelperText>
+                            <HelperText type="error">
+                                {errors.receivedBy}
+                            </HelperText>
                         )}
 
                         <Menu
@@ -433,7 +468,9 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                                 >
                                     Status:{' '}
                                     {statusOptions.find(
-                                        s => s.value === stockInStore.formData.status
+                                        s =>
+                                            s.value ===
+                                            stockInStore.formData.status
                                     )?.label || 'Draft'}
                                 </Button>
                             }

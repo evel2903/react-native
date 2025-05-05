@@ -5,6 +5,7 @@ import NotFoundScreen from '../Screens/NotFoundScreen'
 import AuthScreen from '@/src/Auth/Presentation/Screens/AuthScreen'
 import HomeScreen from '../Screens/HomeScreen'
 import StockInScreen from '@/src/StockIn/Presentation/Screens/StockInScreen'
+import StockInAddScreen from '@/src/StockIn/Presentation/Screens/StockInAddScreen'
 import StockInProcessScreen from '@/src/StockIn/Presentation/Screens/StockInProcessScreen'
 import { useTheme } from '../Theme/ThemeProvider'
 import { observer } from 'mobx-react'
@@ -38,6 +39,7 @@ const RootNavigator = observer(() => {
             />
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="StockIn" component={StockInScreen} />
+            <Stack.Screen name="StockInAdd" component={StockInAddScreen} />
             <Stack.Screen
                 name="StockInProcess"
                 component={StockInProcessScreen}

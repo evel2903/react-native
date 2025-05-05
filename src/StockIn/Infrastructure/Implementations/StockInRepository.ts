@@ -1,8 +1,10 @@
 import { injectable, inject } from 'inversiland'
 import { IStockInRepository } from '../../Domain/Specifications/IStockInRepository'
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
+import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
 import StockInDto from '../Models/StockInDto'
+import CreateStockInDto from '../Models/CreateStockInDto'
 import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
     IHttpClientToken,
@@ -16,65 +18,94 @@ class StockInRepository implements IStockInRepository {
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
     ) {}
 
+    public async createStockIn(
+        payload: CreateStockInPayload
+    ): Promise<StockInEntity> {
+        try {
+            // Transform the payload to DTO
+            const createStockInDto = new CreateStockInDto(payload)
+
+            // Make API request to create stock in
+            const response: any = await this.httpClient.post(
+                this.baseUrl,
+                createStockInDto.toPlain()
+            )
+
+            // Check if the response has the expected structure
+            if (!response || !response.data) {
+                throw new Error('Failed to create stock in record')
+            }
+
+            // Transform the response to domain entity
+            const stockInDto = plainToInstance(StockInDto, response.data)
+            return stockInDto.toDomain()
+        } catch (error) {
+            console.error('Error creating stock in:', error)
+            throw error instanceof Error
+                ? error
+                : new Error('Failed to create stock in record')
+        }
+    }
+
     public async getStockIns(
         payload: GetStockInsPayload
     ): Promise<{ results: StockInEntity[]; count: number }> {
         try {
             // Build query parameters
-            const queryParams = new URLSearchParams();
-            
+            const queryParams = new URLSearchParams()
+
             // Pagination parameters
             if (payload.page) {
-                queryParams.append('page', payload.page.toString());
+                queryParams.append('page', payload.page.toString())
             }
-            
+
             if (payload.pageSize) {
-                queryParams.append('pageSize', payload.pageSize.toString());
+                queryParams.append('pageSize', payload.pageSize.toString())
             }
-            
+
             // Filter parameters
             if (payload.code) {
-                queryParams.append('code', payload.code);
+                queryParams.append('code', payload.code)
             }
-            
+
             if (payload.status) {
-                queryParams.append('status', payload.status);
+                queryParams.append('status', payload.status)
             }
-            
+
             if (payload.priority !== undefined) {
-                queryParams.append('priority', payload.priority.toString());
+                queryParams.append('priority', payload.priority.toString())
             }
-            
+
             if (payload.supplierId) {
-                queryParams.append('supplierId', payload.supplierId);
+                queryParams.append('supplierId', payload.supplierId)
             }
-            
+
             if (payload.lotNumber) {
-                queryParams.append('lotNumber', payload.lotNumber);
+                queryParams.append('lotNumber', payload.lotNumber)
             }
-            
+
             if (payload.startDate) {
-                queryParams.append('startDate', payload.startDate);
+                queryParams.append('startDate', payload.startDate)
             }
-            
+
             if (payload.endDate) {
-                queryParams.append('endDate', payload.endDate);
+                queryParams.append('endDate', payload.endDate)
             }
-            
+
             if (payload.search) {
-                queryParams.append('search', payload.search);
+                queryParams.append('search', payload.search)
             }
-            
-            const url = `${this.baseUrl}?${queryParams.toString()}`;
-            
+
+            const url = `${this.baseUrl}?${queryParams.toString()}`
+
             // Make API request
-            const response: any = await this.httpClient.get(url);
-            
+            const response: any = await this.httpClient.get(url)
+
             // Check if the response has the expected structure
             if (!response || !response.data || !Array.isArray(response.data)) {
-                throw new Error('Unexpected API response format');
+                throw new Error('Unexpected API response format')
             }
-            
+
             // Transform the data to match our domain model
             const stockInItems = response.data.map((item: any) => {
                 return {
@@ -99,21 +130,25 @@ class StockInRepository implements IStockInRepository {
                         code: item.supplierCode,
                         name: item.supplierName,
                         isActive: !item.isDeleted,
-                        isDeleted: item.isDeleted
-                    }
-                } as StockInEntity;
-            });
-            
+                        isDeleted: item.isDeleted,
+                    },
+                } as StockInEntity
+            })
+
             // Use the count from the first item or default to items length
-            const totalCount = response.total || (stockInItems.length > 0 ? stockInItems[0].count : stockInItems.length);
-            
+            const totalCount =
+                response.total ||
+                (stockInItems.length > 0
+                    ? stockInItems[0].count
+                    : stockInItems.length)
+
             return {
                 results: stockInItems,
                 count: totalCount,
-            };
+            }
         } catch (error) {
-            console.error('Error fetching stock ins:', error);
-            throw error;
+            console.error('Error fetching stock ins:', error)
+            throw error
         }
     }
 

@@ -16,9 +16,7 @@ import {
     Surface,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import {
-    RootStackScreenProps,
-} from 'src/Core/Presentation/Navigation/Types/Index'
+import { RootStackScreenProps } from 'src/Core/Presentation/Navigation/Types/Index'
 import { StatusBar } from 'expo-status-bar'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
@@ -162,10 +160,13 @@ const StockInProcessScreen = observer(
                 <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
                     <Appbar.Header>
                         <Appbar.BackAction onPress={handleGoBack} />
-                        <Appbar.Content title="Process Stock In" subtitle={selectedStockIn.code} />
+                        <Appbar.Content
+                            title="Process Stock In"
+                            subtitle={selectedStockIn.code}
+                        />
                     </Appbar.Header>
 
-                    <ScrollView 
+                    <ScrollView
                         contentContainerStyle={styles.scrollContent}
                         refreshControl={
                             <RefreshControl
@@ -200,7 +201,8 @@ const StockInProcessScreen = observer(
                                         {selectedStockIn.code}
                                     </Text>
                                     <Text variant="bodyMedium">
-                                        Date: {formatDate(selectedStockIn.inDate)}
+                                        Date:{' '}
+                                        {formatDate(selectedStockIn.inDate)}
                                     </Text>
                                 </View>
 
@@ -240,7 +242,10 @@ const StockInProcessScreen = observer(
                                             Total Amount:
                                         </Text>
                                         <Text variant="bodyMedium">
-                                            ${formatAmount(selectedStockIn.totalAmount)}
+                                            $
+                                            {formatAmount(
+                                                selectedStockIn.totalAmount
+                                            )}
                                         </Text>
                                     </View>
 
@@ -301,21 +306,52 @@ const StockInProcessScreen = observer(
                                 </Text>
 
                                 {/* Horizontal scroll wrapper for the table */}
-                                <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-                                    <View style={{ width: Math.max(windowWidth - 48, 650) }}>
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={true}
+                                >
+                                    <View
+                                        style={{
+                                            width: Math.max(
+                                                windowWidth - 48,
+                                                650
+                                            ),
+                                        }}
+                                    >
                                         <DataTable>
                                             <DataTable.Header>
-                                                <DataTable.Title style={styles.idColumn}>ID</DataTable.Title>
-                                                <DataTable.Title style={styles.productNameColumn}>
+                                                <DataTable.Title
+                                                    style={styles.idColumn}
+                                                >
+                                                    ID
+                                                </DataTable.Title>
+                                                <DataTable.Title
+                                                    style={
+                                                        styles.productNameColumn
+                                                    }
+                                                >
                                                     Item
                                                 </DataTable.Title>
-                                                <DataTable.Title numeric style={styles.quantityColumn}>
+                                                <DataTable.Title
+                                                    numeric
+                                                    style={
+                                                        styles.quantityColumn
+                                                    }
+                                                >
                                                     Qty
                                                 </DataTable.Title>
-                                                <DataTable.Title numeric style={styles.priceColumn}>
+                                                <DataTable.Title
+                                                    numeric
+                                                    style={styles.priceColumn}
+                                                >
                                                     Price
                                                 </DataTable.Title>
-                                                <DataTable.Title numeric style={styles.subtotalColumn}>
+                                                <DataTable.Title
+                                                    numeric
+                                                    style={
+                                                        styles.subtotalColumn
+                                                    }
+                                                >
                                                     Subtotal
                                                 </DataTable.Title>
                                             </DataTable.Header>
@@ -325,22 +361,60 @@ const StockInProcessScreen = observer(
                                                     <DataTable.Row
                                                         key={detail.id || index}
                                                     >
-                                                        <DataTable.Cell style={styles.idColumn}>
-                                                            {detail.goodsId.substring(0, 8)}...
+                                                        <DataTable.Cell
+                                                            style={
+                                                                styles.idColumn
+                                                            }
+                                                        >
+                                                            {detail.goodsId.substring(
+                                                                0,
+                                                                8
+                                                            )}
+                                                            ...
                                                         </DataTable.Cell>
-                                                        <DataTable.Cell style={styles.productNameColumn}>
-                                                            {detail.goods?.name || `Item #${index + 1}`}
+                                                        <DataTable.Cell
+                                                            style={
+                                                                styles.productNameColumn
+                                                            }
+                                                        >
+                                                            {detail.goods
+                                                                ?.name ||
+                                                                `Item #${
+                                                                    index + 1
+                                                                }`}
                                                         </DataTable.Cell>
-                                                        <DataTable.Cell numeric style={styles.quantityColumn}>
+                                                        <DataTable.Cell
+                                                            numeric
+                                                            style={
+                                                                styles.quantityColumn
+                                                            }
+                                                        >
                                                             {detail.quantity}
                                                         </DataTable.Cell>
-                                                        <DataTable.Cell numeric style={styles.priceColumn}>
-                                                            ${formatAmount(detail.price)}
+                                                        <DataTable.Cell
+                                                            numeric
+                                                            style={
+                                                                styles.priceColumn
+                                                            }
+                                                        >
+                                                            $
+                                                            {formatAmount(
+                                                                detail.price
+                                                            )}
                                                         </DataTable.Cell>
-                                                        <DataTable.Cell numeric style={styles.subtotalColumn}>
-                                                            ${formatAmount(
+                                                        <DataTable.Cell
+                                                            numeric
+                                                            style={
+                                                                styles.subtotalColumn
+                                                            }
+                                                        >
+                                                            $
+                                                            {formatAmount(
                                                                 String(
-                                                                    parseFloat(detail.price) * detail.quantity
+                                                                    parseFloat(
+                                                                        detail.price
+                                                                    ) *
+                                                                        detail.quantity
                                                                 )
                                                             )}
                                                         </DataTable.Cell>
@@ -348,16 +422,51 @@ const StockInProcessScreen = observer(
                                                 )
                                             )}
 
-                                            <DataTable.Row style={styles.totalRow}>
-                                                <DataTable.Cell style={[styles.idColumn, styles.totalLabelContainer]}>
-                                                    <Text style={styles.totalLabel}>Total</Text>
+                                            <DataTable.Row
+                                                style={styles.totalRow}
+                                            >
+                                                <DataTable.Cell
+                                                    style={[
+                                                        styles.idColumn,
+                                                        styles.totalLabelContainer,
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={
+                                                            styles.totalLabel
+                                                        }
+                                                    >
+                                                        Total
+                                                    </Text>
                                                 </DataTable.Cell>
-                                                <DataTable.Cell style={styles.productNameColumn}></DataTable.Cell>
-                                                <DataTable.Cell style={styles.quantityColumn}></DataTable.Cell>
-                                                <DataTable.Cell style={styles.priceColumn}></DataTable.Cell>
-                                                <DataTable.Cell numeric style={styles.subtotalColumn}>
-                                                    <Text style={styles.totalValue}>
-                                                        ${formatAmount(selectedStockIn.totalAmount)}
+                                                <DataTable.Cell
+                                                    style={
+                                                        styles.productNameColumn
+                                                    }
+                                                ></DataTable.Cell>
+                                                <DataTable.Cell
+                                                    style={
+                                                        styles.quantityColumn
+                                                    }
+                                                ></DataTable.Cell>
+                                                <DataTable.Cell
+                                                    style={styles.priceColumn}
+                                                ></DataTable.Cell>
+                                                <DataTable.Cell
+                                                    numeric
+                                                    style={
+                                                        styles.subtotalColumn
+                                                    }
+                                                >
+                                                    <Text
+                                                        style={
+                                                            styles.totalValue
+                                                        }
+                                                    >
+                                                        $
+                                                        {formatAmount(
+                                                            selectedStockIn.totalAmount
+                                                        )}
                                                     </Text>
                                                 </DataTable.Cell>
                                             </DataTable.Row>
