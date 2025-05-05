@@ -1,0 +1,786 @@
+import React, { useState, useEffect } from 'react'
+import { 
+    View, 
+    StyleSheet, 
+    ScrollView, 
+    KeyboardAvoidingView, 
+    Platform,
+    TouchableWithoutFeedback,
+    Keyboard,
+    Alert
+} from 'react-native'
+import {
+    Appbar,
+    TextInput,
+    Button,
+    Text,
+    IconButton,
+    Menu,
+    Divider,
+    Snackbar,
+    Surface,
+    TouchableRipple,
+    ActivityIndicator
+} from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
+import { useNavigation } from '@react-navigation/native'
+import { RootScreenNavigationProp } from '@/src/Core/Presentation/Navigation/Types/Index'
+import { observer } from 'mobx-react'
+import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
+import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
+import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
+import { StockInStoreProvider } from '../Stores/StockInStore/StockInStoreProvider'
+import { MasterDataStoreProvider } from '@/src/Common/Presentation/Stores/MasterDataStore/MasterDataStoreProvider'
+import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
+import { Status } from '@/src/Common/Domain/Enums/Status'
+import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
+import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
+
+interface GoodsItem {
+    goodsId: string;
+    goodsCode: string;
+    goodsName: string;
+    quantity: number;
+    price: number;
+    expiryDate: string;
+    notes: string;
+}
+
+const StockInAddScreen = observer(() => {
+    const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
+    const stockInStore = useStockInStore()
+    const masterDataStore = useMasterDataStore()
+    const authStore = useAuthStore()
+    const theme = useTheme()
+
+    // Form state
+    const [code, setCode] = useState('')
+    const [supplierId, setSupplierId] = useState('')
+    const [lotNumber, setLotNumber] = useState('')
+    const [stockInDate, setStockInDate] = useState(new Date().toISOString().split('T')[0])
+    const [description, setDescription] = useState('')
+    const [totalAmount, setTotalAmount] = useState('0')
+    const [status, setStatus] = useState(Status.Draft)
+    const [notes, setNotes] = useState('')
+    const [priority, setPriority] = useState(1)
+
+    // Goods list
+    const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
+    const [currentItem, setCurrentItem] = useState<GoodsItem | null>(null)
+    
+    // UI state
+    const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
+    const [statusMenuVisible, setStatusMenuVisible] = useState(false)
+    const [goodsMenuVisible, setGoodsMenuVisible] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [snackbarVisible, setSnackbarVisible] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState('')
+    const [errors, setErrors] = useState<Record<string, string>>({})
+
+    // Load master data when component mounts
+    useEffect(() => {
+        const loadData = async () => {
+            setIsLoading(true)
+            try {
+                await Promise.all([
+                    masterDataStore.loadSuppliers(),
+                    masterDataStore.loadGoods(),
+                    masterDataStore.loadUnits()
+                ])
+            } catch (error) {
+                showSnackbar('Failed to load master data')
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        
+        loadData()
+    }, [])
+
+    // Calculate total amount whenever goods items change
+    useEffect(() => {
+        const total = goodsItems.reduce((sum, item) => {
+            return sum + (item.quantity * item.price)
+        }, 0)
+        
+        setTotalAmount(total.toString())
+    }, [goodsItems])
+
+    const handleGoBack = () => {
+        navigation.goBack()
+    }
+
+    const showSnackbar = (message: string) => {
+        setSnackbarMessage(message)
+        setSnackbarVisible(true)
+    }
+
+    const resetGoodsItemForm = () => {
+        setCurrentItem({
+            goodsId: '',
+            goodsCode: '',
+            goodsName: '',
+            quantity: 1,
+            price: 0,
+            expiryDate: new Date().toISOString(),
+            notes: ''
+        })
+    }
+
+    const addGoodsItem = () => {
+        resetGoodsItemForm()
+        setGoodsMenuVisible(true)
+    }
+
+    const selectGoods = (goodsId: string) => {
+        const goods = masterDataStore.goods.data.find(g => g.id === goodsId)
+        
+        if (goods && currentItem) {
+            setCurrentItem({
+                ...currentItem,
+                goodsId: goods.id,
+                goodsCode: goods.code,
+                goodsName: goods.name
+            })
+            
+            // Add the goods to the list
+            const updatedItems = [...goodsItems, {
+                ...currentItem,
+                goodsId: goods.id,
+                goodsCode: goods.code,
+                goodsName: goods.name
+            }]
+            
+            setGoodsItems(updatedItems)
+        }
+        
+        setGoodsMenuVisible(false)
+    }
+
+    const removeGoodsItem = (goodsId: string) => {
+        setGoodsItems(goodsItems.filter(item => item.goodsId !== goodsId))
+    }
+
+    const updateGoodsItem = (
+        goodsId: string, 
+        field: keyof GoodsItem, 
+        value: string | number
+    ) => {
+        setGoodsItems(goodsItems.map(item => {
+            if (item.goodsId === goodsId) {
+                return { ...item, [field]: value }
+            }
+            return item
+        }))
+    }
+
+    const validateForm = (): boolean => {
+        const newErrors: Record<string, string> = {}
+        
+        if (!supplierId) {
+            newErrors.supplierId = 'Supplier is required'
+        }
+        
+        if (!stockInDate) {
+            newErrors.stockInDate = 'Date is required'
+        }
+        
+        if (goodsItems.length === 0) {
+            newErrors.goodsItems = 'At least one goods item is required'
+        }
+        
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+
+    const handleSave = async () => {
+        if (!validateForm()) {
+            showSnackbar('Please fill in all required fields')
+            return
+        }
+        
+        setIsLoading(true)
+        
+        try {
+            // Format date to ISO
+            const isoDate = new Date(stockInDate).toISOString()
+            
+            // Prepare payload according to API requirements
+            const payload = {
+                code,
+                supplierId,
+                inDate: isoDate,
+                description,
+                status,
+                lotNumber,
+                notes,
+                priority,
+                totalAmount: parseFloat(totalAmount),
+                details: goodsItems.map(item => ({
+                    goodsId: item.goodsId,
+                    goodsCode: item.goodsCode,
+                    goodsName: item.goodsName,
+                    quantity: item.quantity,
+                    price: item.price,
+                    expiryDate: item.expiryDate,
+                    notes: item.notes
+                }))
+            }
+            
+            // Call store to save data
+            const result = await stockInStore.createStockIn(payload)
+            
+            if (result) {
+                showSnackbar('Stock in created successfully')
+                setTimeout(() => {
+                    navigation.goBack()
+                }, 1500)
+            } else {
+                showSnackbar('Failed to create stock in')
+            }
+        } catch (error) {
+            console.error('Error creating stock in:', error)
+            showSnackbar('An error occurred while creating stock in')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleRequest = () => {
+        // Change status to PENDING and save
+        setStatus(Status.Pending)
+        setTimeout(() => {
+            handleSave()
+        }, 100)
+    }
+
+    const formatDate = (date: string) => {
+        try {
+            return new Date(date).toISOString().split('T')[0]
+        } catch (e) {
+            return date
+        }
+    }
+
+    return (
+        <View style={[styles.container, { backgroundColor: theme.theme.colors.background }]}>
+            <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
+            <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
+                <Appbar.Header>
+                    <Appbar.BackAction onPress={handleGoBack} />
+                    <Appbar.Content title="New Stock In" />
+                </Appbar.Header>
+                
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1 }}
+                >
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <ScrollView style={styles.scrollView}>
+                            <Surface style={styles.formCard} elevation={1}>
+                                {/* Row 1: Code and Supplier */}
+                                <View style={styles.row}>
+                                    <View style={styles.inputHalf}>
+                                        <TextInput
+                                            label="Code"
+                                            value={code}
+                                            onChangeText={setCode}
+                                            mode="outlined"
+                                            style={styles.input}
+                                            placeholder="Auto-generated"
+                                        />
+                                    </View>
+                                    <View style={styles.inputHalf}>
+                                        <Menu
+                                            visible={supplierMenuVisible}
+                                            onDismiss={() => setSupplierMenuVisible(false)}
+                                            anchor={
+                                                <TouchableRipple onPress={() => setSupplierMenuVisible(true)}>
+                                                    <View style={styles.dropdown}>
+                                                        <TextInput
+                                                            label="Supplier"
+                                                            value={supplierId ? masterDataStore.suppliers.data.find(s => s.id === supplierId)?.name || '' : ''}
+                                                            mode="outlined"
+                                                            editable={false}
+                                                            error={!!errors.supplierId}
+                                                            right={<TextInput.Icon icon="menu-down" />}
+                                                            style={styles.input}
+                                                        />
+                                                    </View>
+                                                </TouchableRipple>
+                                            }
+                                        >
+                                            {masterDataStore.suppliers.data
+                                                .filter(s => s.isActive && !s.isDeleted)
+                                                .map(s => (
+                                                    <Menu.Item
+                                                        key={s.id}
+                                                        onPress={() => {
+                                                            setSupplierId(s.id)
+                                                            setSupplierMenuVisible(false)
+                                                        }}
+                                                        title={s.name}
+                                                    />
+                                                ))
+                                            }
+                                        </Menu>
+                                        {errors.supplierId && (
+                                            <Text style={styles.errorText}>{errors.supplierId}</Text>
+                                        )}
+                                    </View>
+                                </View>
+                                
+                                {/* Row 2: Lot Number and Stock In Date */}
+                                <View style={styles.row}>
+                                    <View style={styles.inputHalf}>
+                                        <TextInput
+                                            label="Lot number"
+                                            value={lotNumber}
+                                            onChangeText={setLotNumber}
+                                            mode="outlined"
+                                            style={styles.input}
+                                        />
+                                    </View>
+                                    <View style={styles.inputHalf}>
+                                        <TextInput
+                                            label="Stock in date"
+                                            value={stockInDate}
+                                            onChangeText={setStockInDate}
+                                            mode="outlined"
+                                            error={!!errors.stockInDate}
+                                            style={styles.input}
+                                        />
+                                        {errors.stockInDate && (
+                                            <Text style={styles.errorText}>{errors.stockInDate}</Text>
+                                        )}
+                                    </View>
+                                </View>
+                                
+                                {/* Row 3: Created by and Description */}
+                                <View style={styles.row}>
+                                    <View style={styles.inputHalf}>
+                                        <TextInput
+                                            label="Created by"
+                                            value={authStore.user?.name || ''}
+                                            editable={false}
+                                            mode="outlined"
+                                            style={styles.input}
+                                        />
+                                    </View>
+                                    <View style={styles.inputHalf}>
+                                        <TextInput
+                                            label="Approved by"
+                                            value=""
+                                            editable={false}
+                                            mode="outlined"
+                                            style={styles.input}
+                                            placeholder="Pending approval"
+                                        />
+                                    </View>
+                                </View>
+                                
+                                {/* Row 4: Total Cost and Status */}
+                                <View style={styles.row}>
+                                    <View style={styles.inputHalf}>
+                                        <TextInput
+                                            label="Total cost"
+                                            value={totalAmount}
+                                            onChangeText={setTotalAmount}
+                                            mode="outlined"
+                                            editable={false}
+                                            style={styles.input}
+                                            keyboardType="numeric"
+                                        />
+                                    </View>
+                                    <View style={styles.inputHalf}>
+                                        <Menu
+                                            visible={statusMenuVisible}
+                                            onDismiss={() => setStatusMenuVisible(false)}
+                                            anchor={
+                                                <TouchableRipple onPress={() => setStatusMenuVisible(true)}>
+                                                    <View style={styles.dropdown}>
+                                                        <TextInput
+                                                            label="Status"
+                                                            value={status}
+                                                            mode="outlined"
+                                                            editable={false}
+                                                            right={<TextInput.Icon icon="menu-down" />}
+                                                            style={styles.input}
+                                                        />
+                                                    </View>
+                                                </TouchableRipple>
+                                            }
+                                        >
+                                            <Menu.Item
+                                                onPress={() => {
+                                                    setStatus(Status.Draft)
+                                                    setStatusMenuVisible(false)
+                                                }}
+                                                title="DRAFT"
+                                            />
+                                            <Menu.Item
+                                                onPress={() => {
+                                                    setStatus(Status.Pending)
+                                                    setStatusMenuVisible(false)
+                                                }}
+                                                title="PENDING"
+                                            />
+                                        </Menu>
+                                    </View>
+                                </View>
+                                
+                                {/* Row 5: Note and Priority */}
+                                <View style={styles.noteRow}>
+                                    <View style={styles.inputFull}>
+                                        <TextInput
+                                            label="Note"
+                                            value={notes}
+                                            onChangeText={setNotes}
+                                            mode="outlined"
+                                            multiline
+                                            numberOfLines={3}
+                                            style={styles.input}
+                                        />
+                                    </View>
+                                    <View style={styles.priorityButtons}>
+                                        <TouchableRipple 
+                                            style={[styles.priorityButton, styles.priorityRed, priority === 1 && styles.priorityActive]} 
+                                            onPress={() => setPriority(1)}
+                                        >
+                                            <Text style={styles.priorityText}>1</Text>
+                                        </TouchableRipple>
+                                        <TouchableRipple 
+                                            style={[styles.priorityButton, styles.priorityGray, priority === 2 && styles.priorityActive]} 
+                                            onPress={() => setPriority(2)}
+                                        >
+                                            <Text style={styles.priorityText}>2</Text>
+                                        </TouchableRipple>
+                                        <TouchableRipple 
+                                            style={[styles.priorityButton, styles.priorityBlue, priority === 3 && styles.priorityActive]} 
+                                            onPress={() => setPriority(3)}
+                                        >
+                                            <Text style={styles.priorityText}>3</Text>
+                                        </TouchableRipple>
+                                    </View>
+                                </View>
+                            </Surface>
+                            
+                            {/* Goods List */}
+                            <View style={styles.goodsListHeader}>
+                                <Text style={styles.goodsListTitle}>Goods list</Text>
+                                <IconButton
+                                    icon="plus"
+                                    size={24}
+                                    onPress={addGoodsItem}
+                                    style={styles.addButton}
+                                />
+                            </View>
+                            
+                            {errors.goodsItems && (
+                                <Text style={styles.errorText}>{errors.goodsItems}</Text>
+                            )}
+                            
+                            {goodsItems.length === 0 ? (
+                                <Text style={styles.emptyListText}>
+                                    No items added yet. Click the + button to add goods.
+                                </Text>
+                            ) : (
+                                goodsItems.map((item) => (
+                                    <Surface key={item.goodsId} style={styles.goodsItemCard} elevation={1}>
+                                        <View style={styles.goodsItemHeader}>
+                                            <View style={styles.goodsItemCodeSection}>
+                                                <TextInput
+                                                    value={item.goodsCode}
+                                                    mode="outlined"
+                                                    editable={false}
+                                                    style={styles.goodsCodeInput}
+                                                />
+                                                <IconButton
+                                                    icon="barcode-scan"
+                                                    size={24}
+                                                    onPress={() => {}}
+                                                    style={styles.scanButton}
+                                                />
+                                            </View>
+                                            <IconButton
+                                                icon="close"
+                                                size={24}
+                                                onPress={() => removeGoodsItem(item.goodsId)}
+                                            />
+                                        </View>
+                                        
+                                        <Text style={styles.goodsName}>{item.goodsName}</Text>
+                                        
+                                        <View style={styles.goodsItemRow}>
+                                            <TextInput
+                                                label="Expiry date"
+                                                value={formatDate(item.expiryDate)}
+                                                onChangeText={(value) => updateGoodsItem(item.goodsId, 'expiryDate', value)}
+                                                mode="outlined"
+                                                style={styles.goodsItemFullInput}
+                                            />
+                                        </View>
+                                        
+                                        <View style={styles.goodsItemRow}>
+                                            <TextInput
+                                                label="Quantity"
+                                                value={item.quantity.toString()}
+                                                onChangeText={(value) => {
+                                                    const numValue = parseFloat(value) || 0
+                                                    updateGoodsItem(item.goodsId, 'quantity', numValue)
+                                                }}
+                                                mode="outlined"
+                                                keyboardType="numeric"
+                                                style={styles.goodsItemHalfInput}
+                                            />
+                                            <TextInput
+                                                label="Cost"
+                                                value={item.price.toString()}
+                                                onChangeText={(value) => {
+                                                    const numValue = parseFloat(value) || 0
+                                                    updateGoodsItem(item.goodsId, 'price', numValue)
+                                                }}
+                                                mode="outlined"
+                                                keyboardType="numeric"
+                                                style={styles.goodsItemHalfInput}
+                                            />
+                                        </View>
+                                        
+                                        <View style={styles.goodsItemRow}>
+                                            <TextInput
+                                                label="Note"
+                                                value={item.notes}
+                                                onChangeText={(value) => updateGoodsItem(item.goodsId, 'notes', value)}
+                                                mode="outlined"
+                                                multiline
+                                                numberOfLines={2}
+                                                style={styles.goodsItemFullInput}
+                                            />
+                                        </View>
+                                    </Surface>
+                                ))
+                            )}
+                            
+                            {/* Action Buttons */}
+                            <View style={styles.actionButtons}>
+                                <Button 
+                                    mode="outlined"
+                                    onPress={handleSave}
+                                    style={styles.actionButton}
+                                    disabled={isLoading}
+                                >
+                                    Save/Edit
+                                </Button>
+                                <Button 
+                                    mode="contained"
+                                    onPress={handleRequest}
+                                    style={styles.actionButton}
+                                    disabled={isLoading}
+                                >
+                                    Request
+                                </Button>
+                            </View>
+                            
+                            {/* Bottom padding */}
+                            <View style={styles.bottomPadding} />
+                        </ScrollView>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
+                
+                {/* Select Goods Dialog */}
+                <Menu
+                    visible={goodsMenuVisible}
+                    onDismiss={() => setGoodsMenuVisible(false)}
+                    anchor={{ x: 0, y: 0 }}
+                    style={styles.goodsMenu}
+                >
+                    <ScrollView style={styles.goodsMenuScroll}>
+                        {masterDataStore.goods.data
+                            .filter(g => g.isActive && !g.isDeleted)
+                            .map(goods => (
+                                <Menu.Item
+                                    key={goods.id}
+                                    onPress={() => selectGoods(goods.id)}
+                                    title={`${goods.name} (${goods.code})`}
+                                />
+                            ))
+                        }
+                    </ScrollView>
+                </Menu>
+                
+                {/* Loading indicator */}
+                {isLoading && (
+                    <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="large" />
+                    </View>
+                )}
+                
+                {/* Snackbar for messages */}
+                <Snackbar
+                    visible={snackbarVisible}
+                    onDismiss={() => setSnackbarVisible(false)}
+                    duration={2000}
+                >
+                    {snackbarMessage}
+                </Snackbar>
+            </SafeAreaView>
+        </View>
+    )
+})
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    scrollView: {
+        flex: 1,
+        padding: 16,
+    },
+    formCard: {
+        padding: 12,
+        borderRadius: 8,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    noteRow: {
+        flexDirection: 'row',
+    },
+    inputHalf: {
+        width: '48%',
+    },
+    inputFull: {
+        flex: 1,
+        marginRight: 8,
+    },
+    input: {
+        backgroundColor: 'transparent',
+    },
+    dropdown: {
+        flex: 1,
+    },
+    priorityButtons: {
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+    },
+    priorityButton: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    priorityRed: {
+        backgroundColor: '#e53935',
+    },
+    priorityGray: {
+        backgroundColor: '#757575',
+    },
+    priorityBlue: {
+        backgroundColor: '#2196f3',
+    },
+    priorityActive: {
+        borderWidth: 2,
+        borderColor: '#000',
+    },
+    priorityText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    goodsListHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    goodsListTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    addButton: {
+        margin: 0,
+    },
+    goodsItemCard: {
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+    },
+    goodsItemHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    goodsItemCodeSection: {
+        flexDirection: 'row',
+        flex: 1,
+        alignItems: 'center',
+    },
+    goodsCodeInput: {
+        flex: 1,
+        marginRight: 8,
+    },
+    scanButton: {
+        margin: 0,
+    },
+    goodsName: {
+        marginVertical: 4,
+        marginLeft: 4,
+    },
+    goodsItemRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 8,
+    },
+    goodsItemFullInput: {
+        flex: 1,
+    },
+    goodsItemHalfInput: {
+        width: '48%',
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    actionButton: {
+        flex: 1,
+        marginHorizontal: 4,
+    },
+    bottomPadding: {
+        height: 40,
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    goodsMenu: {
+        width: '80%',
+        maxHeight: 300,
+        marginHorizontal: '10%',
+        marginTop: 100,
+    },
+    goodsMenuScroll: {
+        maxHeight: 250,
+    },
+    emptyListText: {
+        textAlign: 'center',
+        marginVertical: 20,
+        color: '#666',
+    },
+    errorText: {
+        color: '#CF6679',
+        fontSize: 12,
+        marginLeft: 8,
+    },
+})
+
+export default withProviders([StockInStoreProvider, MasterDataStoreProvider, AuthStoreProvider])(StockInAddScreen)
