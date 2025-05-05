@@ -117,8 +117,8 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                 </View>
 
                 {/* Timestamps & status */}
-                <View style={styles.headerRow}>
-                    <View style={styles.timestampsRow}>
+                <View style={styles.metadataContainer}>
+                    <View style={styles.timestampsContainer}>
                         {item.createdAt && (
                             <Text variant="bodySmall" style={styles.timestamp}>
                                 Created: {formatDateTime(item.createdAt)}
@@ -131,15 +131,15 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                         )}
                     </View>
                     <Chip
-                        style={{
-                            backgroundColor: getStatusDetails(item.status).color,
-                        }}
+                        style={[
+                            styles.statusChip,
+                            { backgroundColor: getStatusDetails(item.status).color }
+                        ]}
                         textStyle={styles.statusText}
                     >
                         {getStatusDetails(item.status).displayName}
                     </Chip>
                 </View>
-
 
                 <Divider style={styles.divider} />
 
@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
     statusText: {
         color: 'white',
         fontSize: 12,
+        fontWeight: '500',
     },
     infoText: {
         marginBottom: 4,
@@ -232,13 +233,25 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: 8,
     },
-    timestampsRow: {
+    metadataContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginTop: 12,
+        marginBottom: 4,
+    },
+    timestampsContainer: {
         flexDirection: 'column',
-        marginTop: 8,
     },
     timestamp: {
         color: '#666',
         fontSize: 11,
+        marginBottom: 2,
+    },
+    statusChip: {
+        borderRadius: 4,
+        height: 28,
+        alignSelf: 'flex-start',
     },
     divider: {
         marginVertical: 8,
