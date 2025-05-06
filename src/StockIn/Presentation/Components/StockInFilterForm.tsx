@@ -9,6 +9,7 @@ import {
     Text,
     Chip,
     IconButton,
+    TouchableRipple,
 } from 'react-native-paper'
 import { formatDate } from '@/src/Core/Utils'
 import { DatePickerModal } from 'react-native-paper-dates'
@@ -30,10 +31,9 @@ const StockInFilterForm = observer(() => {
     const windowHeight = Dimensions.get('window').height
 
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
-    const [priorityMenuVisible, setPriorityMenuVisible] = useState(false)
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
     
-    // Date picker states - now separate for start and end dates
+    // Date picker states - separate for start and end dates
     const [startDatePickerVisible, setStartDatePickerVisible] = useState(false)
     const [endDatePickerVisible, setEndDatePickerVisible] = useState(false)
 
@@ -57,7 +57,7 @@ const StockInFilterForm = observer(() => {
         { value: Status.Cancelled, label: 'Cancelled' },
     ]
 
-    // Priority options for dropdown
+    // Priority options for buttons
     const priorityOptions = [
         { value: PRIORITY.High, label: 'High' },
         { value: PRIORITY.Medium, label: 'Medium' },
@@ -74,7 +74,6 @@ const StockInFilterForm = observer(() => {
 
         loadData()
     }, [masterDataStore])
-
 
     // Handle start date confirmation
     const onConfirmStartDate = ({ date }: { date: Date }) => {
@@ -128,6 +127,39 @@ const StockInFilterForm = observer(() => {
         return Math.min(400, windowHeight * 0.4)
     }
 
+    // Get priority button style based on selection state
+    const getPriorityButtonStyle = (priorityValue: number) => {
+        const isSelected = priorityValue === stockInStore.filters.priority;
+        return [
+            styles.priorityButton,
+            {
+                backgroundColor: isSelected ? 
+                    (priorityValue === PRIORITY.High ? '#ff5252' : 
+                     priorityValue === PRIORITY.Medium ? '#fb8c00' : 
+                     '#4caf50') : 
+                    'transparent',
+                borderWidth: 1,
+                borderColor: priorityValue === PRIORITY.High ? '#ff5252' : 
+                             priorityValue === PRIORITY.Medium ? '#fb8c00' : 
+                             '#4caf50'
+            }
+        ];
+    }
+    
+    // Get text style based on selection state
+    const getPriorityTextStyle = (priorityValue: number) => {
+        const isSelected = priorityValue === stockInStore.filters.priority;
+        return [
+            styles.priorityButtonText,
+            {
+                color: isSelected ? 'white' : 
+                      (priorityValue === PRIORITY.High ? '#ff5252' : 
+                       priorityValue === PRIORITY.Medium ? '#fb8c00' : 
+                       '#4caf50')
+            }
+        ];
+    }
+
     return (
         <Card style={styles.card}>
             <Card.Content>
@@ -149,231 +181,204 @@ const StockInFilterForm = observer(() => {
                     ]}
                     showsVerticalScrollIndicator={true}
                 >
-                    {/* Code filter */}
+                    {/* Row 1: Code and Lot Number in one row */}
                     <View style={styles.filterRow}>
                         <TextInput dense
                             label="Code"
                             value={code}
                             onChangeText={setCode}
                             mode="outlined"
-                            style={styles.input}
+                            style={styles.halfInput}
                         />
-                    </View>
-
-                    {/* Lot Number filter */}
-                    <View style={styles.filterRow}>
+                        
                         <TextInput dense
                             label="Lot Number"
                             value={lotNumber}
                             onChangeText={setLotNumber}
                             mode="outlined"
-                            style={styles.input}
+                            style={styles.halfInput}
                         />
                     </View>
 
-                    {/* Status filter */}
+                    {/* Row 2: Status and Supplier in one row */}
                     <View style={styles.filterRow}>
-                        <Menu
-                            visible={statusMenuVisible}
-                            onDismiss={() => setStatusMenuVisible(false)}
-                            anchor={
-                                <TextInput dense
-                                    label="Status"
-                                    value={stockInStore.filters.status
-                                        ? statusOptions.find(
-                                              s => s.value === stockInStore.filters.status
-                                          )?.label || stockInStore.filters.status
-                                        : ''}
-                                    placeholder="Select Status"
-                                    mode="outlined"
-                                    style={styles.input}
-                                    editable={false}
-                                    right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
-                                    onTouchStart={() => setStatusMenuVisible(true)}
-                                />
-                            }
-                        >
-                            <Menu.Item
-                                onPress={() => {
-                                    stockInStore.mergeFilters({
-                                        status: undefined,
-                                    })
-                                    setStatusMenuVisible(false)
-                                }}
-                                title="All Statuses"
-                            />
-                            <Divider />
-                            {statusOptions.map(status => (
+                        <View style={styles.halfInput}>
+                            <Menu
+                                visible={statusMenuVisible}
+                                onDismiss={() => setStatusMenuVisible(false)}
+                                anchor={
+                                    <TextInput dense
+                                        label="Status"
+                                        value={stockInStore.filters.status
+                                            ? statusOptions.find(
+                                                s => s.value === stockInStore.filters.status
+                                            )?.label || stockInStore.filters.status
+                                            : ''}
+                                        placeholder="Select Status"
+                                        mode="outlined"
+                                        style={styles.input}
+                                        editable={false}
+                                        right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
+                                        onTouchStart={() => setStatusMenuVisible(true)}
+                                    />
+                                }
+                            >
                                 <Menu.Item
-                                    key={status.value}
                                     onPress={() => {
                                         stockInStore.mergeFilters({
-                                            status: status.value as any,
+                                            status: undefined,
                                         })
                                         setStatusMenuVisible(false)
                                     }}
-                                    title={status.label}
-                                />
-                            ))}
-                        </Menu>
-                    </View>
-
-                    {/* Priority filter */}
-                    <View style={styles.filterRow}>
-                        <Menu
-                            visible={priorityMenuVisible}
-                            onDismiss={() => setPriorityMenuVisible(false)}
-                            anchor={
-                                <TextInput dense
-                                    label="Priority"
-                                    value={stockInStore.filters.priority !== undefined
-                                        ? priorityOptions.find(
-                                              p => p.value === stockInStore.filters.priority
-                                          )?.label || stockInStore.filters.priority.toString()
-                                        : ''}
-                                    placeholder="Select Priority"
-                                    mode="outlined"
-                                    style={styles.input}
-                                    editable={false}
-                                    right={<TextInput.Icon icon="menu-down" onPress={() => setPriorityMenuVisible(true)} />}
-                                    onTouchStart={() => setPriorityMenuVisible(true)}
-                                />
-                            }
-                        >
-                            <Menu.Item
-                                onPress={() => {
-                                    stockInStore.mergeFilters({
-                                        priority: undefined,
-                                    })
-                                    setPriorityMenuVisible(false)
-                                }}
-                                title="All Priorities"
-                            />
-                            <Divider />
-                            {priorityOptions.map(priority => (
-                                <Menu.Item
-                                    key={priority.value}
-                                    onPress={() => {
-                                        stockInStore.mergeFilters({
-                                            priority: priority.value as any,
-                                        })
-                                        setPriorityMenuVisible(false)
-                                    }}
-                                    title={priority.label}
-                                />
-                            ))}
-                        </Menu>
-                    </View>
-
-                    {/* Supplier filter */}
-                    <View style={styles.filterRow}>
-                        <Menu
-                            visible={supplierMenuVisible}
-                            onDismiss={() => setSupplierMenuVisible(false)}
-                            anchor={
-                                <TextInput dense
-                                    label="Supplier"
-                                    value={stockInStore.filters.supplierId
-                                        ? masterDataStore.suppliers.data.find(
-                                              s => s.id === stockInStore.filters.supplierId
-                                          )?.name || 'Selected'
-                                        : ''}
-                                    placeholder="Select Supplier"
-                                    mode="outlined"
-                                    style={styles.input}
-                                    editable={false}
-                                    right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
-                                    onTouchStart={() => setSupplierMenuVisible(true)}
-                                />
-                            }
-                            style={styles.supplierMenu}
-                        >
-                            <ScrollView style={styles.menuScrollView}>
-                                <Menu.Item
-                                    onPress={() => {
-                                        stockInStore.mergeFilters({
-                                            supplierId: undefined,
-                                        })
-                                        setSupplierMenuVisible(false)
-                                    }}
-                                    title="All Suppliers"
+                                    title="All Statuses"
                                 />
                                 <Divider />
-                                {masterDataStore.suppliers.data
-                                    .filter(s => s.isActive && !s.isDeleted)
-                                    .map(supplier => (
-                                        <Menu.Item
-                                            key={supplier.id}
-                                            onPress={() => {
-                                                stockInStore.mergeFilters({
-                                                    supplierId: supplier.id,
-                                                })
-                                                setSupplierMenuVisible(false)
-                                            }}
-                                            title={`${supplier.name} (${supplier.code})`}
-                                        />
-                                    ))}
-                            </ScrollView>
-                        </Menu>
+                                {statusOptions.map(status => (
+                                    <Menu.Item
+                                        key={status.value}
+                                        onPress={() => {
+                                            stockInStore.mergeFilters({
+                                                status: status.value as any,
+                                            })
+                                            setStatusMenuVisible(false)
+                                        }}
+                                        title={status.label}
+                                    />
+                                ))}
+                            </Menu>
+                        </View>
+                        
+                        <View style={styles.halfInput}>
+                            <Menu
+                                visible={supplierMenuVisible}
+                                onDismiss={() => setSupplierMenuVisible(false)}
+                                anchor={
+                                    <TextInput dense
+                                        label="Supplier"
+                                        value={stockInStore.filters.supplierId
+                                            ? masterDataStore.suppliers.data.find(
+                                                s => s.id === stockInStore.filters.supplierId
+                                            )?.name || 'Selected'
+                                            : ''}
+                                        placeholder="Select Supplier"
+                                        mode="outlined"
+                                        style={styles.input}
+                                        editable={false}
+                                        right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
+                                        onTouchStart={() => setSupplierMenuVisible(true)}
+                                    />
+                                }
+                                style={styles.supplierMenu}
+                            >
+                                <ScrollView style={styles.menuScrollView}>
+                                    <Menu.Item
+                                        onPress={() => {
+                                            stockInStore.mergeFilters({
+                                                supplierId: undefined,
+                                            })
+                                            setSupplierMenuVisible(false)
+                                        }}
+                                        title="All Suppliers"
+                                    />
+                                    <Divider />
+                                    {masterDataStore.suppliers.data
+                                        .filter(s => s.isActive && !s.isDeleted)
+                                        .map(supplier => (
+                                            <Menu.Item
+                                                key={supplier.id}
+                                                onPress={() => {
+                                                    stockInStore.mergeFilters({
+                                                        supplierId: supplier.id,
+                                                    })
+                                                    setSupplierMenuVisible(false)
+                                                }}
+                                                title={`${supplier.name} (${supplier.code})`}
+                                            />
+                                        ))}
+                                </ScrollView>
+                            </Menu>
+                        </View>
                     </View>
 
-                    {/* Date range filters - Using two separate TextInputs */}
-                    <View style={styles.dateInputRow}>
-                        {/* Start Date Input */}
-                        <TextInput 
-                            dense
-                            label="From"
-                            value={dateRange.startDate ? formatDate(dateRange.startDate.toISOString()) : ''}
-                            placeholder="Start Date"
-                            mode="outlined"
-                            style={styles.dateInput}
-                            editable={false}
-                            right={<TextInput.Icon icon="calendar" onPress={() => setStartDatePickerVisible(true)} />}
-                            onTouchStart={() => setStartDatePickerVisible(true)}
-                        />
+                    {/* Row 3: Date range on left and Priority buttons on right */}
+                    <View style={styles.filterRow}>
+                        <View style={styles.dateRangeContainer}>
+                            <Text variant="bodySmall" style={styles.dateRangeLabel}>Date Range</Text>
+                            {/* Date inputs in two rows */}
+                            <TextInput 
+                                dense
+                                label="From"
+                                value={dateRange.startDate ? formatDate(dateRange.startDate.toISOString()) : ''}
+                                placeholder="Start Date"
+                                mode="outlined"
+                                style={styles.verticalDateInput}
+                                editable={false}
+                                right={<TextInput.Icon icon="calendar" onPress={() => setStartDatePickerVisible(true)} />}
+                                onTouchStart={() => setStartDatePickerVisible(true)}
+                            />
+                            
+                            <TextInput 
+                                dense
+                                label="To"
+                                value={dateRange.endDate ? formatDate(dateRange.endDate.toISOString()) : ''}
+                                placeholder="End Date"
+                                mode="outlined"
+                                style={styles.verticalDateInput}
+                                editable={false}
+                                right={<TextInput.Icon icon="calendar" onPress={() => setEndDatePickerVisible(true)} />}
+                                onTouchStart={() => setEndDatePickerVisible(true)}
+                            />
+                            
+                            {/* Date Picker Modals */}
+                            <DatePickerModal
+                                locale="en"
+                                mode="single"
+                                visible={startDatePickerVisible}
+                                onDismiss={() => setStartDatePickerVisible(false)}
+                                date={dateRange.startDate}
+                                onConfirm={(params) => {
+                                    if (params.date) {
+                                        onConfirmStartDate({ date: params.date });
+                                    }
+                                }}
+                            />
+                            
+                            <DatePickerModal
+                                locale="en"
+                                mode="single"
+                                visible={endDatePickerVisible}
+                                onDismiss={() => setEndDatePickerVisible(false)}
+                                date={dateRange.endDate}
+                                onConfirm={({ date }) => {
+                                    if (date) {
+                                        onConfirmEndDate({ date });
+                                    }
+                                }}
+                            />
+                        </View>
                         
-                        <Text style={styles.dateRangeSeparator}> </Text>
-                        
-                        {/* End Date Input */}
-                        <TextInput 
-                            dense
-                            label="To"
-                            value={dateRange.endDate ? formatDate(dateRange.endDate.toISOString()) : ''}
-                            placeholder="End Date"
-                            mode="outlined"
-                            style={styles.dateInput}
-                            editable={false}
-                            right={<TextInput.Icon icon="calendar" onPress={() => setEndDatePickerVisible(true)} />}
-                            onTouchStart={() => setEndDatePickerVisible(true)}
-                        />
-                        
-                        {/* Start Date Picker Modal */}
-                        <DatePickerModal
-                            locale="en"
-                            mode="single"
-                            visible={startDatePickerVisible}
-                            onDismiss={() => setStartDatePickerVisible(false)}
-                            date={dateRange.startDate}
-                            onConfirm={(params) => {
-                                if (params.date) {
-                                    onConfirmStartDate({ date: params.date });
-                                }
-                            }}
-                        />
-                        
-                        {/* End Date Picker Modal */}
-                        <DatePickerModal
-                            locale="en"
-                            mode="single"
-                            visible={endDatePickerVisible}
-                            onDismiss={() => setEndDatePickerVisible(false)}
-                            date={dateRange.endDate}
-                            onConfirm={({ date }) => {
-                                if (date) {
-                                    onConfirmEndDate({ date });
-                                }
-                            }}
-                        />
+                        <View style={styles.priorityInputContainer}>
+                            <Text variant="bodySmall" style={styles.priorityLabel}>Priority</Text>
+                            <View style={styles.priorityButtonsContainer}>
+                                {priorityOptions.map((option) => (
+                                    <TouchableRipple
+                                        key={option.value}
+                                        style={getPriorityButtonStyle(option.value)}
+                                        onPress={() => {
+                                            if (stockInStore.filters.priority === option.value) {
+                                                stockInStore.mergeFilters({ priority: undefined });
+                                            } else {
+                                                stockInStore.mergeFilters({ priority: option.value });
+                                            }
+                                        }}
+                                    >
+                                        <Text style={getPriorityTextStyle(option.value)}>
+                                            {option.label}
+                                        </Text>
+                                    </TouchableRipple>
+                                ))}
+                            </View>
+                        </View>
                     </View>
                 </ScrollView>
 
@@ -401,6 +406,15 @@ const StockInFilterForm = observer(() => {
                                         Code: {code}
                                     </Chip>
                                 )}
+                                {lotNumber && (
+                                    <Chip
+                                        mode="outlined"
+                                        onClose={() => setLotNumber('')}
+                                        style={styles.filterChip}
+                                    >
+                                        Lot: {lotNumber}
+                                    </Chip>
+                                )}
                                 {stockInStore.filters.status && (
                                     <Chip
                                         mode="outlined"
@@ -417,31 +431,6 @@ const StockInFilterForm = observer(() => {
                                                 s.value ===
                                                 stockInStore.filters.status
                                         )?.label || stockInStore.filters.status}
-                                    </Chip>
-                                )}
-                                {stockInStore.filters.priority !==
-                                    undefined && (
-                                    <Chip
-                                        mode="outlined"
-                                        onClose={() =>
-                                            stockInStore.mergeFilters({
-                                                priority: undefined,
-                                            })
-                                        }
-                                        style={[
-                                            styles.filterChip,
-                                            {
-                                                borderColor: getPriorityColor(
-                                                    stockInStore.filters
-                                                        .priority
-                                                ),
-                                            },
-                                        ]}
-                                    >
-                                        Priority:{' '}
-                                        {getPriorityDisplayName(
-                                            stockInStore.filters.priority
-                                        )}
                                     </Chip>
                                 )}
                                 {stockInStore.filters.supplierId && (
@@ -462,13 +451,27 @@ const StockInFilterForm = observer(() => {
                                         )?.name || 'Selected'}
                                     </Chip>
                                 )}
-                                {lotNumber && (
+                                {stockInStore.filters.priority !== undefined && (
                                     <Chip
                                         mode="outlined"
-                                        onClose={() => setLotNumber('')}
-                                        style={styles.filterChip}
+                                        onClose={() =>
+                                            stockInStore.mergeFilters({
+                                                priority: undefined,
+                                            })
+                                        }
+                                        style={[
+                                            styles.filterChip,
+                                            {
+                                                borderColor: getPriorityColor(
+                                                    stockInStore.filters.priority
+                                                ),
+                                            },
+                                        ]}
                                     >
-                                        Lot: {lotNumber}
+                                        Priority:{' '}
+                                        {getPriorityDisplayName(
+                                            stockInStore.filters.priority
+                                        )}
                                     </Chip>
                                 )}
                                 {(dateRange.startDate || dateRange.endDate) && (
@@ -538,34 +541,69 @@ const styles = StyleSheet.create({
         maxHeight: 400,
     },
     filterRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         marginBottom: 12,
     },
     input: {
         width: '100%',
         backgroundColor: 'transparent',
     },
+    halfInput: {
+        width: '48%',
+    },
+    // Date range styles
+    dateRangeContainer: {
+        width: '60%',
+    },
+    dateRangeLabel: {
+        marginBottom: 4,
+        color: '#666',
+    },
+    dateInputRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    dateInput: {
+        width: '48%',
+        backgroundColor: 'transparent',
+    },
+    verticalDateInput: {
+        width: '100%',
+        backgroundColor: 'transparent',
+        marginBottom: 8,
+    },
+    // Priority styles
+    priorityInputContainer: {
+        width: '38%',
+    },
+    priorityLabel: {
+        marginBottom: 4,
+        color: '#666',
+    },
+    priorityButtonsContainer: {
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        height: 100,
+    },
+    priorityButton: {
+        flex: 1,
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 2,
+        height: 30,
+    },
+    priorityButtonText: {
+        fontWeight: 'bold',
+        fontSize: 12,
+        textAlign: 'center',
+    },
     supplierMenu: {
         maxWidth: '90%',
     },
     menuScrollView: {
         maxHeight: 200,
-    },
-    // Date range styles
-    dateRangeLabel: {
-        marginBottom: 8,
-        fontWeight: '500',
-    },
-    dateInputRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    dateInput: {
-        flex: 1,
-        backgroundColor: 'transparent',
-    },
-    dateRangeSeparator: {
-        marginHorizontal: 8,
     },
     // Active filters styles
     activeFiltersContainer: {

@@ -453,7 +453,11 @@ const StockInAddScreen = observer(() => {
                                             visible={stockInDatePickerVisible}
                                             onDismiss={() => setStockInDatePickerVisible(false)}
                                             date={selectedStockInDate}
-                                            onConfirm={onConfirmStockInDate}
+                                            onConfirm={({ date }) => {
+                                                if (date) {
+                                                    onConfirmStockInDate({ date });
+                                                }
+                                            }}
                                         />
                                         
                                         {errors.stockInDate && (
@@ -686,7 +690,11 @@ const StockInAddScreen = observer(() => {
                                                 visible={expiryDatePickerVisible}
                                                 onDismiss={() => setExpiryDatePickerVisible(false)}
                                                 date={selectedExpiryDate}
-                                                onConfirm={onConfirmExpiryDate}
+                                                onConfirm={({ date }) => {
+                                                    if (date) {
+                                                        onConfirmExpiryDate({ date });
+                                                    }
+                                                }}
                                             />
                                         </View>
 
@@ -977,8 +985,8 @@ const styles = StyleSheet.create({
     },
 })
 
-export default withProviders([
+export default withProviders(
     StockInStoreProvider,
     MasterDataStoreProvider,
     AuthStoreProvider,
-])(StockInAddScreen)
+)(StockInAddScreen)
