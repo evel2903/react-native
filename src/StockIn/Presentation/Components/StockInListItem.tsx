@@ -77,7 +77,7 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
 
     return (
         <Card style={styles.card}>
-            <Card.Content>
+            <Card.Content style={styles.cardContent}>
                 {/* Header section with code and status */}
                 <View style={styles.headerRow}>
                     <View style={styles.codeContainer}>
@@ -186,7 +186,13 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                         ) && (
                             <Button
                                 mode="contained"
-                                style={styles.approveButton}
+                                style={[
+                                    styles.approveButton,
+                                    {
+                                        backgroundColor: getStatusDetails(Status.Approved)
+                                            .color,
+                                    },
+                                ]}
                                 onPress={() => onApprove(item.id)}
                             >
                                 Approve
@@ -203,6 +209,10 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         borderRadius: 8,
         elevation: 2,
+        overflow: 'hidden',
+    },
+    cardContent: {
+        paddingBottom: 8,
     },
     headerRow: {
         flexDirection: 'row',
@@ -225,11 +235,14 @@ const styles = StyleSheet.create({
     priorityChip: {
         color: 'white',
         fontSize: 12,
+        textAlign: 'center',
+        lineHeight: 16,
     },
     statusText: {
         color: 'white',
         fontSize: 12,
-        fontWeight: '500',
+        textAlign: 'center',
+        lineHeight: 16,
     },
     infoText: {
         marginBottom: 4,
@@ -260,15 +273,21 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     divider: {
-        marginVertical: 8,
+        // Empty style kept for future use
     },
     actionsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingBottom: 0,
+        marginTop: 8,
     },
     approveButton: {
         borderRadius: 4,
+        color: 'white',
+        fontSize: 12,
+        textAlign: 'center',
+        lineHeight: 16,
     },
     iconButtons: {
         flexDirection: 'row',
