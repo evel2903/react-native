@@ -77,10 +77,10 @@ export class StockInListItemDto extends ResponseDto<StockInEntity> {
                 code: this.supplierCode,
                 name: this.supplierName,
                 isActive: true,
-                isDeleted: false
+                isDeleted: false,
             },
             // Initialize empty details array since this is a list item
-            details: []
+            details: [],
         }
     }
 }

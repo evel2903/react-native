@@ -8,11 +8,13 @@ import {
 } from 'react-native'
 import {
     Appbar,
-    Searchbar,
     ActivityIndicator,
     Text,
     Button,
     IconButton,
+    Card,
+    Chip,
+    Divider,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -30,7 +32,6 @@ const StockInScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
     const stockInStore = useStockInStore()
     const theme = useTheme()
-    const [searchQuery, setSearchQuery] = useState('')
     const [refreshing, setRefreshing] = useState(false)
     const windowHeight = Dimensions.get('window').height
 
@@ -46,15 +47,6 @@ const StockInScreen = observer(() => {
     const handleAddStockIn = () => {
         // Navigate to add stock in screen
         navigation.navigate('StockInAdd')
-    }
-
-    const handleSearch = () => {
-        stockInStore.search(searchQuery)
-    }
-
-    const handleClearSearch = () => {
-        setSearchQuery('')
-        stockInStore.search('')
     }
 
     const handleToggleFilter = () => {
@@ -89,7 +81,7 @@ const StockInScreen = observer(() => {
 
     // Calculate list height dynamically based on whether filter is visible
     const getListHeight = () => {
-        const baseHeight = windowHeight - 160 // Height minus header and search bar
+        const baseHeight = windowHeight - 120 // Height minus header
         return stockInStore.filterVisible ? baseHeight - 320 : baseHeight
     }
 
@@ -105,35 +97,38 @@ const StockInScreen = observer(() => {
                 <Appbar.Header>
                     <Appbar.BackAction onPress={handleGoBack} />
                     <Appbar.Content title="Stock In" />
+                    <Appbar.Action
+                        icon="magnify"
+                        onPress={handleToggleFilter}
+                        color={
+                            stockInStore.filterVisible
+                                ? theme.theme.colors.primary
+                                : undefined
+                        }
+                    />
                     <Appbar.Action icon="plus" onPress={handleAddStockIn} />
                 </Appbar.Header>
-
-                {/* Search and Filter Bar */}
-                <View style={styles.searchContainer}>
-                    <Searchbar
-                        placeholder="Search stock ins..."
-                        onChangeText={setSearchQuery}
-                        value={searchQuery}
-                        onSubmitEditing={handleSearch}
-                        onClearIconPress={handleClearSearch}
-                        style={styles.searchbar}
-                    />
-                    <IconButton
-                        icon="filter-variant"
-                        onPress={handleToggleFilter}
-                        style={[
-                            styles.filterButton,
-                            stockInStore.filterVisible
-                                ? styles.filterButtonActive
-                                : {},
-                        ]}
-                    />
-                </View>
 
                 {/* Filter Form */}
                 {stockInStore.filterVisible && (
                     <View style={styles.filterContainer}>
                         <StockInFilterForm />
+                    </View>
+                )}
+
+                {/* Applied Filters Indicator */}
+                {Object.values(stockInStore.filters).some(
+                    value => value !== undefined
+                ) && (
+                    <View style={styles.activeFiltersIndicator}>
+                        <Text variant="bodySmall">Filters applied</Text>
+                        <Button
+                            mode="text"
+                            compact
+                            onPress={() => stockInStore.resetFilters()}
+                        >
+                            Clear
+                        </Button>
                     </View>
                 )}
 
@@ -184,8 +179,6 @@ const StockInScreen = observer(() => {
                         }
                     />
                 )}
-
-                {/* Removed FAB in favor of header action button */}
             </SafeAreaView>
         </View>
     )
@@ -198,30 +191,20 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
     },
-    searchContainer: {
-        padding: 16,
-        paddingBottom: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        zIndex: 1,
-    },
-    searchbar: {
-        flex: 1,
-        elevation: 2,
-    },
-    filterButton: {
-        marginLeft: 8,
-        elevation: 2,
-    },
-    filterButtonActive: {
-        backgroundColor: 'rgba(0, 0, 0, 0.08)',
-    },
     filterContainer: {
         zIndex: 2,
     },
+    activeFiltersIndicator: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 4,
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    },
     listContent: {
         padding: 16,
-        paddingBottom: 20, // Reduced padding since we're not using FAB
+        paddingBottom: 20,
     },
     loaderContainer: {
         flex: 1,
@@ -240,7 +223,6 @@ const styles = StyleSheet.create({
     resetButton: {
         marginTop: 16,
     },
-    // FAB styles removed as we're using the header button instead
 })
 
 export default withProviders(StockInStoreProvider)(StockInScreen)

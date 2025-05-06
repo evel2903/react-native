@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { 
-    View, 
-    StyleSheet, 
-    ScrollView, 
-    KeyboardAvoidingView, 
+import {
+    View,
+    StyleSheet,
+    ScrollView,
+    KeyboardAvoidingView,
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
-    Alert
+    Alert,
 } from 'react-native'
 import {
     Appbar,
@@ -20,7 +20,7 @@ import {
     Snackbar,
     Surface,
     TouchableRipple,
-    ActivityIndicator
+    ActivityIndicator,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -38,13 +38,13 @@ import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthSt
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
 
 interface GoodsItem {
-    goodsId: string;
-    goodsCode: string;
-    goodsName: string;
-    quantity: number;
-    price: number;
-    expiryDate: string;
-    notes: string;
+    goodsId: string
+    goodsCode: string
+    goodsName: string
+    quantity: number
+    price: number
+    expiryDate: string
+    notes: string
 }
 
 const StockInAddScreen = observer(() => {
@@ -58,7 +58,9 @@ const StockInAddScreen = observer(() => {
     const [code, setCode] = useState('')
     const [supplierId, setSupplierId] = useState('')
     const [lotNumber, setLotNumber] = useState('')
-    const [stockInDate, setStockInDate] = useState(new Date().toISOString().split('T')[0])
+    const [stockInDate, setStockInDate] = useState(
+        new Date().toISOString().split('T')[0]
+    )
     const [description, setDescription] = useState('')
     const [totalAmount, setTotalAmount] = useState('0')
     const [status, setStatus] = useState(Status.Draft)
@@ -68,7 +70,7 @@ const StockInAddScreen = observer(() => {
     // Goods list
     const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
     const [currentItem, setCurrentItem] = useState<GoodsItem | null>(null)
-    
+
     // UI state
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
@@ -86,7 +88,7 @@ const StockInAddScreen = observer(() => {
                 await Promise.all([
                     masterDataStore.loadSuppliers(),
                     masterDataStore.loadGoods(),
-                    masterDataStore.loadUnits()
+                    masterDataStore.loadUnits(),
                 ])
             } catch (error) {
                 showSnackbar('Failed to load master data')
@@ -94,16 +96,16 @@ const StockInAddScreen = observer(() => {
                 setIsLoading(false)
             }
         }
-        
+
         loadData()
     }, [])
 
     // Calculate total amount whenever goods items change
     useEffect(() => {
         const total = goodsItems.reduce((sum, item) => {
-            return sum + (item.quantity * item.price)
+            return sum + item.quantity * item.price
         }, 0)
-        
+
         setTotalAmount(total.toString())
     }, [goodsItems])
 
@@ -124,7 +126,7 @@ const StockInAddScreen = observer(() => {
             quantity: 1,
             price: 0,
             expiryDate: new Date().toISOString(),
-            notes: ''
+            notes: '',
         })
     }
 
@@ -135,26 +137,29 @@ const StockInAddScreen = observer(() => {
 
     const selectGoods = (goodsId: string) => {
         const goods = masterDataStore.goods.data.find(g => g.id === goodsId)
-        
+
         if (goods && currentItem) {
             setCurrentItem({
                 ...currentItem,
                 goodsId: goods.id,
                 goodsCode: goods.code,
-                goodsName: goods.name
+                goodsName: goods.name,
             })
-            
+
             // Add the goods to the list
-            const updatedItems = [...goodsItems, {
-                ...currentItem,
-                goodsId: goods.id,
-                goodsCode: goods.code,
-                goodsName: goods.name
-            }]
-            
+            const updatedItems = [
+                ...goodsItems,
+                {
+                    ...currentItem,
+                    goodsId: goods.id,
+                    goodsCode: goods.code,
+                    goodsName: goods.name,
+                },
+            ]
+
             setGoodsItems(updatedItems)
         }
-        
+
         setGoodsMenuVisible(false)
     }
 
@@ -163,33 +168,35 @@ const StockInAddScreen = observer(() => {
     }
 
     const updateGoodsItem = (
-        goodsId: string, 
-        field: keyof GoodsItem, 
+        goodsId: string,
+        field: keyof GoodsItem,
         value: string | number
     ) => {
-        setGoodsItems(goodsItems.map(item => {
-            if (item.goodsId === goodsId) {
-                return { ...item, [field]: value }
-            }
-            return item
-        }))
+        setGoodsItems(
+            goodsItems.map(item => {
+                if (item.goodsId === goodsId) {
+                    return { ...item, [field]: value }
+                }
+                return item
+            })
+        )
     }
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {}
-        
+
         if (!supplierId) {
             newErrors.supplierId = 'Supplier is required'
         }
-        
+
         if (!stockInDate) {
             newErrors.stockInDate = 'Date is required'
         }
-        
+
         if (goodsItems.length === 0) {
             newErrors.goodsItems = 'At least one goods item is required'
         }
-        
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -199,13 +206,13 @@ const StockInAddScreen = observer(() => {
             showSnackbar('Please fill in all required fields')
             return
         }
-        
+
         setIsLoading(true)
-        
+
         try {
             // Format date to ISO
             const isoDate = new Date(stockInDate).toISOString()
-            
+
             // Prepare payload according to API requirements
             const payload = {
                 code,
@@ -224,13 +231,13 @@ const StockInAddScreen = observer(() => {
                     quantity: item.quantity,
                     price: item.price,
                     expiryDate: item.expiryDate,
-                    notes: item.notes
-                }))
+                    notes: item.notes,
+                })),
             }
-            
+
             // Call store to save data
             const result = await stockInStore.createStockIn(payload)
-            
+
             if (result) {
                 showSnackbar('Stock in created successfully')
                 setTimeout(() => {
@@ -264,14 +271,19 @@ const StockInAddScreen = observer(() => {
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.theme.colors.background }]}>
+        <View
+            style={[
+                styles.container,
+                { backgroundColor: theme.theme.colors.background },
+            ]}
+        >
             <StatusBar style={theme.isDarkTheme ? 'light' : 'dark'} />
             <SafeAreaView style={{ flex: 1 }} edges={['right', 'left']}>
                 <Appbar.Header>
                     <Appbar.BackAction onPress={handleGoBack} />
                     <Appbar.Content title="New Stock In" />
                 </Appbar.Header>
-                
+
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={{ flex: 1 }}
@@ -294,17 +306,40 @@ const StockInAddScreen = observer(() => {
                                     <View style={styles.inputHalf}>
                                         <Menu
                                             visible={supplierMenuVisible}
-                                            onDismiss={() => setSupplierMenuVisible(false)}
+                                            onDismiss={() =>
+                                                setSupplierMenuVisible(false)
+                                            }
                                             anchor={
-                                                <TouchableRipple onPress={() => setSupplierMenuVisible(true)}>
-                                                    <View style={styles.dropdown}>
+                                                <TouchableRipple
+                                                    onPress={() =>
+                                                        setSupplierMenuVisible(
+                                                            true
+                                                        )
+                                                    }
+                                                >
+                                                    <View
+                                                        style={styles.dropdown}
+                                                    >
                                                         <TextInput
                                                             label="Supplier"
-                                                            value={supplierId ? masterDataStore.suppliers.data.find(s => s.id === supplierId)?.name || '' : ''}
+                                                            value={
+                                                                supplierId
+                                                                    ? masterDataStore.suppliers.data.find(
+                                                                          s =>
+                                                                              s.id ===
+                                                                              supplierId
+                                                                      )?.name ||
+                                                                      ''
+                                                                    : ''
+                                                            }
                                                             mode="outlined"
                                                             editable={false}
-                                                            error={!!errors.supplierId}
-                                                            right={<TextInput.Icon icon="menu-down" />}
+                                                            error={
+                                                                !!errors.supplierId
+                                                            }
+                                                            right={
+                                                                <TextInput.Icon icon="menu-down" />
+                                                            }
                                                             style={styles.input}
                                                         />
                                                     </View>
@@ -312,25 +347,32 @@ const StockInAddScreen = observer(() => {
                                             }
                                         >
                                             {masterDataStore.suppliers.data
-                                                .filter(s => s.isActive && !s.isDeleted)
+                                                .filter(
+                                                    s =>
+                                                        s.isActive &&
+                                                        !s.isDeleted
+                                                )
                                                 .map(s => (
                                                     <Menu.Item
                                                         key={s.id}
                                                         onPress={() => {
                                                             setSupplierId(s.id)
-                                                            setSupplierMenuVisible(false)
+                                                            setSupplierMenuVisible(
+                                                                false
+                                                            )
                                                         }}
                                                         title={s.name}
                                                     />
-                                                ))
-                                            }
+                                                ))}
                                         </Menu>
                                         {errors.supplierId && (
-                                            <Text style={styles.errorText}>{errors.supplierId}</Text>
+                                            <Text style={styles.errorText}>
+                                                {errors.supplierId}
+                                            </Text>
                                         )}
                                     </View>
                                 </View>
-                                
+
                                 {/* Row 2: Lot Number and Stock In Date */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
@@ -352,11 +394,13 @@ const StockInAddScreen = observer(() => {
                                             style={styles.input}
                                         />
                                         {errors.stockInDate && (
-                                            <Text style={styles.errorText}>{errors.stockInDate}</Text>
+                                            <Text style={styles.errorText}>
+                                                {errors.stockInDate}
+                                            </Text>
                                         )}
                                     </View>
                                 </View>
-                                
+
                                 {/* Row 3: Created by and Description */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
@@ -379,7 +423,7 @@ const StockInAddScreen = observer(() => {
                                         />
                                     </View>
                                 </View>
-                                
+
                                 {/* Row 4: Total Cost and Status */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
@@ -396,16 +440,28 @@ const StockInAddScreen = observer(() => {
                                     <View style={styles.inputHalf}>
                                         <Menu
                                             visible={statusMenuVisible}
-                                            onDismiss={() => setStatusMenuVisible(false)}
+                                            onDismiss={() =>
+                                                setStatusMenuVisible(false)
+                                            }
                                             anchor={
-                                                <TouchableRipple onPress={() => setStatusMenuVisible(true)}>
-                                                    <View style={styles.dropdown}>
+                                                <TouchableRipple
+                                                    onPress={() =>
+                                                        setStatusMenuVisible(
+                                                            true
+                                                        )
+                                                    }
+                                                >
+                                                    <View
+                                                        style={styles.dropdown}
+                                                    >
                                                         <TextInput
                                                             label="Status"
                                                             value={status}
                                                             mode="outlined"
                                                             editable={false}
-                                                            right={<TextInput.Icon icon="menu-down" />}
+                                                            right={
+                                                                <TextInput.Icon icon="menu-down" />
+                                                            }
                                                             style={styles.input}
                                                         />
                                                     </View>
@@ -429,7 +485,7 @@ const StockInAddScreen = observer(() => {
                                         </Menu>
                                     </View>
                                 </View>
-                                
+
                                 {/* Row 5: Note and Priority */}
                                 <View style={styles.noteRow}>
                                     <View style={styles.inputFull}>
@@ -444,31 +500,54 @@ const StockInAddScreen = observer(() => {
                                         />
                                     </View>
                                     <View style={styles.priorityButtons}>
-                                        <TouchableRipple 
-                                            style={[styles.priorityButton, styles.priorityRed, priority === 1 && styles.priorityActive]} 
+                                        <TouchableRipple
+                                            style={[
+                                                styles.priorityButton,
+                                                styles.priorityRed,
+                                                priority === 1 &&
+                                                    styles.priorityActive,
+                                            ]}
                                             onPress={() => setPriority(1)}
                                         >
-                                            <Text style={styles.priorityText}>1</Text>
+                                            <Text style={styles.priorityText}>
+                                                1
+                                            </Text>
                                         </TouchableRipple>
-                                        <TouchableRipple 
-                                            style={[styles.priorityButton, styles.priorityGray, priority === 2 && styles.priorityActive]} 
+                                        <TouchableRipple
+                                            style={[
+                                                styles.priorityButton,
+                                                styles.priorityGray,
+                                                priority === 2 &&
+                                                    styles.priorityActive,
+                                            ]}
                                             onPress={() => setPriority(2)}
                                         >
-                                            <Text style={styles.priorityText}>2</Text>
+                                            <Text style={styles.priorityText}>
+                                                2
+                                            </Text>
                                         </TouchableRipple>
-                                        <TouchableRipple 
-                                            style={[styles.priorityButton, styles.priorityBlue, priority === 3 && styles.priorityActive]} 
+                                        <TouchableRipple
+                                            style={[
+                                                styles.priorityButton,
+                                                styles.priorityBlue,
+                                                priority === 3 &&
+                                                    styles.priorityActive,
+                                            ]}
                                             onPress={() => setPriority(3)}
                                         >
-                                            <Text style={styles.priorityText}>3</Text>
+                                            <Text style={styles.priorityText}>
+                                                3
+                                            </Text>
                                         </TouchableRipple>
                                     </View>
                                 </View>
                             </Surface>
-                            
+
                             {/* Goods List */}
                             <View style={styles.goodsListHeader}>
-                                <Text style={styles.goodsListTitle}>Goods list</Text>
+                                <Text style={styles.goodsListTitle}>
+                                    Goods list
+                                </Text>
                                 <IconButton
                                     icon="plus"
                                     size={24}
@@ -476,25 +555,38 @@ const StockInAddScreen = observer(() => {
                                     style={styles.addButton}
                                 />
                             </View>
-                            
+
                             {errors.goodsItems && (
-                                <Text style={styles.errorText}>{errors.goodsItems}</Text>
+                                <Text style={styles.errorText}>
+                                    {errors.goodsItems}
+                                </Text>
                             )}
-                            
+
                             {goodsItems.length === 0 ? (
                                 <Text style={styles.emptyListText}>
-                                    No items added yet. Click the + button to add goods.
+                                    No items added yet. Click the + button to
+                                    add goods.
                                 </Text>
                             ) : (
-                                goodsItems.map((item) => (
-                                    <Surface key={item.goodsId} style={styles.goodsItemCard} elevation={1}>
+                                goodsItems.map(item => (
+                                    <Surface
+                                        key={item.goodsId}
+                                        style={styles.goodsItemCard}
+                                        elevation={1}
+                                    >
                                         <View style={styles.goodsItemHeader}>
-                                            <View style={styles.goodsItemCodeSection}>
+                                            <View
+                                                style={
+                                                    styles.goodsItemCodeSection
+                                                }
+                                            >
                                                 <TextInput
                                                     value={item.goodsCode}
                                                     mode="outlined"
                                                     editable={false}
-                                                    style={styles.goodsCodeInput}
+                                                    style={
+                                                        styles.goodsCodeInput
+                                                    }
                                                 />
                                                 <IconButton
                                                     icon="barcode-scan"
@@ -506,65 +598,103 @@ const StockInAddScreen = observer(() => {
                                             <IconButton
                                                 icon="close"
                                                 size={24}
-                                                onPress={() => removeGoodsItem(item.goodsId)}
+                                                onPress={() =>
+                                                    removeGoodsItem(
+                                                        item.goodsId
+                                                    )
+                                                }
                                             />
                                         </View>
-                                        
-                                        <Text style={styles.goodsName}>{item.goodsName}</Text>
-                                        
+
+                                        <Text style={styles.goodsName}>
+                                            {item.goodsName}
+                                        </Text>
+
                                         <View style={styles.goodsItemRow}>
                                             <TextInput
                                                 label="Expiry date"
-                                                value={formatDate(item.expiryDate)}
-                                                onChangeText={(value) => updateGoodsItem(item.goodsId, 'expiryDate', value)}
+                                                value={formatDate(
+                                                    item.expiryDate
+                                                )}
+                                                onChangeText={value =>
+                                                    updateGoodsItem(
+                                                        item.goodsId,
+                                                        'expiryDate',
+                                                        value
+                                                    )
+                                                }
                                                 mode="outlined"
-                                                style={styles.goodsItemFullInput}
+                                                style={
+                                                    styles.goodsItemFullInput
+                                                }
                                             />
                                         </View>
-                                        
+
                                         <View style={styles.goodsItemRow}>
                                             <TextInput
                                                 label="Quantity"
                                                 value={item.quantity.toString()}
-                                                onChangeText={(value) => {
-                                                    const numValue = parseFloat(value) || 0
-                                                    updateGoodsItem(item.goodsId, 'quantity', numValue)
+                                                onChangeText={value => {
+                                                    const numValue =
+                                                        parseFloat(value) || 0
+                                                    updateGoodsItem(
+                                                        item.goodsId,
+                                                        'quantity',
+                                                        numValue
+                                                    )
                                                 }}
                                                 mode="outlined"
                                                 keyboardType="numeric"
-                                                style={styles.goodsItemHalfInput}
+                                                style={
+                                                    styles.goodsItemHalfInput
+                                                }
                                             />
                                             <TextInput
                                                 label="Cost"
                                                 value={item.price.toString()}
-                                                onChangeText={(value) => {
-                                                    const numValue = parseFloat(value) || 0
-                                                    updateGoodsItem(item.goodsId, 'price', numValue)
+                                                onChangeText={value => {
+                                                    const numValue =
+                                                        parseFloat(value) || 0
+                                                    updateGoodsItem(
+                                                        item.goodsId,
+                                                        'price',
+                                                        numValue
+                                                    )
                                                 }}
                                                 mode="outlined"
                                                 keyboardType="numeric"
-                                                style={styles.goodsItemHalfInput}
+                                                style={
+                                                    styles.goodsItemHalfInput
+                                                }
                                             />
                                         </View>
-                                        
+
                                         <View style={styles.goodsItemRow}>
                                             <TextInput
                                                 label="Note"
                                                 value={item.notes}
-                                                onChangeText={(value) => updateGoodsItem(item.goodsId, 'notes', value)}
+                                                onChangeText={value =>
+                                                    updateGoodsItem(
+                                                        item.goodsId,
+                                                        'notes',
+                                                        value
+                                                    )
+                                                }
                                                 mode="outlined"
                                                 multiline
                                                 numberOfLines={2}
-                                                style={styles.goodsItemFullInput}
+                                                style={
+                                                    styles.goodsItemFullInput
+                                                }
                                             />
                                         </View>
                                     </Surface>
                                 ))
                             )}
-                            
+
                             {/* Action Buttons */}
                             <View style={styles.actionButtons}>
-                                <Button 
+                                <Button
                                     mode="outlined"
                                     onPress={handleSave}
                                     style={styles.actionButton}
@@ -572,7 +702,7 @@ const StockInAddScreen = observer(() => {
                                 >
                                     Save/Edit
                                 </Button>
-                                <Button 
+                                <Button
                                     mode="contained"
                                     onPress={handleRequest}
                                     style={styles.actionButton}
@@ -581,13 +711,13 @@ const StockInAddScreen = observer(() => {
                                     Request
                                 </Button>
                             </View>
-                            
+
                             {/* Bottom padding */}
                             <View style={styles.bottomPadding} />
                         </ScrollView>
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
-                
+
                 {/* Select Goods Dialog */}
                 <Menu
                     visible={goodsMenuVisible}
@@ -604,18 +734,17 @@ const StockInAddScreen = observer(() => {
                                     onPress={() => selectGoods(goods.id)}
                                     title={`${goods.name} (${goods.code})`}
                                 />
-                            ))
-                        }
+                            ))}
                     </ScrollView>
                 </Menu>
-                
+
                 {/* Loading indicator */}
                 {isLoading && (
                     <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" />
                     </View>
                 )}
-                
+
                 {/* Snackbar for messages */}
                 <Snackbar
                     visible={snackbarVisible}
@@ -783,4 +912,8 @@ const styles = StyleSheet.create({
     },
 })
 
-export default withProviders([StockInStoreProvider, MasterDataStoreProvider, AuthStoreProvider])(StockInAddScreen)
+export default withProviders([
+    StockInStoreProvider,
+    MasterDataStoreProvider,
+    AuthStoreProvider,
+])(StockInAddScreen)
