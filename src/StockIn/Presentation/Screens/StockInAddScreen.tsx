@@ -23,6 +23,8 @@ import {
     ActivityIndicator,
     Title,
 } from 'react-native-paper'
+import { formatDate} from '@/src/Core/Utils';
+import { DatePickerModal } from 'react-native-paper-dates'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { useNavigation } from '@react-navigation/native'
@@ -67,11 +69,18 @@ const StockInAddScreen = observer(() => {
     const [totalAmount, setTotalAmount] = useState('0')
     const [status, setStatus] = useState(Status.Draft)
     const [notes, setNotes] = useState('')
-    const [priority, setPriority] = useState(2) // Default to High priority
+    const [priority, setPriority] = useState(2) // Default to Medium priority
 
     // Goods list
     const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
     const [currentItem, setCurrentItem] = useState<GoodsItem | null>(null)
+    const [currentItemIndex, setCurrentItemIndex] = useState<number | null>(null)
+
+    // Date picker states
+    const [stockInDatePickerVisible, setStockInDatePickerVisible] = useState(false)
+    const [expiryDatePickerVisible, setExpiryDatePickerVisible] = useState(false)
+    const [selectedStockInDate, setSelectedStockInDate] = useState(new Date())
+    const [selectedExpiryDate, setSelectedExpiryDate] = useState(new Date())
 
     // UI state
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
@@ -130,6 +139,30 @@ const StockInAddScreen = observer(() => {
             expiryDate: new Date().toISOString(),
             notes: '',
         })
+        setCurrentItemIndex(null)
+    }
+
+    // Handle stock in date confirmation
+    const onConfirmStockInDate = ({ date }: { date: Date }) => {
+        setSelectedStockInDate(date)
+        setStockInDate(date.toISOString().split('T')[0])
+        setStockInDatePickerVisible(false)
+    }
+
+    // Handle expiry date confirmation
+    const onConfirmExpiryDate = ({ date }: { date: Date }) => {
+        setSelectedExpiryDate(date)
+        if (currentItem && currentItemIndex !== null) {
+            // Updating existing item
+            updateGoodsItem(currentItem.goodsId, 'expiryDate', date.toISOString())
+        } else if (currentItem) {
+            // For new item that hasn't been added yet
+            setCurrentItem({
+                ...currentItem,
+                expiryDate: date.toISOString()
+            })
+        }
+        setExpiryDatePickerVisible(false)
     }
 
     const addGoodsItem = () => {
@@ -137,29 +170,30 @@ const StockInAddScreen = observer(() => {
         setGoodsMenuVisible(true)
     }
 
+    const editGoodsItem = (index: number) => {
+        const item = goodsItems[index]
+        setCurrentItem(item)
+        setCurrentItemIndex(index)
+        setSelectedExpiryDate(new Date(item.expiryDate))
+    }
+
     const selectGoods = (goodsId: string) => {
         const goods = masterDataStore.goods.data.find(g => g.id === goodsId)
 
         if (goods && currentItem) {
-            setCurrentItem({
+            const updatedItem = {
                 ...currentItem,
                 goodsId: goods.id,
                 goodsCode: goods.code,
                 goodsName: goods.name,
-            })
+            }
+            
+            setCurrentItem(updatedItem)
 
-            // Add the goods to the list
-            const updatedItems = [
-                ...goodsItems,
-                {
-                    ...currentItem,
-                    goodsId: goods.id,
-                    goodsCode: goods.code,
-                    goodsName: goods.name,
-                },
-            ]
-
-            setGoodsItems(updatedItems)
+            // Add the goods to the list if not editing an existing item
+            if (currentItemIndex === null) {
+                setGoodsItems([...goodsItems, updatedItem])
+            }
         }
 
         setGoodsMenuVisible(false)
@@ -264,14 +298,6 @@ const StockInAddScreen = observer(() => {
         }, 100)
     }
 
-    const formatDate = (date: string) => {
-        try {
-            return new Date(date).toISOString().split('T')[0]
-        } catch (e) {
-            return date
-        }
-    }
-
     // Priority styles based on value
     const getPriorityButtonStyle = (priorityValue: number) => {
         const isSelected = priorityValue === priority;
@@ -347,40 +373,26 @@ const StockInAddScreen = observer(() => {
                                                 setSupplierMenuVisible(false)
                                             }
                                             anchor={
-                                                <TouchableRipple
-                                                    onPress={() =>
-                                                        setSupplierMenuVisible(
-                                                            true
-                                                        )
+                                                <TextInput dense
+                                                    label="Supplier"
+                                                    value={
+                                                        supplierId
+                                                            ? masterDataStore.suppliers.data.find(
+                                                                  s =>
+                                                                      s.id ===
+                                                                      supplierId
+                                                              )?.name ||
+                                                              ''
+                                                            : ''
                                                     }
-                                                >
-                                                    <View
-                                                        style={styles.dropdown}
-                                                    >
-                                                        <TextInput dense
-                                                            label="Supplier"
-                                                            value={
-                                                                supplierId
-                                                                    ? masterDataStore.suppliers.data.find(
-                                                                          s =>
-                                                                              s.id ===
-                                                                              supplierId
-                                                                      )?.name ||
-                                                                      ''
-                                                                    : ''
-                                                            }
-                                                            mode="outlined"
-                                                            editable={false}
-                                                            error={
-                                                                !!errors.supplierId
-                                                            }
-                                                            right={
-                                                                <TextInput.Icon icon="menu-down" />
-                                                            }
-                                                            style={styles.input}
-                                                        />
-                                                    </View>
-                                                </TouchableRipple>
+                                                    placeholder="Select Supplier"
+                                                    mode="outlined"
+                                                    style={styles.input}
+                                                    editable={false}
+                                                    error={!!errors.supplierId}
+                                                    right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
+                                                    onTouchStart={() => setSupplierMenuVisible(true)}
+                                                />
                                             }
                                         >
                                             {masterDataStore.suppliers.data
@@ -422,14 +434,28 @@ const StockInAddScreen = observer(() => {
                                         />
                                     </View>
                                     <View style={styles.inputHalf}>
+                                        {/* Date picker as TextInput */}
                                         <TextInput dense
                                             label="Stock in date"
-                                            value={stockInDate}
-                                            onChangeText={setStockInDate}
+                                            value={formatDate(stockInDate)}
                                             mode="outlined"
-                                            error={!!errors.stockInDate}
                                             style={styles.input}
+                                            editable={false}
+                                            error={!!errors.stockInDate}
+                                            right={<TextInput.Icon icon="calendar" onPress={() => setStockInDatePickerVisible(true)} />}
+                                            onTouchStart={() => setStockInDatePickerVisible(true)}
                                         />
+                                        
+                                        {/* Stock In Date Picker Modal */}
+                                        <DatePickerModal
+                                            locale="en"
+                                            mode="single"
+                                            visible={stockInDatePickerVisible}
+                                            onDismiss={() => setStockInDatePickerVisible(false)}
+                                            date={selectedStockInDate}
+                                            onConfirm={onConfirmStockInDate}
+                                        />
+                                        
                                         {errors.stockInDate && (
                                             <Text style={styles.errorText}>
                                                 {errors.stockInDate}
@@ -481,28 +507,15 @@ const StockInAddScreen = observer(() => {
                                                 setStatusMenuVisible(false)
                                             }
                                             anchor={
-                                                <TouchableRipple
-                                                    onPress={() =>
-                                                        setStatusMenuVisible(
-                                                            true
-                                                        )
-                                                    }
-                                                >
-                                                    <View
-                                                        style={styles.dropdown}
-                                                    >
-                                                        <TextInput dense
-                                                            label="Status"
-                                                            value={status}
-                                                            mode="outlined"
-                                                            editable={false}
-                                                            right={
-                                                                <TextInput.Icon icon="menu-down" />
-                                                            }
-                                                            style={styles.input}
-                                                        />
-                                                    </View>
-                                                </TouchableRipple>
+                                                <TextInput dense
+                                                    label="Status"
+                                                    value={status}
+                                                    mode="outlined"
+                                                    editable={false}
+                                                    style={styles.input}
+                                                    right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
+                                                    onTouchStart={() => setStatusMenuVisible(true)}
+                                                />
                                             }
                                         >
                                             <Menu.Item
@@ -526,7 +539,7 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 5: Note and Priority */}
                                 <View style={styles.noteRow}>
                                     <View style={styles.inputFull}>
-                                                                                    <TextInput dense
+                                        <TextInput dense
                                             label="Note"
                                             value={notes}
                                             onChangeText={setNotes}
@@ -594,7 +607,7 @@ const StockInAddScreen = observer(() => {
                                     add goods.
                                 </Text>
                             ) : (
-                                goodsItems.map(item => (
+                                goodsItems.map((item, index) => (
                                     <Surface
                                         key={item.goodsId}
                                         style={styles.goodsItemCard}
@@ -621,15 +634,23 @@ const StockInAddScreen = observer(() => {
                                                     style={styles.scanButton}
                                                 />
                                             </View>
-                                            <IconButton
-                                                icon="close"
-                                                size={24}
-                                                onPress={() =>
-                                                    removeGoodsItem(
-                                                        item.goodsId
-                                                    )
-                                                }
-                                            />
+                                            <View style={styles.goodsItemActions}>
+                                                <IconButton
+                                                    icon="pencil"
+                                                    size={20}
+                                                    onPress={() => editGoodsItem(index)}
+                                                    style={styles.editButton}
+                                                />
+                                                <IconButton
+                                                    icon="close"
+                                                    size={20}
+                                                    onPress={() =>
+                                                        removeGoodsItem(
+                                                            item.goodsId
+                                                        )
+                                                    }
+                                                />
+                                            </View>
                                         </View>
 
                                         <Text style={styles.goodsName}>
@@ -637,22 +658,35 @@ const StockInAddScreen = observer(() => {
                                         </Text>
 
                                         <View style={styles.goodsItemRow}>
+                                            {/* Expiry date as TextInput */}
                                             <TextInput dense
                                                 label="Expiry date"
-                                                value={formatDate(
-                                                    item.expiryDate
-                                                )}
-                                                onChangeText={value =>
-                                                    updateGoodsItem(
-                                                        item.goodsId,
-                                                        'expiryDate',
-                                                        value
-                                                    )
-                                                }
+                                                value={formatDate(item.expiryDate)}
                                                 mode="outlined"
-                                                style={
-                                                    styles.goodsItemFullInput
-                                                }
+                                                style={styles.goodsItemFullInput}
+                                                editable={false}
+                                                right={<TextInput.Icon icon="calendar" onPress={() => {
+                                                    setCurrentItem(item);
+                                                    setCurrentItemIndex(index);
+                                                    setSelectedExpiryDate(new Date(item.expiryDate));
+                                                    setExpiryDatePickerVisible(true);
+                                                }} />}
+                                                onTouchStart={() => {
+                                                    setCurrentItem(item);
+                                                    setCurrentItemIndex(index);
+                                                    setSelectedExpiryDate(new Date(item.expiryDate));
+                                                    setExpiryDatePickerVisible(true);
+                                                }}
+                                            />
+                                            
+                                            {/* Expiry Date Picker Modal */}
+                                            <DatePickerModal
+                                                locale="en"
+                                                mode="single"
+                                                visible={expiryDatePickerVisible}
+                                                onDismiss={() => setExpiryDatePickerVisible(false)}
+                                                date={selectedExpiryDate}
+                                                onConfirm={onConfirmExpiryDate}
                                             />
                                         </View>
 
@@ -845,11 +879,6 @@ const styles = StyleSheet.create({
     noteInput: {
         height: 125, // Match the height of priority buttons container
     },
-    // Default we don't need these styles anymore as we apply them directly
-    priorityHigh: {}, // Empty object since we apply styles dynamically now
-    priorityMedium: {}, // Empty object since we apply styles dynamically now
-    priorityLow: {}, // Empty object since we apply styles dynamically now
-    priorityActive: {}, // Empty object since we apply styles dynamically now
     goodsListHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -879,11 +908,17 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
     },
+    goodsItemActions: {
+        flexDirection: 'row',
+    },
     goodsCodeInput: {
         flex: 1,
         marginRight: 8,
     },
     scanButton: {
+        margin: 0,
+    },
+    editButton: {
         margin: 0,
     },
     goodsName: {

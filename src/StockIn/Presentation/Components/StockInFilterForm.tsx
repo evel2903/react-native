@@ -10,6 +10,8 @@ import {
     Chip,
     IconButton,
 } from 'react-native-paper'
+import { formatDate } from '@/src/Core/Utils'
+import { DatePickerModal } from 'react-native-paper-dates'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
 import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
@@ -30,15 +32,21 @@ const StockInFilterForm = observer(() => {
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
     const [priorityMenuVisible, setPriorityMenuVisible] = useState(false)
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
+    
+    // Date picker states - now separate for start and end dates
+    const [startDatePickerVisible, setStartDatePickerVisible] = useState(false)
+    const [endDatePickerVisible, setEndDatePickerVisible] = useState(false)
 
     const [code, setCode] = useState(stockInStore.filters.code || '')
     const [lotNumber, setLotNumber] = useState(
         stockInStore.filters.lotNumber || ''
     )
-    const [startDate, setStartDate] = useState(
-        stockInStore.filters.startDate || ''
-    )
-    const [endDate, setEndDate] = useState(stockInStore.filters.endDate || '')
+    
+    // Date range state
+    const [dateRange, setDateRange] = useState({
+        startDate: stockInStore.filters.startDate ? new Date(stockInStore.filters.startDate) : undefined,
+        endDate: stockInStore.filters.endDate ? new Date(stockInStore.filters.endDate) : undefined,
+    })
 
     // Status options for dropdown
     const statusOptions = [
@@ -67,15 +75,17 @@ const StockInFilterForm = observer(() => {
         loadData()
     }, [masterDataStore])
 
-    // Format date for display
-    const formatDate = (dateString: string) => {
-        if (!dateString) return ''
-        try {
-            const date = new Date(dateString)
-            return date.toISOString().split('T')[0] // YYYY-MM-DD format
-        } catch (e) {
-            return dateString
-        }
+
+    // Handle start date confirmation
+    const onConfirmStartDate = ({ date }: { date: Date }) => {
+        setDateRange(prev => ({ ...prev, startDate: date }))
+        setStartDatePickerVisible(false)
+    }
+
+    // Handle end date confirmation
+    const onConfirmEndDate = ({ date }: { date: Date }) => {
+        setDateRange(prev => ({ ...prev, endDate: date }))
+        setEndDatePickerVisible(false)
     }
 
     // Apply all filters
@@ -86,8 +96,8 @@ const StockInFilterForm = observer(() => {
             priority: stockInStore.filters.priority,
             supplierId: stockInStore.filters.supplierId,
             lotNumber: lotNumber || undefined,
-            startDate: startDate || undefined,
-            endDate: endDate || undefined,
+            startDate: dateRange.startDate ? dateRange.startDate.toISOString() : undefined,
+            endDate: dateRange.endDate ? dateRange.endDate.toISOString() : undefined,
         })
     }
 
@@ -95,8 +105,7 @@ const StockInFilterForm = observer(() => {
     const clearFilters = () => {
         setCode('')
         setLotNumber('')
-        setStartDate('')
-        setEndDate('')
+        setDateRange({ startDate: undefined, endDate: undefined })
         stockInStore.resetFilters()
     }
 
@@ -108,8 +117,8 @@ const StockInFilterForm = observer(() => {
             !!stockInStore.filters.priority ||
             !!stockInStore.filters.supplierId ||
             !!lotNumber ||
-            !!startDate ||
-            !!endDate
+            !!dateRange.startDate ||
+            !!dateRange.endDate
         )
     }
 
@@ -168,23 +177,20 @@ const StockInFilterForm = observer(() => {
                             visible={statusMenuVisible}
                             onDismiss={() => setStatusMenuVisible(false)}
                             anchor={
-                                <Button
+                                <TextInput dense
+                                    label="Status"
+                                    value={stockInStore.filters.status
+                                        ? statusOptions.find(
+                                              s => s.value === stockInStore.filters.status
+                                          )?.label || stockInStore.filters.status
+                                        : ''}
+                                    placeholder="Select Status"
                                     mode="outlined"
-                                    onPress={() => setStatusMenuVisible(true)}
-                                    style={styles.dropdownButton}
-                                >
-                                    {stockInStore.filters.status
-                                        ? `Status: ${
-                                              statusOptions.find(
-                                                  s =>
-                                                      s.value ===
-                                                      stockInStore.filters
-                                                          .status
-                                              )?.label ||
-                                              stockInStore.filters.status
-                                          }`
-                                        : 'Select Status'}
-                                </Button>
+                                    style={styles.input}
+                                    editable={false}
+                                    right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
+                                    onTouchStart={() => setStatusMenuVisible(true)}
+                                />
                             }
                         >
                             <Menu.Item
@@ -218,23 +224,20 @@ const StockInFilterForm = observer(() => {
                             visible={priorityMenuVisible}
                             onDismiss={() => setPriorityMenuVisible(false)}
                             anchor={
-                                <Button
+                                <TextInput dense
+                                    label="Priority"
+                                    value={stockInStore.filters.priority !== undefined
+                                        ? priorityOptions.find(
+                                              p => p.value === stockInStore.filters.priority
+                                          )?.label || stockInStore.filters.priority.toString()
+                                        : ''}
+                                    placeholder="Select Priority"
                                     mode="outlined"
-                                    onPress={() => setPriorityMenuVisible(true)}
-                                    style={styles.dropdownButton}
-                                >
-                                    {stockInStore.filters.priority !== undefined
-                                        ? `Priority: ${
-                                              priorityOptions.find(
-                                                  p =>
-                                                      p.value ===
-                                                      stockInStore.filters
-                                                          .priority
-                                              )?.label ||
-                                              stockInStore.filters.priority
-                                          }`
-                                        : 'Select Priority'}
-                                </Button>
+                                    style={styles.input}
+                                    editable={false}
+                                    right={<TextInput.Icon icon="menu-down" onPress={() => setPriorityMenuVisible(true)} />}
+                                    onTouchStart={() => setPriorityMenuVisible(true)}
+                                />
                             }
                         >
                             <Menu.Item
@@ -268,22 +271,20 @@ const StockInFilterForm = observer(() => {
                             visible={supplierMenuVisible}
                             onDismiss={() => setSupplierMenuVisible(false)}
                             anchor={
-                                <Button
+                                <TextInput dense
+                                    label="Supplier"
+                                    value={stockInStore.filters.supplierId
+                                        ? masterDataStore.suppliers.data.find(
+                                              s => s.id === stockInStore.filters.supplierId
+                                          )?.name || 'Selected'
+                                        : ''}
+                                    placeholder="Select Supplier"
                                     mode="outlined"
-                                    onPress={() => setSupplierMenuVisible(true)}
-                                    style={styles.dropdownButton}
-                                >
-                                    {stockInStore.filters.supplierId
-                                        ? `Supplier: ${
-                                              masterDataStore.suppliers.data.find(
-                                                  s =>
-                                                      s.id ===
-                                                      stockInStore.filters
-                                                          .supplierId
-                                              )?.name || 'Selected'
-                                          }`
-                                        : 'Select Supplier'}
-                                </Button>
+                                    style={styles.input}
+                                    editable={false}
+                                    right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
+                                    onTouchStart={() => setSupplierMenuVisible(true)}
+                                />
                             }
                             style={styles.supplierMenu}
                         >
@@ -316,33 +317,63 @@ const StockInFilterForm = observer(() => {
                         </Menu>
                     </View>
 
-                    {/* Date range filters */}
-                    <View style={styles.dateRangeContainer}>
-                        <Text
-                            variant="bodyMedium"
-                            style={styles.dateRangeLabel}
-                        >
-                            Date Range:
-                        </Text>
-                        <View style={styles.dateInputsRow}>
-                            <TextInput dense
-                                label="Start Date"
-                                value={startDate ? formatDate(startDate) : ''}
-                                onChangeText={setStartDate}
-                                mode="outlined"
-                                placeholder="YYYY-MM-DD"
-                                style={styles.dateInput}
-                            />
-                            <Text style={styles.dateRangeSeparator}>to</Text>
-                            <TextInput dense
-                                label="End Date"
-                                value={endDate ? formatDate(endDate) : ''}
-                                onChangeText={setEndDate}
-                                mode="outlined"
-                                placeholder="YYYY-MM-DD"
-                                style={styles.dateInput}
-                            />
-                        </View>
+                    {/* Date range filters - Using two separate TextInputs */}
+                    <View style={styles.dateInputRow}>
+                        {/* Start Date Input */}
+                        <TextInput 
+                            dense
+                            label="From"
+                            value={dateRange.startDate ? formatDate(dateRange.startDate.toISOString()) : ''}
+                            placeholder="Start Date"
+                            mode="outlined"
+                            style={styles.dateInput}
+                            editable={false}
+                            right={<TextInput.Icon icon="calendar" onPress={() => setStartDatePickerVisible(true)} />}
+                            onTouchStart={() => setStartDatePickerVisible(true)}
+                        />
+                        
+                        <Text style={styles.dateRangeSeparator}> </Text>
+                        
+                        {/* End Date Input */}
+                        <TextInput 
+                            dense
+                            label="To"
+                            value={dateRange.endDate ? formatDate(dateRange.endDate.toISOString()) : ''}
+                            placeholder="End Date"
+                            mode="outlined"
+                            style={styles.dateInput}
+                            editable={false}
+                            right={<TextInput.Icon icon="calendar" onPress={() => setEndDatePickerVisible(true)} />}
+                            onTouchStart={() => setEndDatePickerVisible(true)}
+                        />
+                        
+                        {/* Start Date Picker Modal */}
+                        <DatePickerModal
+                            locale="en"
+                            mode="single"
+                            visible={startDatePickerVisible}
+                            onDismiss={() => setStartDatePickerVisible(false)}
+                            date={dateRange.startDate}
+                            onConfirm={(params) => {
+                                if (params.date) {
+                                    onConfirmStartDate({ date: params.date });
+                                }
+                            }}
+                        />
+                        
+                        {/* End Date Picker Modal */}
+                        <DatePickerModal
+                            locale="en"
+                            mode="single"
+                            visible={endDatePickerVisible}
+                            onDismiss={() => setEndDatePickerVisible(false)}
+                            date={dateRange.endDate}
+                            onConfirm={({ date }) => {
+                                if (date) {
+                                    onConfirmEndDate({ date });
+                                }
+                            }}
+                        />
                     </View>
                 </ScrollView>
 
@@ -440,21 +471,25 @@ const StockInFilterForm = observer(() => {
                                         Lot: {lotNumber}
                                     </Chip>
                                 )}
-                                {(startDate || endDate) && (
+                                {(dateRange.startDate || dateRange.endDate) && (
                                     <Chip
                                         mode="outlined"
                                         onClose={() => {
-                                            setStartDate('')
-                                            setEndDate('')
+                                            setDateRange({
+                                                startDate: undefined,
+                                                endDate: undefined
+                                            })
                                         }}
                                         style={styles.filterChip}
                                     >
                                         Date:{' '}
-                                        {startDate
-                                            ? formatDate(startDate)
+                                        {dateRange.startDate
+                                            ? formatDate(dateRange.startDate)
                                             : 'Any'}{' '}
                                         to{' '}
-                                        {endDate ? formatDate(endDate) : 'Any'}
+                                        {dateRange.endDate 
+                                            ? formatDate(dateRange.endDate) 
+                                            : 'Any'}
                                     </Chip>
                                 )}
                             </View>
@@ -507,10 +542,7 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '100%',
-    },
-    dropdownButton: {
-        width: '100%',
-        justifyContent: 'flex-start',
+        backgroundColor: 'transparent',
     },
     supplierMenu: {
         maxWidth: '90%',
@@ -518,22 +550,24 @@ const styles = StyleSheet.create({
     menuScrollView: {
         maxHeight: 200,
     },
-    dateRangeContainer: {
-        marginVertical: 8,
-    },
+    // Date range styles
     dateRangeLabel: {
-        marginBottom: 4,
+        marginBottom: 8,
+        fontWeight: '500',
     },
-    dateInputsRow: {
+    dateInputRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 12,
     },
     dateInput: {
         flex: 1,
+        backgroundColor: 'transparent',
     },
     dateRangeSeparator: {
         marginHorizontal: 8,
     },
+    // Active filters styles
     activeFiltersContainer: {
         marginTop: 16,
     },

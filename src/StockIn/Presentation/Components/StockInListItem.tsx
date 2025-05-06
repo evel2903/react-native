@@ -14,6 +14,7 @@ import {
     getStatusColor,
     getStatusDisplayName,
 } from '@/src/Common/Domain/Enums/Status'
+import { formatDate, formatDateTime, formatCurrency } from '@/src/Core/Utils';
 import {
     PRIORITY,
     getPriorityColor,
@@ -37,29 +38,6 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
     onDelete,
 }) => {
     const authStore = useAuthStore()
-
-    // Format date to user-friendly format
-    const formatDate = (dateString: string) => {
-        return new Date(dateString)
-            .toLocaleDateString('en-CA')
-            .replace(/-/g, '/')
-    }
-
-    // Format date and time
-    const formatDateTime = (dateString?: string) => {
-        if (!dateString) return 'N/A'
-        return new Date(dateString).toLocaleString()
-    }
-
-    // Format currency amounts
-    const formatAmount = (amount: string) => {
-        return parseFloat(amount).toLocaleString('en-US', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
-            style: 'currency',
-            currency: 'USD',
-        })
-    }
 
     // Use the Status enum for type safety
     const getStatusDetails = (statusStr: string) => {
@@ -114,7 +92,7 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                 {/* Details row with quantity and cost */}
                 <View style={styles.detailsRow}>
                     <Text>Items: {itemCount}</Text>
-                    <Text>Total: {formatAmount(item.totalAmount)}</Text>
+                    <Text>Total: {formatCurrency(item.totalAmount)}</Text>
                 </View>
 
                 {/* Timestamps & status */}
