@@ -3,6 +3,7 @@ import { IStockInRepository } from '../../Domain/Specifications/IStockInReposito
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
+import { StockInListItemDto, StockInListResponseDto } from '../Models/StockInListItemDto'
 import StockInDto from '../Models/StockInDto'
 import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
@@ -11,16 +12,16 @@ import IHttpClient, {
 
 @injectable()
 class StockInRepository implements IStockInRepository {
-    private readonly baseUrl = '/api/stock-in'
+    private readonly baseUrl = '/api/mobile/stock-in'
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
     ) {}
 
-    public async createStockIn(payload: any): Promise<StockInEntity> {
+    public async createStockIn(payload: CreateStockInPayload): Promise<StockInEntity> {
         try {
             // Make API request to create stock in
-            const response: any = await this.httpClient.post(
+            const response = await this.httpClient.post<CreateStockInPayload, any>(
                 this.baseUrl,
                 payload
             );
@@ -29,8 +30,9 @@ class StockInRepository implements IStockInRepository {
                 throw new Error('Failed to create stock in record');
             }
             
-            // Transform the response to domain entity
-            return this.transformToEntity(response);
+            // Transform the response to domain entity using StockInDto
+            const stockInDto = plainToInstance(StockInDto, response);
+            return stockInDto.toDomain();
         } catch (error) {
             console.error('Error creating stock in:', error);
             throw error instanceof Error 
@@ -91,18 +93,21 @@ class StockInRepository implements IStockInRepository {
             const url = `${this.baseUrl}?${queryParams.toString()}`;
             
             // Make API request
-            const response: any = await this.httpClient.get(url);
+            const response = await this.httpClient.get<StockInListResponseDto>(url);
             
             // Check if the response has the expected structure
             if (!response || !response.data || !Array.isArray(response.data)) {
                 throw new Error('Unexpected API response format');
             }
             
-            // Transform the data to match our domain model
-            const stockInItems = response.data.map((item: any) => this.transformToEntity(item));
+            // Transform the response items to domain entities
+            const stockInItems = response.data.map(item => {
+                const stockInDto = plainToInstance(StockInListItemDto, item);
+                return stockInDto.toDomain();
+            });
             
-            // Use the count from the first item or default to items length
-            const totalCount = response.total || (stockInItems.length > 0 ? stockInItems[0].count : stockInItems.length);
+            // Use the count from the response or default to items length
+            const totalCount = stockInItems.length > 0 ? stockInItems.length : 0;
             
             return {
                 results: stockInItems,
@@ -110,26 +115,31 @@ class StockInRepository implements IStockInRepository {
             };
         } catch (error) {
             console.error('Error fetching stock ins:', error);
-            throw error;
+            throw error instanceof Error
+                ? error
+                : new Error('Failed to fetch stock in records');
         }
     }
 
     public async getStockInById(id: string): Promise<StockInEntity> {
         try {
-            const response: any = await this.httpClient.get(
+            const response = await this.httpClient.get<any>(
                 `${this.baseUrl}/${id}`
-            )
+            );
 
             // Check if the response has the expected structure
             if (!response) {
-                throw new Error('Stock in record not found')
+                throw new Error('Stock in record not found');
             }
 
-            // Transform the response to domain entity
-            return this.transformToEntity(response);
+            // Transform the response to domain entity using StockInDto
+            const stockInDto = plainToInstance(StockInDto, response);
+            return stockInDto.toDomain();
         } catch (error) {
-            console.error(`Error fetching stock in with ID ${id}:`, error)
-            throw error
+            console.error(`Error fetching stock in with ID ${id}:`, error);
+            throw error instanceof Error
+                ? error
+                : new Error(`Failed to fetch stock in record with ID ${id}`);
         }
     }
 
@@ -139,65 +149,24 @@ class StockInRepository implements IStockInRepository {
     ): Promise<StockInEntity> {
         try {
             // Make API request to update status
-            const response: any = await this.httpClient.patch(
+            const response = await this.httpClient.patch<{status: StockInEntity['status']}, any>(
                 `${this.baseUrl}/${id}/status`,
                 { status }
-            )
+            );
 
             // Check if the response has the expected structure
             if (!response) {
-                throw new Error('Failed to update stock in status')
+                throw new Error('Failed to update stock in status');
             }
 
-            // Transform the response to domain entity
-            return this.transformToEntity(response);
+            // Transform the response to domain entity using StockInDto
+            const stockInDto = plainToInstance(StockInDto, response);
+            return stockInDto.toDomain();
         } catch (error) {
-            console.error(`Error updating stock in status for ID ${id}:`, error)
-            throw error
-        }
-    }
-
-    // Helper method to transform API response to domain entity
-    private transformToEntity(item: any): StockInEntity {
-        return {
-            id: item.Id || item.id,
-            code: item.Code || item.code,
-            supplierId: item.SupplierId || item.supplierId,
-            inDate: item.InDate || item.inDate,
-            description: item.Description || item.description || '',
-            status: item.Status || item.status,
-            notes: item.Notes || item.notes || '',
-            lotNumber: item.LotNumber || item.lotNumber,
-            totalAmount: String(item.TotalAmount || item.totalAmount || 0),
-            priority: item.Priority || item.priority || 0,
-            createdAt: item.CreatedAt || item.createdAt,
-            updatedAt: item.UpdatedAt || item.updatedAt,
-            count: item.count || 0,
-            createdBy: item.CreatedBy || item.createdBy || null,
-            approvedBy: item.ApprovedBy || item.approvedBy || null,
-            isActive: item.IsActive || item.isActive,
-            isDeleted: item.IsDeleted || item.isDeleted,
-            details: Array.isArray(item.Details || item.details) 
-                ? (item.Details || item.details).map((detail: any) => ({
-                    id: detail.Id || detail.id,
-                    goodsId: detail.GoodsId || detail.goodsId,
-                    quantity: detail.Quantity || detail.quantity,
-                    price: String(detail.Price || detail.price),
-                    expiryDate: detail.ExpiryDate || detail.expiryDate,
-                    notes: detail.Notes || detail.notes || '',
-                    goods: detail.goods ? {
-                        id: detail.goods.id,
-                        name: detail.goods.name,
-                    } : null
-                }))
-                : [],
-            supplier: item.supplier ? {
-                id: item.supplier.id,
-                code: item.supplier.code,
-                name: item.supplier.name,
-                isActive: item.supplier.isActive !== undefined ? item.supplier.isActive : true,
-                isDeleted: item.supplier.isDeleted !== undefined ? item.supplier.isDeleted : false,
-            } : undefined,
+            console.error(`Error updating stock in status for ID ${id}:`, error);
+            throw error instanceof Error
+                ? error
+                : new Error(`Failed to update stock in status for ID ${id}`);
         }
     }
 }

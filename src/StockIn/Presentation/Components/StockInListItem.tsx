@@ -106,7 +106,9 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                 </Text>
                 <Text style={styles.infoText}>
                     Supplier:{' '}
-                    {`${item.supplier?.code} - ${item.supplier?.name}` || 'N/A'}
+                    {item.supplier 
+                        ? `${item.supplier.code || ''} - ${item.supplier.name}` 
+                        : 'N/A'}
                 </Text>
 
                 {/* Details row with quantity and cost */}
@@ -177,9 +179,9 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                                 />
                             )}
                     </View>
-                    {/* Only show Approve button for pending status and if user has approval permission */}
-                    {item.status === Status.Pending &&
-                        authStore.hasPermission('stockIn:approve') && (
+                    {/* Only show Approve button if valid for approval and user has approval permission */}
+                    {item.isValidForApprovalRequest === true &&
+                        authStore.hasPermission('approval_request_decisions:create') && (
                             <Button
                                 mode="contained"
                                 style={styles.approveButton}

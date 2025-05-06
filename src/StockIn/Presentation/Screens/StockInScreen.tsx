@@ -67,7 +67,7 @@ const StockInScreen = observer(() => {
     }
 
     const handleView = (id: string) => {
-        navigation.navigate('StockInProcess', { id })
+        console.log('View stock in:', id)
     }
 
     const handleEdit = (id: string) => {

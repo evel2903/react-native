@@ -13,12 +13,13 @@ export default interface StockInEntity {
     lotNumber?: string
     totalAmount: string
 
-    // New fields from updated API response
+    // Fields from updated API response
     priority?: PriorityType
     createdAt?: string
     updatedAt?: string
     count?: number
     isDeleted?: boolean
+    isValidForApprovalRequest?: boolean
 
     // Existing fields that may not be in the base response
     createdBy?: string | null

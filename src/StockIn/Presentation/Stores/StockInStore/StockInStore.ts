@@ -8,6 +8,7 @@ import {
     IStockInRepositoryToken,
 } from '@/src/StockIn/Domain/Specifications/IStockInRepository';
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority';
+import CreateStockInPayload from '@/src/StockIn/Application/Types/CreateStockInPayload';
 
 @injectable()
 export class StockInStore implements StockInStoreState {
@@ -38,12 +39,28 @@ export class StockInStore implements StockInStoreState {
     selectedStockIn: StockInEntity | null = null;
     error: string | null = null;
     filterVisible = false;
+    
+    // Form data for creating new stock in
+    formData: CreateStockInPayload = {
+        productId: '',
+        productName: '',
+        quantity: 0,
+        unit: '',
+        date: new Date().toISOString().split('T')[0],
+        receivedBy: '',
+        supplierName: '',
+        supplierInvoice: '',
+        notes: '',
+        status: 'pending'
+    };
 
     constructor(
         @inject(IStockInRepositoryToken)
         private readonly stockInRepository: IStockInRepository
     ) {
         makeAutoObservable(this);
+        // Load stock ins on store initialization
+        this.getStockIns();
     }
 
     get pageCount() {
@@ -91,6 +108,10 @@ export class StockInStore implements StockInStoreState {
     setSelectedStockIn = (stockIn: StockInEntity | null) => {
         this.selectedStockIn = stockIn;
     };
+    
+    updateFormData = (payload: Partial<CreateStockInPayload>) => {
+        Object.assign(this.formData, payload);
+    };
 
     // Get stock ins with current filters and pagination
     async getStockIns() {
@@ -117,6 +138,8 @@ export class StockInStore implements StockInStoreState {
                 this.setResults(response.results);
                 this.setCount(response.count);
             });
+            
+            return response;
         } catch (error) {
             console.error('Error fetching stock ins:', error);
             
@@ -130,6 +153,8 @@ export class StockInStore implements StockInStoreState {
                 this.setResults([]);
                 this.setCount(0);
             });
+            
+            return null;
         } finally {
             runInAction(() => {
                 this.setIsLoading(false);
@@ -160,6 +185,59 @@ export class StockInStore implements StockInStoreState {
                         : 'Failed to fetch stock in details'
                 );
                 this.setSelectedStockIn(null);
+            });
+            
+            return null;
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false);
+            });
+        }
+    }
+
+    // Create new stock in
+    async createStockIn(payload?: Record<string, any>) {
+        this.setIsLoading(true);
+        this.setError(null);
+        
+        try {
+            // If payload is provided, use it; otherwise use the store's formData
+            const data = payload || this.formData;
+            
+            const stockIn = await this.stockInRepository.createStockIn(data);
+            
+            runInAction(() => {
+                // Add the new stock in to the results if appropriate
+                if (this.results.length > 0) {
+                    this.results = [stockIn, ...this.results];
+                    this.count = this.count + 1;
+                }
+                
+                // Reset form data
+                this.formData = {
+                    productId: '',
+                    productName: '',
+                    quantity: 0,
+                    unit: '',
+                    date: new Date().toISOString().split('T')[0],
+                    receivedBy: '',
+                    supplierName: '',
+                    supplierInvoice: '',
+                    notes: '',
+                    status: 'pending'
+                };
+            });
+            
+            return stockIn;
+        } catch (error) {
+            console.error('Error creating stock in:', error);
+            
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to create stock in'
+                );
             });
             
             return null;
