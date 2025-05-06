@@ -331,7 +331,7 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 1: Code and Supplier */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
-                                        <TextInput
+                                        <TextInput dense
                                             label="Code"
                                             value={code}
                                             onChangeText={setCode}
@@ -357,7 +357,7 @@ const StockInAddScreen = observer(() => {
                                                     <View
                                                         style={styles.dropdown}
                                                     >
-                                                        <TextInput
+                                                        <TextInput dense
                                                             label="Supplier"
                                                             value={
                                                                 supplierId
@@ -413,7 +413,7 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 2: Lot Number and Stock In Date */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
-                                        <TextInput
+                                        <TextInput dense
                                             label="Lot number"
                                             value={lotNumber}
                                             onChangeText={setLotNumber}
@@ -422,7 +422,7 @@ const StockInAddScreen = observer(() => {
                                         />
                                     </View>
                                     <View style={styles.inputHalf}>
-                                        <TextInput
+                                        <TextInput dense
                                             label="Stock in date"
                                             value={stockInDate}
                                             onChangeText={setStockInDate}
@@ -441,7 +441,7 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 3: Created by and Description */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
-                                        <TextInput
+                                        <TextInput dense
                                             label="Created by"
                                             value={authStore.user?.name || ''}
                                             editable={false}
@@ -450,7 +450,7 @@ const StockInAddScreen = observer(() => {
                                         />
                                     </View>
                                     <View style={styles.inputHalf}>
-                                        <TextInput
+                                        <TextInput dense
                                             label="Approved by"
                                             value=""
                                             editable={false}
@@ -464,7 +464,7 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 4: Total Cost and Status */}
                                 <View style={styles.row}>
                                     <View style={styles.inputHalf}>
-                                        <TextInput
+                                        <TextInput dense
                                             label="Total cost"
                                             value={totalAmount}
                                             onChangeText={setTotalAmount}
@@ -491,7 +491,7 @@ const StockInAddScreen = observer(() => {
                                                     <View
                                                         style={styles.dropdown}
                                                     >
-                                                        <TextInput
+                                                        <TextInput dense
                                                             label="Status"
                                                             value={status}
                                                             mode="outlined"
@@ -526,7 +526,7 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 5: Note and Priority */}
                                 <View style={styles.noteRow}>
                                     <View style={styles.inputFull}>
-                                                                                    <TextInput
+                                                                                    <TextInput dense
                                             label="Note"
                                             value={notes}
                                             onChangeText={setNotes}
@@ -606,7 +606,7 @@ const StockInAddScreen = observer(() => {
                                                     styles.goodsItemCodeSection
                                                 }
                                             >
-                                                <TextInput
+                                                <TextInput dense
                                                     value={item.goodsCode}
                                                     mode="outlined"
                                                     editable={false}
@@ -637,7 +637,7 @@ const StockInAddScreen = observer(() => {
                                         </Text>
 
                                         <View style={styles.goodsItemRow}>
-                                            <TextInput
+                                            <TextInput dense
                                                 label="Expiry date"
                                                 value={formatDate(
                                                     item.expiryDate
@@ -657,7 +657,7 @@ const StockInAddScreen = observer(() => {
                                         </View>
 
                                         <View style={styles.goodsItemRow}>
-                                            <TextInput
+                                            <TextInput dense
                                                 label="Quantity"
                                                 value={item.quantity.toString()}
                                                 onChangeText={value => {
@@ -675,7 +675,7 @@ const StockInAddScreen = observer(() => {
                                                     styles.goodsItemHalfInput
                                                 }
                                             />
-                                            <TextInput
+                                            <TextInput dense
                                                 label="Cost"
                                                 value={item.price.toString()}
                                                 onChangeText={value => {
@@ -696,7 +696,7 @@ const StockInAddScreen = observer(() => {
                                         </View>
 
                                         <View style={styles.goodsItemRow}>
-                                            <TextInput
+                                            <TextInput dense
                                                 label="Note"
                                                 value={item.notes}
                                                 onChangeText={value =>

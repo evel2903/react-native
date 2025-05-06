@@ -142,7 +142,7 @@ const StockInFilterForm = observer(() => {
                 >
                     {/* Code filter */}
                     <View style={styles.filterRow}>
-                        <TextInput
+                        <TextInput dense
                             label="Code"
                             value={code}
                             onChangeText={setCode}
@@ -153,7 +153,7 @@ const StockInFilterForm = observer(() => {
 
                     {/* Lot Number filter */}
                     <View style={styles.filterRow}>
-                        <TextInput
+                        <TextInput dense
                             label="Lot Number"
                             value={lotNumber}
                             onChangeText={setLotNumber}
@@ -325,7 +325,7 @@ const StockInFilterForm = observer(() => {
                             Date Range:
                         </Text>
                         <View style={styles.dateInputsRow}>
-                            <TextInput
+                            <TextInput dense
                                 label="Start Date"
                                 value={startDate ? formatDate(startDate) : ''}
                                 onChangeText={setStartDate}
@@ -334,7 +334,7 @@ const StockInFilterForm = observer(() => {
                                 style={styles.dateInput}
                             />
                             <Text style={styles.dateRangeSeparator}>to</Text>
-                            <TextInput
+                            <TextInput dense
                                 label="End Date"
                                 value={endDate ? formatDate(endDate) : ''}
                                 onChangeText={setEndDate}
