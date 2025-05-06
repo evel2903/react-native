@@ -185,14 +185,15 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                             'approval_request_decisions:create'
                         ) && (
                             <Button
-                                mode="contained"
+                                mode="outlined"
                                 style={[
                                     styles.approveButton,
                                     {
-                                        backgroundColor: getStatusDetails(Status.Approved)
+                                        borderColor: getStatusDetails(Status.Approved)
                                             .color,
                                     },
                                 ]}
+                                textColor={getStatusDetails(Status.Approved).color}
                                 onPress={() => onApprove(item.id)}
                             >
                                 Approve
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
     },
     approveButton: {
         borderRadius: 4,
-        color: 'white',
+        borderWidth: 1,
         fontSize: 12,
         textAlign: 'center',
         lineHeight: 16,

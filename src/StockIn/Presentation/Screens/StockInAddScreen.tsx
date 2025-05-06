@@ -21,6 +21,7 @@ import {
     Surface,
     TouchableRipple,
     ActivityIndicator,
+    Title,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -36,6 +37,7 @@ import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { Status } from '@/src/Common/Domain/Enums/Status'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
+import { PRIORITY, getPriorityDisplayName } from '@/src/Common/Domain/Enums/Priority'
 
 interface GoodsItem {
     goodsId: string
@@ -65,7 +67,7 @@ const StockInAddScreen = observer(() => {
     const [totalAmount, setTotalAmount] = useState('0')
     const [status, setStatus] = useState(Status.Draft)
     const [notes, setNotes] = useState('')
-    const [priority, setPriority] = useState(1)
+    const [priority, setPriority] = useState(2) // Default to High priority
 
     // Goods list
     const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
@@ -268,6 +270,41 @@ const StockInAddScreen = observer(() => {
         } catch (e) {
             return date
         }
+    }
+
+    // Priority styles based on value
+    const getPriorityButtonStyle = (priorityValue: number) => {
+        const isSelected = priorityValue === priority;
+        const baseStyles = [
+            styles.priorityButton,
+            {
+                backgroundColor: isSelected ? 
+                    (priorityValue === PRIORITY.High ? '#ff5252' : 
+                     priorityValue === PRIORITY.Medium ? '#fb8c00' : 
+                     '#4caf50') : 
+                    'transparent',
+                borderWidth: 1,
+                borderColor: priorityValue === PRIORITY.High ? '#ff5252' : 
+                             priorityValue === PRIORITY.Medium ? '#fb8c00' : 
+                             '#4caf50'
+            }
+        ];
+        
+        return baseStyles;
+    }
+    
+    // Get text style based on selection state
+    const getPriorityTextStyle = (priorityValue: number) => {
+        const isSelected = priorityValue === priority;
+        return [
+            styles.priorityButtonText,
+            {
+                color: isSelected ? 'white' : 
+                      (priorityValue === PRIORITY.High ? '#ff5252' : 
+                       priorityValue === PRIORITY.Medium ? '#fb8c00' : 
+                       '#4caf50')
+            }
+        ];
     }
 
     return (
@@ -489,56 +526,45 @@ const StockInAddScreen = observer(() => {
                                 {/* Row 5: Note and Priority */}
                                 <View style={styles.noteRow}>
                                     <View style={styles.inputFull}>
-                                        <TextInput
+                                                                                    <TextInput
                                             label="Note"
                                             value={notes}
                                             onChangeText={setNotes}
                                             mode="outlined"
                                             multiline
-                                            numberOfLines={3}
-                                            style={styles.input}
+                                            numberOfLines={4}
+                                            style={[styles.input, styles.noteInput]}
                                         />
                                     </View>
-                                    <View style={styles.priorityButtons}>
-                                        <TouchableRipple
-                                            style={[
-                                                styles.priorityButton,
-                                                styles.priorityRed,
-                                                priority === 1 &&
-                                                    styles.priorityActive,
-                                            ]}
-                                            onPress={() => setPriority(1)}
-                                        >
-                                            <Text style={styles.priorityText}>
-                                                1
-                                            </Text>
-                                        </TouchableRipple>
-                                        <TouchableRipple
-                                            style={[
-                                                styles.priorityButton,
-                                                styles.priorityGray,
-                                                priority === 2 &&
-                                                    styles.priorityActive,
-                                            ]}
-                                            onPress={() => setPriority(2)}
-                                        >
-                                            <Text style={styles.priorityText}>
-                                                2
-                                            </Text>
-                                        </TouchableRipple>
-                                        <TouchableRipple
-                                            style={[
-                                                styles.priorityButton,
-                                                styles.priorityBlue,
-                                                priority === 3 &&
-                                                    styles.priorityActive,
-                                            ]}
-                                            onPress={() => setPriority(3)}
-                                        >
-                                            <Text style={styles.priorityText}>
-                                                3
-                                            </Text>
-                                        </TouchableRipple>
+                                    <View style={styles.priorityContainer}>
+                                        <View style={styles.priorityButtonsContainer}>
+                                            <TouchableRipple
+                                                style={getPriorityButtonStyle(PRIORITY.High)}
+                                                onPress={() => setPriority(PRIORITY.High)}
+                                            >
+                                                <Text style={getPriorityTextStyle(PRIORITY.High)}>
+                                                    {getPriorityDisplayName(PRIORITY.High)}
+                                                </Text>
+                                            </TouchableRipple>
+                                            
+                                            <TouchableRipple
+                                                style={getPriorityButtonStyle(PRIORITY.Medium)}
+                                                onPress={() => setPriority(PRIORITY.Medium)}
+                                            >
+                                                <Text style={getPriorityTextStyle(PRIORITY.Medium)}>
+                                                    {getPriorityDisplayName(PRIORITY.Medium)}
+                                                </Text>
+                                            </TouchableRipple>
+                                            
+                                            <TouchableRipple
+                                                style={getPriorityButtonStyle(PRIORITY.Low)}
+                                                onPress={() => setPriority(PRIORITY.Low)}
+                                            >
+                                                <Text style={getPriorityTextStyle(PRIORITY.Low)}>
+                                                    {getPriorityDisplayName(PRIORITY.Low)}
+                                                </Text>
+                                            </TouchableRipple>
+                                        </View>
                                     </View>
                                 </View>
                             </Surface>
@@ -777,13 +803,13 @@ const styles = StyleSheet.create({
     },
     noteRow: {
         flexDirection: 'row',
+        marginBottom: 16,
     },
     inputHalf: {
         width: '48%',
     },
     inputFull: {
         flex: 1,
-        marginRight: 8,
     },
     input: {
         backgroundColor: 'transparent',
@@ -791,35 +817,39 @@ const styles = StyleSheet.create({
     dropdown: {
         flex: 1,
     },
-    priorityButtons: {
+    // Priority styles
+    priorityContainer: {
+        width: 80, // Reduced width to minimum
+        marginLeft: 12,
+        justifyContent: 'center',
+    },
+    priorityButtonsContainer: {
+        flexDirection: 'column',
         justifyContent: 'space-between',
-        alignItems: 'flex-end',
+        alignItems: 'stretch',
+        height: 125, // Match the height of the note input with 4 lines
     },
     priorityButton: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
+        flex: 1,
+        borderRadius: 6,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 4,
+        marginVertical: 4,
+        paddingHorizontal: 2,
     },
-    priorityRed: {
-        backgroundColor: '#e53935',
-    },
-    priorityGray: {
-        backgroundColor: '#757575',
-    },
-    priorityBlue: {
-        backgroundColor: '#2196f3',
-    },
-    priorityActive: {
-        borderWidth: 2,
-        borderColor: '#000',
-    },
-    priorityText: {
-        color: 'white',
+    priorityButtonText: {
         fontWeight: 'bold',
+        fontSize: 11,
+        textAlign: 'center',
     },
+    noteInput: {
+        height: 125, // Match the height of priority buttons container
+    },
+    // Default we don't need these styles anymore as we apply them directly
+    priorityHigh: {}, // Empty object since we apply styles dynamically now
+    priorityMedium: {}, // Empty object since we apply styles dynamically now
+    priorityLow: {}, // Empty object since we apply styles dynamically now
+    priorityActive: {}, // Empty object since we apply styles dynamically now
     goodsListHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
