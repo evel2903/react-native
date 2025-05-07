@@ -40,6 +40,7 @@ import { Status } from '@/src/Common/Domain/Enums/Status'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
 import { PRIORITY, getPriorityDisplayName } from '@/src/Common/Domain/Enums/Priority'
+import GoodsScannerModal from '../Components/GoodsScannerModal'
 
 interface GoodsItem {
     goodsId: string
@@ -86,6 +87,7 @@ const StockInAddScreen = observer(() => {
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
     const [goodsMenuVisible, setGoodsMenuVisible] = useState(false)
+    const [scannerModalVisible, setScannerModalVisible] = useState(false) // New state for scanner modal
     const [isLoading, setIsLoading] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
@@ -165,9 +167,11 @@ const StockInAddScreen = observer(() => {
         setExpiryDatePickerVisible(false)
     }
 
+    // Modified to show scanner modal
     const addGoodsItem = () => {
         resetGoodsItemForm()
-        setGoodsMenuVisible(true)
+        // Show the scanner modal instead of the goods menu
+        setScannerModalVisible(true)
     }
 
     const editGoodsItem = (index: number) => {
@@ -197,6 +201,28 @@ const StockInAddScreen = observer(() => {
         }
 
         setGoodsMenuVisible(false)
+    }
+    
+    // New function to handle goods selected from scanner
+    const handleGoodsFromScanner = (goods: any) => {
+        if (goods && currentItem) {
+            const updatedItem = {
+                ...currentItem,
+                goodsId: goods.id,
+                goodsCode: goods.code,
+                goodsName: goods.name,
+            }
+            
+            setCurrentItem(updatedItem)
+
+            // Add the goods to the list if not editing an existing item
+            if (currentItemIndex === null) {
+                setGoodsItems([...goodsItems, updatedItem])
+            }
+        }
+        
+        // Close the scanner modal
+        setScannerModalVisible(false)
     }
 
     const removeGoodsItem = (goodsId: string) => {
@@ -634,7 +660,12 @@ const StockInAddScreen = observer(() => {
                                                 <IconButton
                                                     icon="barcode-scan"
                                                     size={24}
-                                                    onPress={() => {}}
+                                                    onPress={() => {
+                                                        // Set the current item for editing and show scanner
+                                                        setCurrentItem(item)
+                                                        setCurrentItemIndex(index)
+                                                        setScannerModalVisible(true)
+                                                    }}
                                                     style={styles.scanButton}
                                                 />
                                             </View>
@@ -786,7 +817,7 @@ const StockInAddScreen = observer(() => {
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
 
-                {/* Select Goods Dialog */}
+                {/* Goods Selection Menu (if you still want to keep it) */}
                 <Menu
                     visible={goodsMenuVisible}
                     onDismiss={() => setGoodsMenuVisible(false)}
@@ -805,6 +836,15 @@ const StockInAddScreen = observer(() => {
                             ))}
                     </ScrollView>
                 </Menu>
+
+                {/* Goods Scanner Modal */}
+                <GoodsScannerModal
+                    visible={scannerModalVisible}
+                    onClose={() => setScannerModalVisible(false)}
+                    onSelectGoods={handleGoodsFromScanner}
+                    goods={masterDataStore.goods.data.filter(g => g.isActive && !g.isDeleted)}
+                    isLoading={isLoading}
+                />
 
                 {/* Loading indicator */}
                 {isLoading && (
