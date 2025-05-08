@@ -7,7 +7,6 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
-    Alert,
 } from 'react-native'
 import {
     Appbar,
@@ -21,9 +20,8 @@ import {
     Surface,
     TouchableRipple,
     ActivityIndicator,
-    Title,
 } from 'react-native-paper'
-import { formatDate} from '@/src/Core/Utils';
+import { formatDate } from '@/src/Core/Utils'
 import { DatePickerModal } from 'react-native-paper-dates'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -42,6 +40,7 @@ import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/Auth
 import { PRIORITY, getPriorityDisplayName } from '@/src/Common/Domain/Enums/Priority'
 import GoodsScannerModal from '../Components/GoodsScannerModal'
 import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
+import StockInGoodsItem from '../Components/StockInGoodsItem'
 
 interface GoodsItem {
     goodsId: string
@@ -80,14 +79,11 @@ const StockInAddScreen = observer(() => {
 
     // Date picker states
     const [stockInDatePickerVisible, setStockInDatePickerVisible] = useState(false)
-    const [expiryDatePickerVisible, setExpiryDatePickerVisible] = useState(false)
     const [selectedStockInDate, setSelectedStockInDate] = useState(new Date())
-    const [selectedExpiryDate, setSelectedExpiryDate] = useState(new Date())
 
     // UI state
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
-    const [goodsMenuVisible, setGoodsMenuVisible] = useState(false)
     const [scannerModalVisible, setScannerModalVisible] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
@@ -152,22 +148,6 @@ const StockInAddScreen = observer(() => {
         setStockInDatePickerVisible(false)
     }
 
-    // Handle expiry date confirmation
-    const onConfirmExpiryDate = ({ date }: { date: Date }) => {
-        setSelectedExpiryDate(date)
-        if (currentItem && currentItemIndex !== null) {
-            // Updating existing item
-            updateGoodsItem(currentItem.goodsId, 'expiryDate', date.toISOString())
-        } else if (currentItem) {
-            // For new item that hasn't been added yet
-            setCurrentItem({
-                ...currentItem,
-                expiryDate: date.toISOString()
-            })
-        }
-        setExpiryDatePickerVisible(false)
-    }
-
     // Show scanner modal for adding goods
     const addGoodsItem = () => {
         resetGoodsItemForm()
@@ -178,34 +158,58 @@ const StockInAddScreen = observer(() => {
         const item = goodsItems[index]
         setCurrentItem(item)
         setCurrentItemIndex(index)
-        setSelectedExpiryDate(new Date(item.expiryDate))
+    }
+
+    const handleScanGoodsItem = (index: number) => {
+        // Set the current item for editing and show scanner
+        setCurrentItem(goodsItems[index])
+        setCurrentItemIndex(index)
+        setScannerModalVisible(true)
     }
 
     // Updated to handle goods selected from scanner
     const handleGoodsFromScanner = (goods: GoodsEntity) => {
-        if (goods && currentItem) {
-            const updatedItem = {
-                ...currentItem,
+        if (goods) {
+            // Check if this goods item already exists in the list
+            const existingItemIndex = goodsItems.findIndex(item => item.goodsId === goods.id);
+            
+            // Create a new item with default values
+            const newItem = {
                 goodsId: goods.id,
                 goodsCode: goods.code,
                 goodsName: goods.name,
-            }
+                quantity: 1,
+                price: 0,
+                expiryDate: new Date().toISOString(),
+                notes: '',
+            };
             
-            setCurrentItem(updatedItem)
-
-            // Add the goods to the list if not editing an existing item
-            if (currentItemIndex === null) {
-                setGoodsItems([...goodsItems, updatedItem])
-            } else {
-                // Update the item if editing an existing one
-                const updatedItems = [...goodsItems]
-                updatedItems[currentItemIndex] = updatedItem
-                setGoodsItems(updatedItems)
+            setCurrentItem(newItem);
+            
+            // If we're currently editing an item
+            if (currentItemIndex !== null) {
+                const updatedItems = [...goodsItems];
+                updatedItems[currentItemIndex] = newItem;
+                setGoodsItems(updatedItems);
+            } 
+            // If this goods item already exists in the list
+            else if (existingItemIndex !== -1) {
+                // Clear the data in the existing item rather than creating a new one
+                const updatedItems = [...goodsItems];
+                updatedItems[existingItemIndex] = newItem;
+                setGoodsItems(updatedItems);
+                
+                // Show notification about updating existing item
+                showSnackbar(`Updated existing ${goods.name} item`);
+            } 
+            // Otherwise add as a new item
+            else {
+                setGoodsItems([...goodsItems, newItem]);
             }
         }
         
         // Close the scanner modal
-        setScannerModalVisible(false)
+        setScannerModalVisible(false);
     }
 
     const removeGoodsItem = (goodsId: string) => {
@@ -620,157 +624,13 @@ const StockInAddScreen = observer(() => {
                                     add goods.
                                 </Text>
                             ) : (
-                                goodsItems.map((item, index) => (
-                                    <Surface
+                                goodsItems.map((item) => (
+                                    <StockInGoodsItem
                                         key={item.goodsId}
-                                        style={styles.goodsItemCard}
-                                        elevation={1}
-                                    >
-                                        <View style={styles.goodsItemHeader}>
-                                            <View
-                                                style={
-                                                    styles.goodsItemCodeSection
-                                                }
-                                            >
-                                                <TextInput dense
-                                                    value={item.goodsCode}
-                                                    mode="outlined"
-                                                    editable={false}
-                                                    style={
-                                                        styles.goodsCodeInput
-                                                    }
-                                                />
-                                                <IconButton
-                                                    icon="barcode-scan"
-                                                    size={24}
-                                                    onPress={() => {
-                                                        // Set the current item for editing and show scanner
-                                                        setCurrentItem(item)
-                                                        setCurrentItemIndex(index)
-                                                        setScannerModalVisible(true)
-                                                    }}
-                                                    style={styles.scanButton}
-                                                />
-                                            </View>
-                                            <View style={styles.goodsItemActions}>
-                                                <IconButton
-                                                    icon="pencil"
-                                                    size={20}
-                                                    onPress={() => editGoodsItem(index)}
-                                                    style={styles.editButton}
-                                                />
-                                                <IconButton
-                                                    icon="close"
-                                                    size={20}
-                                                    onPress={() =>
-                                                        removeGoodsItem(
-                                                            item.goodsId
-                                                        )
-                                                    }
-                                                />
-                                            </View>
-                                        </View>
-
-                                        <Text style={styles.goodsName}>
-                                            {item.goodsName}
-                                        </Text>
-
-                                        <View style={styles.goodsItemRow}>
-                                            {/* Expiry date as TextInput */}
-                                            <TextInput dense
-                                                label="Expiry date"
-                                                value={formatDate(item.expiryDate)}
-                                                mode="outlined"
-                                                style={styles.goodsItemFullInput}
-                                                editable={false}
-                                                right={<TextInput.Icon icon="calendar" onPress={() => {
-                                                    setCurrentItem(item);
-                                                    setCurrentItemIndex(index);
-                                                    setSelectedExpiryDate(new Date(item.expiryDate));
-                                                    setExpiryDatePickerVisible(true);
-                                                }} />}
-                                                onTouchStart={() => {
-                                                    setCurrentItem(item);
-                                                    setCurrentItemIndex(index);
-                                                    setSelectedExpiryDate(new Date(item.expiryDate));
-                                                    setExpiryDatePickerVisible(true);
-                                                }}
-                                            />
-                                            
-                                            {/* Expiry Date Picker Modal */}
-                                            <DatePickerModal
-                                                locale="en"
-                                                mode="single"
-                                                visible={expiryDatePickerVisible}
-                                                onDismiss={() => setExpiryDatePickerVisible(false)}
-                                                date={selectedExpiryDate}
-                                                onConfirm={({ date }) => {
-                                                    if (date) {
-                                                        onConfirmExpiryDate({ date });
-                                                    }
-                                                }}
-                                            />
-                                        </View>
-
-                                        <View style={styles.goodsItemRow}>
-                                            <TextInput dense
-                                                label="Quantity"
-                                                value={item.quantity.toString()}
-                                                onChangeText={value => {
-                                                    const numValue =
-                                                        parseFloat(value) || 0
-                                                    updateGoodsItem(
-                                                        item.goodsId,
-                                                        'quantity',
-                                                        numValue
-                                                    )
-                                                }}
-                                                mode="outlined"
-                                                keyboardType="numeric"
-                                                style={
-                                                    styles.goodsItemHalfInput
-                                                }
-                                            />
-                                            <TextInput dense
-                                                label="Cost"
-                                                value={item.price.toString()}
-                                                onChangeText={value => {
-                                                    const numValue =
-                                                        parseFloat(value) || 0
-                                                    updateGoodsItem(
-                                                        item.goodsId,
-                                                        'price',
-                                                        numValue
-                                                    )
-                                                }}
-                                                mode="outlined"
-                                                keyboardType="numeric"
-                                                style={
-                                                    styles.goodsItemHalfInput
-                                                }
-                                            />
-                                        </View>
-
-                                        <View style={styles.goodsItemRow}>
-                                            <TextInput dense
-                                                label="Note"
-                                                value={item.notes}
-                                                onChangeText={value =>
-                                                    updateGoodsItem(
-                                                        item.goodsId,
-                                                        'notes',
-                                                        value
-                                                    )
-                                                }
-                                                mode="outlined"
-                                                multiline
-                                                numberOfLines={2}
-                                                style={
-                                                    styles.goodsItemFullInput
-                                                }
-                                            />
-                                        </View>
-                                    </Surface>
+                                        item={item}
+                                        onRemove={removeGoodsItem}
+                                        onUpdate={updateGoodsItem}
+                                    />
                                 ))
                             )}
 
@@ -903,49 +763,6 @@ const styles = StyleSheet.create({
     addButton: {
         margin: 0,
     },
-    goodsItemCard: {
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 12,
-    },
-    goodsItemHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    goodsItemCodeSection: {
-        flexDirection: 'row',
-        flex: 1,
-        alignItems: 'center',
-    },
-    goodsItemActions: {
-        flexDirection: 'row',
-    },
-    goodsCodeInput: {
-        flex: 1,
-        marginRight: 8,
-    },
-    scanButton: {
-        margin: 0,
-    },
-    editButton: {
-        margin: 0,
-    },
-    goodsName: {
-        marginVertical: 4,
-        marginLeft: 4,
-    },
-    goodsItemRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
-    },
-    goodsItemFullInput: {
-        flex: 1,
-    },
-    goodsItemHalfInput: {
-        width: '48%',
-    },
     actionButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -965,15 +782,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
-    },
-    goodsMenu: {
-        width: '80%',
-        maxHeight: 300,
-        marginHorizontal: '10%',
-        marginTop: 100,
-    },
-    goodsMenuScroll: {
-        maxHeight: 250,
     },
     emptyListText: {
         textAlign: 'center',
