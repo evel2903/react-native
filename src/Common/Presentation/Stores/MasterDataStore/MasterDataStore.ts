@@ -10,6 +10,7 @@ import { CategoryEntity } from '@/src/Common/Domain/Entities/CategoryEntity'
 import { UnitEntity } from '@/src/Common/Domain/Entities/UnitEntity'
 import { SupplierEntity } from '@/src/Common/Domain/Entities/SupplierEntity'
 import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
+import { IMasterDataRepository, IMasterDataRepositoryToken } from '@/src/Common/Domain/Specifications/IMasterDataRepository'
 
 @injectable()
 export class MasterDataStore implements MasterDataStoreState {
@@ -45,7 +46,9 @@ export class MasterDataStore implements MasterDataStoreState {
         @inject(GetSuppliersUseCase)
         private readonly getSuppliersUseCase: GetSuppliersUseCase,
         @inject(GetGoodsUseCase)
-        private readonly getGoodsUseCase: GetGoodsUseCase
+        private readonly getGoodsUseCase: GetGoodsUseCase,
+        @inject(IMasterDataRepositoryToken)
+        private readonly masterDataRepository: IMasterDataRepository
     ) {
         makeAutoObservable(this)
     }
@@ -166,13 +169,23 @@ export class MasterDataStore implements MasterDataStoreState {
         return this.goods.data.find(item => item.id === id)
     }
 
+    // New method to fetch goods by code using the repository directly
+    async getGoodsByCode(code: string): Promise<GoodsEntity | null> {
+        try {
+            return await this.masterDataRepository.getGoodsByCode(code)
+        } catch (error) {
+            console.error(`Error fetching goods with code ${code}:`, error)
+            return null
+        }
+    }
+
     // Helper method to load all master data at once
     async loadAllMasterData() {
         await Promise.all([
             this.loadCategories(),
             this.loadUnits(),
             this.loadSuppliers(),
-            this.loadGoods(),
+            // Removed loadGoods() from here as we'll fetch goods as needed
         ])
     }
 

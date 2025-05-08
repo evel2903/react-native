@@ -88,6 +88,23 @@ class MasterDataRepository implements IMasterDataRepository {
         }
     }
 
+    // Implement the new method to fetch goods by code
+    public async getGoodsByCode(code: string): Promise<GoodsEntity | null> {
+        try {
+            const response: any = await this.httpClient.get(`/api/goods?code=${encodeURIComponent(code)}`)
+
+            if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
+                return null
+            }
+
+            // Return the first item from the response data array
+            return plainToInstance(GoodsDto, response.data[0]).toDomain()
+        } catch (error) {
+            console.error(`Error fetching goods with code ${code}:`, error)
+            return null
+        }
+    }
+
     public async getCategoryById(id: string): Promise<CategoryEntity | null> {
         try {
             const response: any = await this.httpClient.get(

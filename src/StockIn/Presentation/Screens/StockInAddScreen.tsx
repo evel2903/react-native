@@ -41,6 +41,7 @@ import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthSt
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
 import { PRIORITY, getPriorityDisplayName } from '@/src/Common/Domain/Enums/Priority'
 import GoodsScannerModal from '../Components/GoodsScannerModal'
+import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
 
 interface GoodsItem {
     goodsId: string
@@ -87,21 +88,21 @@ const StockInAddScreen = observer(() => {
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
     const [goodsMenuVisible, setGoodsMenuVisible] = useState(false)
-    const [scannerModalVisible, setScannerModalVisible] = useState(false) // New state for scanner modal
+    const [scannerModalVisible, setScannerModalVisible] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
 
-    // Load master data when component mounts
+    // Load master data when component mounts - but not goods
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true)
             try {
                 await Promise.all([
                     masterDataStore.loadSuppliers(),
-                    masterDataStore.loadGoods(),
                     masterDataStore.loadUnits(),
+                    // We're not loading all goods anymore to improve performance
                 ])
             } catch (error) {
                 showSnackbar('Failed to load master data')
@@ -167,10 +168,9 @@ const StockInAddScreen = observer(() => {
         setExpiryDatePickerVisible(false)
     }
 
-    // Modified to show scanner modal
+    // Show scanner modal for adding goods
     const addGoodsItem = () => {
         resetGoodsItemForm()
-        // Show the scanner modal instead of the goods menu
         setScannerModalVisible(true)
     }
 
@@ -181,9 +181,8 @@ const StockInAddScreen = observer(() => {
         setSelectedExpiryDate(new Date(item.expiryDate))
     }
 
-    const selectGoods = (goodsId: string) => {
-        const goods = masterDataStore.goods.data.find(g => g.id === goodsId)
-
+    // Updated to handle goods selected from scanner
+    const handleGoodsFromScanner = (goods: GoodsEntity) => {
         if (goods && currentItem) {
             const updatedItem = {
                 ...currentItem,
@@ -197,27 +196,11 @@ const StockInAddScreen = observer(() => {
             // Add the goods to the list if not editing an existing item
             if (currentItemIndex === null) {
                 setGoodsItems([...goodsItems, updatedItem])
-            }
-        }
-
-        setGoodsMenuVisible(false)
-    }
-    
-    // New function to handle goods selected from scanner
-    const handleGoodsFromScanner = (goods: any) => {
-        if (goods && currentItem) {
-            const updatedItem = {
-                ...currentItem,
-                goodsId: goods.id,
-                goodsCode: goods.code,
-                goodsName: goods.name,
-            }
-            
-            setCurrentItem(updatedItem)
-
-            // Add the goods to the list if not editing an existing item
-            if (currentItemIndex === null) {
-                setGoodsItems([...goodsItems, updatedItem])
+            } else {
+                // Update the item if editing an existing one
+                const updatedItems = [...goodsItems]
+                updatedItems[currentItemIndex] = updatedItem
+                setGoodsItems(updatedItems)
             }
         }
         
@@ -817,32 +800,11 @@ const StockInAddScreen = observer(() => {
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
 
-                {/* Goods Selection Menu (if you still want to keep it) */}
-                <Menu
-                    visible={goodsMenuVisible}
-                    onDismiss={() => setGoodsMenuVisible(false)}
-                    anchor={{ x: 0, y: 0 }}
-                    style={styles.goodsMenu}
-                >
-                    <ScrollView style={styles.goodsMenuScroll}>
-                        {masterDataStore.goods.data
-                            .filter(g => g.isActive && !g.isDeleted)
-                            .map(goods => (
-                                <Menu.Item
-                                    key={goods.id}
-                                    onPress={() => selectGoods(goods.id)}
-                                    title={`${goods.name} (${goods.code})`}
-                                />
-                            ))}
-                    </ScrollView>
-                </Menu>
-
-                {/* Goods Scanner Modal */}
+                {/* Updated GoodsScannerModal with new API-based approach */}
                 <GoodsScannerModal
                     visible={scannerModalVisible}
                     onClose={() => setScannerModalVisible(false)}
                     onSelectGoods={handleGoodsFromScanner}
-                    goods={masterDataStore.goods.data.filter(g => g.isActive && !g.isDeleted)}
                     isLoading={isLoading}
                 />
 
