@@ -1,5 +1,3 @@
-// Update the StockInScreen component in src/StockIn/Presentation/Screens/StockInScreen.tsx
-
 import React, { useEffect, useState, useCallback } from 'react'
 import {
     View,
@@ -22,7 +20,7 @@ import {
     Snackbar,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { RootScreenNavigationProp } from '@/src/Core/Presentation/Navigation/Types/Index'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
@@ -53,6 +51,14 @@ const StockInScreen = observer(() => {
         // Load stock in data when component mounts
         stockInStore.resetFilters()
     }, [])
+
+    // Add useFocusEffect to refresh the list when the screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            stockInStore.getStockIns()
+            return () => {}
+        }, [stockInStore])
+    )
 
     const handleGoBack = () => {
         navigation.navigate('Home')

@@ -305,13 +305,13 @@ const StockInAddScreen = observer(() => {
             showSnackbar('Please fill in all required fields')
             return
         }
-
+    
         setIsLoading(true)
-
+    
         try {
             // Format date to ISO
             const isoDate = new Date(stockInDate).toISOString()
-
+    
             // Prepare payload according to API requirements
             const payload = {
                 code,
@@ -333,12 +333,15 @@ const StockInAddScreen = observer(() => {
                     notes: item.notes,
                 })),
             }
-
+    
             // Call store to save data
             const result = await stockInStore.createStockIn(payload)
-
+    
             if (result) {
                 showSnackbar('Stock in created successfully')
+                
+                // Short timeout to allow the user to see the success message
+                // before navigating back to the list screen
                 setTimeout(() => {
                     navigation.goBack()
                 }, 1500)

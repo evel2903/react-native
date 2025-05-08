@@ -197,22 +197,20 @@ export class StockInStore implements StockInStoreState {
 
     // Create new stock in
     async createStockIn(payload?: Record<string, any>) {
-        this.setIsLoading(true)
-        this.setError(null)
-
+        this.setIsLoading(true);
+        this.setError(null);
+    
         try {
             // If payload is provided, use it; otherwise use the store's formData
-            const data = payload || this.formData
-
-            const stockIn = await this.stockInRepository.createStockIn(data)
-
+            const data = payload || this.formData;
+    
+            const stockIn = await this.stockInRepository.createStockIn(data as any);
+    
             runInAction(() => {
-                // Add the new stock in to the results if appropriate
-                if (this.results.length > 0) {
-                    this.results = [stockIn, ...this.results]
-                    this.count = this.count + 1
-                }
-
+                // Always add the new stock in to the results, regardless of current list state
+                this.results = [stockIn, ...this.results];
+                this.count = this.count + 1;
+    
                 // Reset form data
                 this.formData = {
                     productId: '',
@@ -225,26 +223,26 @@ export class StockInStore implements StockInStoreState {
                     supplierInvoice: '',
                     notes: '',
                     status: 'pending',
-                }
-            })
-
-            return stockIn
+                };
+            });
+    
+            return stockIn;
         } catch (error) {
-            console.error('Error creating stock in:', error)
-
+            console.error('Error creating stock in:', error);
+    
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to create stock in'
-                )
-            })
-
-            return null
+                );
+            });
+    
+            return null;
         } finally {
             runInAction(() => {
-                this.setIsLoading(false)
-            })
+                this.setIsLoading(false);
+            });
         }
     }
 

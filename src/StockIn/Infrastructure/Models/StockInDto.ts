@@ -81,7 +81,7 @@ export default class StockInDto extends ResponseDto<StockInEntity> {
             updatedAt: this.updatedAt,
             count: this.count,
             isDeleted: this.isDeleted,
-            details: this.details.map(detail => ({
+            details: this.details ? this.details.map(detail => ({
                 id: detail.id,
                 goodsId: detail.goodsId,
                 goodsCode: detail.goodsCode, // Map the goodsCode property
@@ -91,16 +91,16 @@ export default class StockInDto extends ResponseDto<StockInEntity> {
                 expiryDate: detail.expiryDate,
                 notes: detail.notes,
                 goods: detail.goods,
-            })),
+            })) : [],
             supplier: this.supplier
-                ? {
-                      id: this.supplier.id,
-                      code: this.supplier.code,
-                      name: this.supplier.name,
-                      isActive: this.supplier.isActive,
-                      isDeleted: this.supplier.isDeleted,
-                  }
-                : undefined,
+            ? {
+                  id: this.supplier.id,
+                  code: this.supplier.code,
+                  name: this.supplier.name,
+                  isActive: this.supplier.isActive,
+                  isDeleted: this.supplier.isDeleted,
+              }
+            : undefined,
         }
     }
 }
