@@ -10,7 +10,10 @@ import { CategoryEntity } from '@/src/Common/Domain/Entities/CategoryEntity'
 import { UnitEntity } from '@/src/Common/Domain/Entities/UnitEntity'
 import { SupplierEntity } from '@/src/Common/Domain/Entities/SupplierEntity'
 import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
-import { IMasterDataRepository, IMasterDataRepositoryToken } from '@/src/Common/Domain/Specifications/IMasterDataRepository'
+import {
+    IMasterDataRepository,
+    IMasterDataRepositoryToken,
+} from '@/src/Common/Domain/Specifications/IMasterDataRepository'
 
 @injectable()
 export class MasterDataStore implements MasterDataStoreState {

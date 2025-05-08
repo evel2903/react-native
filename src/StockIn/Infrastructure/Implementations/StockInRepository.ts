@@ -176,6 +176,27 @@ class StockInRepository implements IStockInRepository {
                 : new Error(`Failed to update stock in status for ID ${id}`)
         }
     }
+
+    public async deleteStockIn(id: string): Promise<boolean> {
+        try {
+            // Make API request to delete stock in
+            const response = await this.httpClient.delete<any>(
+                `${this.baseUrl}/${id}`
+            )
+
+            // Check if the response indicates success
+            if (response && response.success) {
+                return true
+            } else {
+                throw new Error('Failed to delete stock in record')
+            }
+        } catch (error) {
+            console.error(`Error deleting stock in with ID ${id}:`, error)
+            throw error instanceof Error
+                ? error
+                : new Error(`Failed to delete stock in record with ID ${id}`)
+        }
+    }
 }
 
 export default StockInRepository

@@ -11,7 +11,7 @@ export interface IMasterDataRepository {
     getUnits(): Promise<UnitEntity[]>
     getSuppliers(): Promise<SupplierEntity[]>
     getGoods(): Promise<GoodsEntity[]>
-    
+
     // New method to fetch goods by code
     getGoodsByCode(code: string): Promise<GoodsEntity | null>
 

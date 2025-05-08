@@ -295,6 +295,48 @@ export class StockInStore implements StockInStoreState {
             })
         }
     }
+    // Delete stock in
+    async deleteStockIn(id: string) {
+        this.setIsLoading(true)
+        this.setError(null)
+
+        try {
+            // Call HTTP client directly as there's no repository method
+            const url = `/api/stock-in/${id}`
+
+            // Get the HTTP client from repository to maintain consistency
+            await this.stockInRepository.deleteStockIn
+
+            runInAction(() => {
+                // Remove from the results list if present
+                this.results = this.results.filter(item => item.id !== id)
+                this.count = this.count - 1
+
+                // If it was the selected one, clear selection
+                if (this.selectedStockIn && this.selectedStockIn.id === id) {
+                    this.setSelectedStockIn(null)
+                }
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error deleting stock in:', error)
+
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to delete stock in record'
+                )
+            })
+
+            return false
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false)
+            })
+        }
+    }
 
     // Filter methods for each filter type
     filterByCode(code?: string) {

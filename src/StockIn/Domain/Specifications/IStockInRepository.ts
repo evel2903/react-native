@@ -1,6 +1,9 @@
+//src/StockIn/Domain/Specifications/IStockInRepository.ts
+
 import StockInEntity from '../Entities/StockInEntity'
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
+import IHttpClient from '@/src/Core/Domain/Specifications/IHttpClient'
 
 export const IStockInRepositoryToken = Symbol('IStockInRepository')
 
@@ -18,4 +21,7 @@ export interface IStockInRepository {
     ) => Promise<StockInEntity>
 
     createStockIn: (data: CreateStockInPayload) => Promise<StockInEntity>
+
+    // Optional: Add deleteStockIn method
+    deleteStockIn?: (id: string) => Promise<boolean>
 }

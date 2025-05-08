@@ -6,17 +6,15 @@
  * @returns Formatted date string
  */
 export const formatDate = (date: Date | string | undefined): string => {
-    if (!date) return '';
+    if (!date) return ''
     try {
-        const dateObject = typeof date === 'string' ? new Date(date) : date;
-        return dateObject
-        .toLocaleDateString('en-CA')
-        .replace(/-/g, '/')
+        const dateObject = typeof date === 'string' ? new Date(date) : date
+        return dateObject.toLocaleDateString('en-CA').replace(/-/g, '/')
     } catch (e) {
-        console.error('Error formatting date:', e);
-        return '';
+        console.error('Error formatting date:', e)
+        return ''
     }
-};
+}
 
 /**
  * Format date and time to local string representation
@@ -24,15 +22,15 @@ export const formatDate = (date: Date | string | undefined): string => {
  * @returns Formatted date and time string
  */
 export const formatDateTime = (date: Date | string | undefined): string => {
-    if (!date) return 'N/A';
+    if (!date) return 'N/A'
     try {
-        const dateObject = typeof date === 'string' ? new Date(date) : date;
-        return dateObject.toLocaleString();
+        const dateObject = typeof date === 'string' ? new Date(date) : date
+        return dateObject.toLocaleString()
     } catch (e) {
-        console.error('Error formatting date time:', e);
-        return 'N/A';
+        console.error('Error formatting date time:', e)
+        return 'N/A'
     }
-};
+}
 
 /**
  * Format currency amount with specified locale and currency
@@ -47,15 +45,16 @@ export const formatCurrency = (
     currency: string = 'USD'
 ): string => {
     try {
-        const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+        const numericAmount =
+            typeof amount === 'string' ? parseFloat(amount) : amount
         return new Intl.NumberFormat(locale, {
             style: 'currency',
             currency,
             minimumFractionDigits: 0,
             maximumFractionDigits: 2,
-        }).format(numericAmount);
+        }).format(numericAmount)
     } catch (e) {
-        console.error('Error formatting currency:', e);
-        return '';
+        console.error('Error formatting currency:', e)
+        return ''
     }
-};
+}

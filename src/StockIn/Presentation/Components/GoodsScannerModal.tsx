@@ -40,7 +40,7 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
     const [foundGoods, setFoundGoods] = useState<GoodsEntity | null>(null)
     const [scannerActive, setScannerActive] = useState(true)
     const [searchLoading, setSearchLoading] = useState(false)
-    
+
     // Get the master data store for API calls
     const masterDataStore = useMasterDataStore()
 
@@ -67,76 +67,88 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
     }, [visible])
 
     // Handle barcode scanning
-    const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
-        setScannerActive(false);
-        setScannedData(data);
-        
+    const handleBarcodeScanned = ({
+        type,
+        data,
+    }: {
+        type: string
+        data: string
+    }) => {
+        setScannerActive(false)
+        setScannedData(data)
+
         // If data is empty, show error
         if (!data || data.trim().length === 0) {
-            setErrorMessage('Empty scan result');
-            return;
+            setErrorMessage('Empty scan result')
+            return
         }
-        
+
         // Extract code using regex even if JSON parsing fails
-        let goodsCode = null;
-        
+        let goodsCode = null
+
         // Check if data appears to be JSON (starts with { and ends with })
         if (data.trim().startsWith('{') && data.trim().endsWith('}')) {
             try {
                 // Try standard JSON parsing first
-                const parsedData = JSON.parse(data);
+                const parsedData = JSON.parse(data)
                 if (parsedData && parsedData.code) {
-                    goodsCode = parsedData.code;
+                    goodsCode = parsedData.code
                 }
             } catch (error) {
-                console.log("JSON parsing failed, trying regex extraction:", error);
-                
+                console.log(
+                    'JSON parsing failed, trying regex extraction:',
+                    error
+                )
+
                 // If JSON parsing fails, try to extract the code using regex
                 try {
-                    const codeMatch = data.match(/"code"\s*:\s*"([^"]+)"/);
+                    const codeMatch = data.match(/"code"\s*:\s*"([^"]+)"/)
                     if (codeMatch && codeMatch[1]) {
-                        goodsCode = codeMatch[1];
-                        console.log("Extracted code using regex:", goodsCode);
+                        goodsCode = codeMatch[1]
+                        console.log('Extracted code using regex:', goodsCode)
                     }
                 } catch (regexError) {
-                    console.log("Regex extraction failed:", regexError);
+                    console.log('Regex extraction failed:', regexError)
                 }
             }
         } else {
             // If not JSON format, use the data as direct code
-            goodsCode = data.trim();
+            goodsCode = data.trim()
         }
-        
+
         // If we managed to extract a code, search for it
         if (goodsCode) {
-            searchGoodsByCode(goodsCode);
+            searchGoodsByCode(goodsCode)
         } else {
-            setErrorMessage('Could not extract a valid code from scan');
+            setErrorMessage('Could not extract a valid code from scan')
         }
-    };
+    }
 
     // Find goods based on QR data
-    const findGoodsByQrData = async (qrData: { code?: string; name?: string }) => {
+    const findGoodsByQrData = async (qrData: {
+        code?: string
+        name?: string
+    }) => {
         setSearchLoading(true)
         setErrorMessage(null)
-        
+
         try {
             // If code is present, search by code using API
             if (qrData.code) {
                 const goods = await masterDataStore.getGoodsByCode(qrData.code)
-                
+
                 if (goods) {
                     setFoundGoods(goods)
                     return
                 }
             }
-            
+
             // If name is present but no goods found by code, show error
             if (qrData.name) {
                 setErrorMessage(`No goods found with name: ${qrData.name}`)
                 return
             }
-            
+
             // If no matching goods found
             setErrorMessage('No matching goods found')
         } catch (error) {
@@ -156,10 +168,10 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
 
         setSearchLoading(true)
         setErrorMessage(null)
-        
+
         try {
             const goods = await masterDataStore.getGoodsByCode(code)
-            
+
             if (goods) {
                 setFoundGoods(goods)
             } else {
@@ -207,7 +219,9 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
                 <Surface style={styles.modalContent}>
                     <View style={styles.modalHeader}>
                         <Text variant="titleMedium">
-                            {scanMode ? 'Scan Goods QR Code' : 'Find Goods by Code'}
+                            {scanMode
+                                ? 'Scan Goods QR Code'
+                                : 'Find Goods by Code'}
                         </Text>
                         <IconButton icon="close" size={24} onPress={onClose} />
                     </View>
@@ -225,11 +239,13 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
                             {/* Toggle between manual entry and scanner */}
                             <Button
                                 mode="outlined"
-                                icon={scanMode ? "keyboard" : "qrcode-scan"}
+                                icon={scanMode ? 'keyboard' : 'qrcode-scan'}
                                 onPress={toggleScanMode}
                                 style={styles.toggleButton}
                             >
-                                {scanMode ? 'Type Code Manually' : 'Scan QR Code'}
+                                {scanMode
+                                    ? 'Type Code Manually'
+                                    : 'Scan QR Code'}
                             </Button>
 
                             {/* Manual code entry mode */}
@@ -265,50 +281,100 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
                             {scanMode && (
                                 <View style={styles.scannerContainer}>
                                     {hasPermission === null && (
-                                        <Text>Requesting for camera permission...</Text>
+                                        <Text>
+                                            Requesting for camera permission...
+                                        </Text>
                                     )}
 
                                     {hasPermission === false && (
-                                        <Text>No access to camera. Please enable camera permissions.</Text>
+                                        <Text>
+                                            No access to camera. Please enable
+                                            camera permissions.
+                                        </Text>
                                     )}
 
-                                    {hasPermission === true && scannerActive && !searchLoading && (
-                                        <View style={styles.cameraContainer}>
-                                            <CameraView
-                                                onBarcodeScanned={scannerActive ? handleBarcodeScanned : undefined}
-                                                barcodeScannerSettings={{
-                                                    barcodeTypes: ["qr", "code128", "code39", "code93", "ean13", "ean8", "pdf417"],
-                                                }}
-                                                style={styles.scanner}
-                                            />
-                                            <View style={styles.scannerOverlay}>
-                                                <View style={styles.scannerTargetBox} />
-                                            </View>
-                                            <Text style={styles.scanInstructionText}>
-                                                Position QR code or barcode within the box
-                                            </Text>
-                                        </View>
-                                    )}
-
-                                    {scannedData && !scannerActive && !searchLoading && (
-                                        <View style={styles.scannedDataContainer}>
-                                            <Text>Scanned code: {scannedData.length > 30 ? `${scannedData.substring(0, 30)}...` : scannedData}</Text>
-                                            <Button
-                                                mode="text"
-                                                onPress={() => {
-                                                    setScannedData(null)
-                                                    setScannerActive(true)
-                                                }}
+                                    {hasPermission === true &&
+                                        scannerActive &&
+                                        !searchLoading && (
+                                            <View
+                                                style={styles.cameraContainer}
                                             >
-                                                Scan Again
-                                            </Button>
-                                        </View>
-                                    )}
-                                    
+                                                <CameraView
+                                                    onBarcodeScanned={
+                                                        scannerActive
+                                                            ? handleBarcodeScanned
+                                                            : undefined
+                                                    }
+                                                    barcodeScannerSettings={{
+                                                        barcodeTypes: [
+                                                            'qr',
+                                                            'code128',
+                                                            'code39',
+                                                            'code93',
+                                                            'ean13',
+                                                            'ean8',
+                                                            'pdf417',
+                                                        ],
+                                                    }}
+                                                    style={styles.scanner}
+                                                />
+                                                <View
+                                                    style={
+                                                        styles.scannerOverlay
+                                                    }
+                                                >
+                                                    <View
+                                                        style={
+                                                            styles.scannerTargetBox
+                                                        }
+                                                    />
+                                                </View>
+                                                <Text
+                                                    style={
+                                                        styles.scanInstructionText
+                                                    }
+                                                >
+                                                    Position QR code or barcode
+                                                    within the box
+                                                </Text>
+                                            </View>
+                                        )}
+
+                                    {scannedData &&
+                                        !scannerActive &&
+                                        !searchLoading && (
+                                            <View
+                                                style={
+                                                    styles.scannedDataContainer
+                                                }
+                                            >
+                                                <Text>
+                                                    Scanned code:{' '}
+                                                    {scannedData.length > 30
+                                                        ? `${scannedData.substring(
+                                                              0,
+                                                              30
+                                                          )}...`
+                                                        : scannedData}
+                                                </Text>
+                                                <Button
+                                                    mode="text"
+                                                    onPress={() => {
+                                                        setScannedData(null)
+                                                        setScannerActive(true)
+                                                    }}
+                                                >
+                                                    Scan Again
+                                                </Button>
+                                            </View>
+                                        )}
+
                                     {searchLoading && (
                                         <View style={styles.loadingContainer}>
                                             <ActivityIndicator size="large" />
-                                            <Text style={styles.loadingText}>Searching...</Text>
+                                            <Text style={styles.loadingText}>
+                                                Searching...
+                                            </Text>
                                         </View>
                                     )}
                                 </View>
@@ -316,13 +382,20 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
 
                             {/* Error message */}
                             {errorMessage && (
-                                <Text style={styles.errorText}>{errorMessage}</Text>
+                                <Text style={styles.errorText}>
+                                    {errorMessage}
+                                </Text>
                             )}
 
                             {/* Found goods details */}
                             {foundGoods && (
-                                <Surface style={styles.foundGoodsContainer} elevation={3}>
-                                    <Text variant="titleSmall">Found Goods:</Text>
+                                <Surface
+                                    style={styles.foundGoodsContainer}
+                                    elevation={3}
+                                >
+                                    <Text variant="titleSmall">
+                                        Found Goods:
+                                    </Text>
                                     <Text style={styles.goodsDetail}>
                                         Code: {foundGoods.code}
                                     </Text>

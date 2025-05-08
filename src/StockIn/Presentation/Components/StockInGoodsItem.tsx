@@ -17,7 +17,11 @@ interface GoodsItem {
 interface StockInGoodsItemProps {
     item: GoodsItem
     onRemove: (goodsId: string) => void
-    onUpdate: (goodsId: string, field: keyof GoodsItem, value: string | number) => void
+    onUpdate: (
+        goodsId: string,
+        field: keyof GoodsItem,
+        value: string | number
+    ) => void
 }
 
 const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
@@ -25,8 +29,11 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
     onRemove,
     onUpdate,
 }) => {
-    const [expiryDatePickerVisible, setExpiryDatePickerVisible] = useState(false)
-    const [selectedExpiryDate, setSelectedExpiryDate] = useState(new Date(item.expiryDate))
+    const [expiryDatePickerVisible, setExpiryDatePickerVisible] =
+        useState(false)
+    const [selectedExpiryDate, setSelectedExpiryDate] = useState(
+        new Date(item.expiryDate)
+    )
 
     // Handle expiry date confirmation
     const onConfirmExpiryDate = ({ date }: { date: Date }) => {
@@ -39,7 +46,8 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
         <Surface style={styles.goodsItemCard} elevation={1}>
             <View style={styles.goodsItemHeader}>
                 <View style={styles.goodsItemCodeSection}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         value={item.goodsCode}
                         mode="outlined"
                         disabled
@@ -59,16 +67,22 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
 
             <View style={styles.goodsItemRow}>
                 {/* Expiry date as TextInput */}
-                <TextInput dense
+                <TextInput
+                    dense
                     label="Expiry date"
                     value={formatDate(item.expiryDate)}
                     mode="outlined"
                     style={styles.goodsItemFullInput}
-                    disabled
-                    right={<TextInput.Icon icon="calendar" onPress={() => setExpiryDatePickerVisible(true)} />}
+                    editable={false}
+                    right={
+                        <TextInput.Icon
+                            icon="calendar"
+                            onPress={() => setExpiryDatePickerVisible(true)}
+                        />
+                    }
                     onTouchStart={() => setExpiryDatePickerVisible(true)}
                 />
-                
+
                 {/* Expiry Date Picker Modal */}
                 <DatePickerModal
                     locale="en"
@@ -78,14 +92,15 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
                     date={selectedExpiryDate}
                     onConfirm={({ date }) => {
                         if (date) {
-                            onConfirmExpiryDate({ date });
+                            onConfirmExpiryDate({ date })
                         }
                     }}
                 />
             </View>
 
             <View style={styles.goodsItemRow}>
-                <TextInput dense
+                <TextInput
+                    dense
                     label="Quantity"
                     value={item.quantity.toString()}
                     onChangeText={value => {
@@ -96,7 +111,8 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
                     keyboardType="numeric"
                     style={styles.goodsItemHalfInput}
                 />
-                <TextInput dense
+                <TextInput
+                    dense
                     label="Cost"
                     value={item.price.toString()}
                     onChangeText={value => {
@@ -110,10 +126,13 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
             </View>
 
             <View style={styles.goodsItemRow}>
-                <TextInput dense
+                <TextInput
+                    dense
                     label="Note"
                     value={item.notes}
-                    onChangeText={value => onUpdate(item.goodsId, 'notes', value)}
+                    onChangeText={value =>
+                        onUpdate(item.goodsId, 'notes', value)
+                    }
                     mode="outlined"
                     multiline
                     numberOfLines={2}

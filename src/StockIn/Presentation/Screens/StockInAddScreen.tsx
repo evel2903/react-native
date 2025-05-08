@@ -38,7 +38,10 @@ import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { Status } from '@/src/Common/Domain/Enums/Status'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
-import { PRIORITY, getPriorityDisplayName } from '@/src/Common/Domain/Enums/Priority'
+import {
+    PRIORITY,
+    getPriorityDisplayName,
+} from '@/src/Common/Domain/Enums/Priority'
 import GoodsScannerModal from '../Components/GoodsScannerModal'
 import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
 import StockInGoodsItem from '../Components/StockInGoodsItem'
@@ -54,16 +57,16 @@ interface GoodsItem {
 }
 
 // Custom Accordion Component with centered title
-const CenteredAccordion = ({ 
-    title, 
-    expanded, 
-    onPress, 
-    children 
-}: { 
-    title: string, 
-    expanded: boolean, 
-    onPress: () => void, 
-    children: React.ReactNode 
+const CenteredAccordion = ({
+    title,
+    expanded,
+    onPress,
+    children,
+}: {
+    title: string
+    expanded: boolean
+    onPress: () => void
+    children: React.ReactNode
 }) => {
     return (
         <List.Accordion
@@ -73,18 +76,18 @@ const CenteredAccordion = ({
             style={styles.accordion}
             titleStyle={styles.accordionTitle}
             // Custom right icon that changes based on expanded state
-            right={props => 
-                <List.Icon 
-                    {...props} 
-                    icon={expanded ? "chevron-up" : "chevron-down"} 
-                    style={styles.accordionIcon} 
+            right={props => (
+                <List.Icon
+                    {...props}
+                    icon={expanded ? 'chevron-up' : 'chevron-down'}
+                    style={styles.accordionIcon}
                 />
-            }
+            )}
         >
             {children}
         </List.Accordion>
-    );
-};
+    )
+}
 
 const StockInAddScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
@@ -112,10 +115,13 @@ const StockInAddScreen = observer(() => {
     // Goods list
     const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
     const [currentItem, setCurrentItem] = useState<GoodsItem | null>(null)
-    const [currentItemIndex, setCurrentItemIndex] = useState<number | null>(null)
+    const [currentItemIndex, setCurrentItemIndex] = useState<number | null>(
+        null
+    )
 
     // Date picker states
-    const [stockInDatePickerVisible, setStockInDatePickerVisible] = useState(false)
+    const [stockInDatePickerVisible, setStockInDatePickerVisible] =
+        useState(false)
     const [selectedStockInDate, setSelectedStockInDate] = useState(new Date())
 
     // UI state
@@ -208,8 +214,10 @@ const StockInAddScreen = observer(() => {
     const handleGoodsFromScanner = (goods: GoodsEntity) => {
         if (goods) {
             // Check if this goods item already exists in the list
-            const existingItemIndex = goodsItems.findIndex(item => item.goodsId === goods.id);
-            
+            const existingItemIndex = goodsItems.findIndex(
+                item => item.goodsId === goods.id
+            )
+
             // Create a new item with default values
             const newItem = {
                 goodsId: goods.id,
@@ -219,34 +227,34 @@ const StockInAddScreen = observer(() => {
                 price: 0,
                 expiryDate: new Date().toISOString(),
                 notes: '',
-            };
-            
-            setCurrentItem(newItem);
-            
+            }
+
+            setCurrentItem(newItem)
+
             // If we're currently editing an item
             if (currentItemIndex !== null) {
-                const updatedItems = [...goodsItems];
-                updatedItems[currentItemIndex] = newItem;
-                setGoodsItems(updatedItems);
-            } 
+                const updatedItems = [...goodsItems]
+                updatedItems[currentItemIndex] = newItem
+                setGoodsItems(updatedItems)
+            }
             // If this goods item already exists in the list
             else if (existingItemIndex !== -1) {
                 // Clear the data in the existing item rather than creating a new one
-                const updatedItems = [...goodsItems];
-                updatedItems[existingItemIndex] = newItem;
-                setGoodsItems(updatedItems);
-                
+                const updatedItems = [...goodsItems]
+                updatedItems[existingItemIndex] = newItem
+                setGoodsItems(updatedItems)
+
                 // Show notification about updating existing item
-                showSnackbar(`Updated existing ${goods.name} item`);
-            } 
+                showSnackbar(`Updated existing ${goods.name} item`)
+            }
             // Otherwise add as a new item
             else {
-                setGoodsItems([...goodsItems, newItem]);
+                setGoodsItems([...goodsItems, newItem])
             }
         }
-        
+
         // Close the scanner modal
-        setScannerModalVisible(false);
+        setScannerModalVisible(false)
     }
 
     const removeGoodsItem = (goodsId: string) => {
@@ -340,47 +348,47 @@ const StockInAddScreen = observer(() => {
         }
     }
 
-    const handleRequest = () => {
-        // Change status to PENDING and save
-        setStatus(Status.Pending)
-        setTimeout(() => {
-            handleSave()
-        }, 100)
-    }
-
     // Priority styles based on value
     const getPriorityButtonStyle = (priorityValue: number) => {
-        const isSelected = priorityValue === priority;
+        const isSelected = priorityValue === priority
         const baseStyles = [
             styles.priorityButton,
             {
-                backgroundColor: isSelected ? 
-                    (priorityValue === PRIORITY.High ? '#ff5252' : 
-                     priorityValue === PRIORITY.Medium ? '#fb8c00' : 
-                     '#4caf50') : 
-                    'transparent',
+                backgroundColor: isSelected
+                    ? priorityValue === PRIORITY.High
+                        ? '#ff5252'
+                        : priorityValue === PRIORITY.Medium
+                        ? '#fb8c00'
+                        : '#4caf50'
+                    : 'transparent',
                 borderWidth: 1,
-                borderColor: priorityValue === PRIORITY.High ? '#ff5252' : 
-                             priorityValue === PRIORITY.Medium ? '#fb8c00' : 
-                             '#4caf50'
-            }
-        ];
-        
-        return baseStyles;
+                borderColor:
+                    priorityValue === PRIORITY.High
+                        ? '#ff5252'
+                        : priorityValue === PRIORITY.Medium
+                        ? '#fb8c00'
+                        : '#4caf50',
+            },
+        ]
+
+        return baseStyles
     }
-    
+
     // Get text style based on selection state
     const getPriorityTextStyle = (priorityValue: number) => {
-        const isSelected = priorityValue === priority;
+        const isSelected = priorityValue === priority
         return [
             styles.priorityButtonText,
             {
-                color: isSelected ? 'white' : 
-                      (priorityValue === PRIORITY.High ? '#ff5252' : 
-                       priorityValue === PRIORITY.Medium ? '#fb8c00' : 
-                       '#4caf50')
-            }
-        ];
+                color: isSelected
+                    ? 'white'
+                    : priorityValue === PRIORITY.High
+                    ? '#ff5252'
+                    : priorityValue === PRIORITY.Medium
+                    ? '#fb8c00'
+                    : '#4caf50',
+            },
+        ]
     }
 
     // Render the form content inside the accordion
@@ -389,7 +397,8 @@ const StockInAddScreen = observer(() => {
             {/* Row 1: Code and Supplier */}
             <View style={styles.row}>
                 <View style={styles.inputHalf}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Code"
                         disabled
                         value={code}
@@ -402,20 +411,16 @@ const StockInAddScreen = observer(() => {
                 <View style={styles.inputHalf}>
                     <Menu
                         visible={supplierMenuVisible}
-                        onDismiss={() =>
-                            setSupplierMenuVisible(false)
-                        }
+                        onDismiss={() => setSupplierMenuVisible(false)}
                         anchor={
-                            <TextInput dense
+                            <TextInput
+                                dense
                                 label="Supplier"
                                 value={
                                     supplierId
                                         ? masterDataStore.suppliers.data.find(
-                                              s =>
-                                                  s.id ===
-                                                  supplierId
-                                          )?.name ||
-                                          ''
+                                              s => s.id === supplierId
+                                          )?.name || ''
                                         : ''
                                 }
                                 placeholder="Select Supplier"
@@ -423,25 +428,28 @@ const StockInAddScreen = observer(() => {
                                 style={styles.input}
                                 editable={false}
                                 error={!!errors.supplierId}
-                                right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
-                                onTouchStart={() => setSupplierMenuVisible(true)}
+                                right={
+                                    <TextInput.Icon
+                                        icon="menu-down"
+                                        onPress={() =>
+                                            setSupplierMenuVisible(true)
+                                        }
+                                    />
+                                }
+                                onTouchStart={() =>
+                                    setSupplierMenuVisible(true)
+                                }
                             />
                         }
                     >
                         {masterDataStore.suppliers.data
-                            .filter(
-                                s =>
-                                    s.isActive &&
-                                    !s.isDeleted
-                            )
+                            .filter(s => s.isActive && !s.isDeleted)
                             .map(s => (
                                 <Menu.Item
                                     key={s.id}
                                     onPress={() => {
                                         setSupplierId(s.id)
-                                        setSupplierMenuVisible(
-                                            false
-                                        )
+                                        setSupplierMenuVisible(false)
                                     }}
                                     title={s.name}
                                 />
@@ -458,7 +466,8 @@ const StockInAddScreen = observer(() => {
             {/* Row 2: Lot Number and Stock In Date */}
             <View style={styles.row}>
                 <View style={styles.inputHalf}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Lot number"
                         value={lotNumber}
                         onChangeText={setLotNumber}
@@ -468,17 +477,25 @@ const StockInAddScreen = observer(() => {
                 </View>
                 <View style={styles.inputHalf}>
                     {/* Date picker as TextInput */}
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Stock in date"
                         value={formatDate(stockInDate)}
                         mode="outlined"
                         style={styles.input}
                         editable={false}
                         error={!!errors.stockInDate}
-                        right={<TextInput.Icon icon="calendar" onPress={() => setStockInDatePickerVisible(true)} />}
+                        right={
+                            <TextInput.Icon
+                                icon="calendar"
+                                onPress={() =>
+                                    setStockInDatePickerVisible(true)
+                                }
+                            />
+                        }
                         onTouchStart={() => setStockInDatePickerVisible(true)}
                     />
-                    
+
                     {/* Stock In Date Picker Modal */}
                     <DatePickerModal
                         locale="en"
@@ -488,11 +505,11 @@ const StockInAddScreen = observer(() => {
                         date={selectedStockInDate}
                         onConfirm={({ date }) => {
                             if (date) {
-                                onConfirmStockInDate({ date });
+                                onConfirmStockInDate({ date })
                             }
                         }}
                     />
-                    
+
                     {errors.stockInDate && (
                         <Text style={styles.errorText}>
                             {errors.stockInDate}
@@ -504,7 +521,8 @@ const StockInAddScreen = observer(() => {
             {/* Row 3: Created by and Description */}
             <View style={styles.row}>
                 <View style={styles.inputHalf}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Created by"
                         value={authStore.user?.name || ''}
                         disabled
@@ -513,7 +531,8 @@ const StockInAddScreen = observer(() => {
                     />
                 </View>
                 <View style={styles.inputHalf}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Approved by"
                         value=""
                         disabled
@@ -527,7 +546,8 @@ const StockInAddScreen = observer(() => {
             {/* Row 4: Total Cost and Status */}
             <View style={styles.row}>
                 <View style={styles.inputHalf}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Total cost"
                         value={totalAmount}
                         onChangeText={setTotalAmount}
@@ -540,17 +560,23 @@ const StockInAddScreen = observer(() => {
                 <View style={styles.inputHalf}>
                     <Menu
                         visible={statusMenuVisible}
-                        onDismiss={() =>
-                            setStatusMenuVisible(false)
-                        }
+                        onDismiss={() => setStatusMenuVisible(false)}
                         anchor={
-                            <TextInput dense
+                            <TextInput
+                                dense
                                 label="Status"
                                 value={status}
                                 mode="outlined"
                                 editable={false}
                                 style={styles.input}
-                                right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
+                                right={
+                                    <TextInput.Icon
+                                        icon="menu-down"
+                                        onPress={() =>
+                                            setStatusMenuVisible(true)
+                                        }
+                                    />
+                                }
                                 onTouchStart={() => setStatusMenuVisible(true)}
                             />
                         }
@@ -576,7 +602,8 @@ const StockInAddScreen = observer(() => {
             {/* Row 5: Note and Priority */}
             <View style={styles.noteRow}>
                 <View style={styles.inputFull}>
-                    <TextInput dense
+                    <TextInput
+                        dense
                         label="Note"
                         value={notes}
                         onChangeText={setNotes}
@@ -596,7 +623,7 @@ const StockInAddScreen = observer(() => {
                                 {getPriorityDisplayName(PRIORITY.High)}
                             </Text>
                         </TouchableRipple>
-                        
+
                         <TouchableRipple
                             style={getPriorityButtonStyle(PRIORITY.Medium)}
                             onPress={() => setPriority(PRIORITY.Medium)}
@@ -605,7 +632,7 @@ const StockInAddScreen = observer(() => {
                                 {getPriorityDisplayName(PRIORITY.Medium)}
                             </Text>
                         </TouchableRipple>
-                        
+
                         <TouchableRipple
                             style={getPriorityButtonStyle(PRIORITY.Low)}
                             onPress={() => setPriority(PRIORITY.Low)}
@@ -618,7 +645,7 @@ const StockInAddScreen = observer(() => {
                 </View>
             </View>
         </>
-    );
+    )
 
     return (
         <View
@@ -641,11 +668,16 @@ const StockInAddScreen = observer(() => {
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <ScrollView style={styles.scrollView}>
                             {/* Accordion for form info section */}
-                            <Surface style={styles.accordionContainer} elevation={1}>
+                            <Surface
+                                style={styles.accordionContainer}
+                                elevation={1}
+                            >
                                 <CenteredAccordion
                                     title="Stock In Information"
                                     expanded={infoExpanded}
-                                    onPress={() => setInfoExpanded(!infoExpanded)}
+                                    onPress={() =>
+                                        setInfoExpanded(!infoExpanded)
+                                    }
                                 >
                                     <View style={styles.formContent}>
                                         {renderFormContent()}
@@ -678,7 +710,7 @@ const StockInAddScreen = observer(() => {
                                     add goods.
                                 </Text>
                             ) : (
-                                goodsItems.map((item) => (
+                                goodsItems.map(item => (
                                     <StockInGoodsItem
                                         key={item.goodsId}
                                         item={item}
@@ -688,23 +720,15 @@ const StockInAddScreen = observer(() => {
                                 ))
                             )}
 
-                            {/* Action Buttons */}
+                            {/* Action Button - replaced the dual buttons with a single Create button */}
                             <View style={styles.actionButtons}>
                                 <Button
-                                    mode="outlined"
-                                    onPress={handleSave}
-                                    style={styles.actionButton}
-                                    disabled={isLoading}
-                                >
-                                    Save/Edit
-                                </Button>
-                                <Button
                                     mode="contained"
-                                    onPress={handleRequest}
-                                    style={styles.actionButton}
+                                    onPress={handleSave}
+                                    style={styles.createButton}
                                     disabled={isLoading}
                                 >
-                                    Request
+                                    Create
                                 </Button>
                             </View>
 
@@ -836,15 +860,18 @@ const styles = StyleSheet.create({
     addButton: {
         margin: 0,
     },
+    // Updated action button styles
     actionButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         marginTop: 16,
         marginBottom: 8,
     },
-    actionButton: {
+    createButton: {
         flex: 1,
         marginHorizontal: 4,
+        paddingVertical: 6,
+        borderRadius: 4,
     },
     bottomPadding: {
         height: 40,
@@ -871,5 +898,5 @@ const styles = StyleSheet.create({
 export default withProviders(
     StockInStoreProvider,
     MasterDataStoreProvider,
-    AuthStoreProvider,
+    AuthStoreProvider
 )(StockInAddScreen)

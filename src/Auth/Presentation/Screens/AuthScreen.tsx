@@ -117,7 +117,8 @@ const AuthScreen = observer(() => {
 
                         <Surface style={styles.authForm} elevation={1}>
                             <View style={styles.formContent}>
-                                <TextInput dense
+                                <TextInput
+                                    dense
                                     label="Username"
                                     value={username}
                                     onChangeText={handleUsernameChange}
@@ -137,7 +138,8 @@ const AuthScreen = observer(() => {
                                     </HelperText>
                                 )}
 
-                                <TextInput dense
+                                <TextInput
+                                    dense
                                     label={i18n.t('auth.screens.Auth.password')}
                                     value={password}
                                     onChangeText={handlePasswordChange}

@@ -91,9 +91,15 @@ class MasterDataRepository implements IMasterDataRepository {
     // Implement the new method to fetch goods by code
     public async getGoodsByCode(code: string): Promise<GoodsEntity | null> {
         try {
-            const response: any = await this.httpClient.get(`/api/goods?code=${encodeURIComponent(code)}`)
+            const response: any = await this.httpClient.get(
+                `/api/goods?code=${encodeURIComponent(code)}`
+            )
 
-            if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
+            if (
+                !response.data ||
+                !Array.isArray(response.data) ||
+                response.data.length === 0
+            ) {
                 return null
             }
 

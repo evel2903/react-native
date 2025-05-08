@@ -14,7 +14,7 @@ import {
     getStatusColor,
     getStatusDisplayName,
 } from '@/src/Common/Domain/Enums/Status'
-import { formatDate, formatDateTime, formatCurrency } from '@/src/Core/Utils';
+import { formatDate, formatDateTime, formatCurrency } from '@/src/Core/Utils'
 import {
     PRIORITY,
     getPriorityColor,
@@ -167,11 +167,14 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                                 style={[
                                     styles.approveButton,
                                     {
-                                        borderColor: getStatusDetails(Status.Approved)
-                                            .color,
+                                        borderColor: getStatusDetails(
+                                            Status.Approved
+                                        ).color,
                                     },
                                 ]}
-                                textColor={getStatusDetails(Status.Approved).color}
+                                textColor={
+                                    getStatusDetails(Status.Approved).color
+                                }
                                 onPress={() => onApprove(item.id)}
                             >
                                 Approve

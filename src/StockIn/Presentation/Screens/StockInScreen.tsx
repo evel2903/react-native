@@ -1,3 +1,5 @@
+// Update the StockInScreen component in src/StockIn/Presentation/Screens/StockInScreen.tsx
+
 import React, { useEffect, useState, useCallback } from 'react'
 import {
     View,
@@ -15,6 +17,9 @@ import {
     Card,
     Chip,
     Divider,
+    Portal,
+    Dialog,
+    Snackbar,
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -34,6 +39,15 @@ const StockInScreen = observer(() => {
     const theme = useTheme()
     const [refreshing, setRefreshing] = useState(false)
     const windowHeight = Dimensions.get('window').height
+
+    // Add states for delete confirmation dialog
+    const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
+    const [stockToDelete, setStockToDelete] = useState<string | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
+    // Add snackbar state
+    const [snackbarVisible, setSnackbarVisible] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState('')
 
     useEffect(() => {
         // Load stock in data when component mounts
@@ -67,9 +81,46 @@ const StockInScreen = observer(() => {
         console.log('Edit stock in:', id)
     }
 
+    // Updated to show delete confirmation dialog
     const handleDelete = (id: string) => {
-        // Delete functionality would be implemented here
-        console.log('Delete stock in:', id)
+        setStockToDelete(id)
+        setDeleteDialogVisible(true)
+    }
+
+    // Method to handle delete confirmation
+    const confirmDelete = async () => {
+        if (!stockToDelete) return
+
+        setIsDeleting(true)
+
+        try {
+            const success = await stockInStore.deleteStockIn(stockToDelete)
+
+            if (success) {
+                showSnackbar('Stock in record deleted successfully')
+            } else {
+                showSnackbar('Failed to delete stock in record')
+            }
+        } catch (error) {
+            console.error('Error during deletion:', error)
+            showSnackbar('An error occurred while deleting')
+        } finally {
+            setIsDeleting(false)
+            setDeleteDialogVisible(false)
+            setStockToDelete(null)
+        }
+    }
+
+    // Method to handle cancellation
+    const cancelDelete = () => {
+        setDeleteDialogVisible(false)
+        setStockToDelete(null)
+    }
+
+    // Helper method to show snackbar message
+    const showSnackbar = (message: string) => {
+        setSnackbarMessage(message)
+        setSnackbarVisible(true)
     }
 
     const onRefresh = useCallback(() => {
@@ -179,6 +230,46 @@ const StockInScreen = observer(() => {
                         }
                     />
                 )}
+
+                {/* Delete Confirmation Dialog */}
+                <Portal>
+                    <Dialog
+                        visible={deleteDialogVisible}
+                        onDismiss={cancelDelete}
+                    >
+                        <Dialog.Title>Confirm Deletion</Dialog.Title>
+                        <Dialog.Content>
+                            <Text variant="bodyMedium">
+                                Are you sure you want to delete this stock in
+                                record? This action cannot be undone.
+                            </Text>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={cancelDelete}>Cancel</Button>
+                            <Button
+                                onPress={confirmDelete}
+                                loading={isDeleting}
+                                disabled={isDeleting}
+                                textColor={theme.theme.colors.error}
+                            >
+                                Delete
+                            </Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
+
+                {/* Snackbar for notifications */}
+                <Snackbar
+                    visible={snackbarVisible}
+                    onDismiss={() => setSnackbarVisible(false)}
+                    duration={3000}
+                    action={{
+                        label: 'Dismiss',
+                        onPress: () => setSnackbarVisible(false),
+                    }}
+                >
+                    {snackbarMessage}
+                </Snackbar>
             </SafeAreaView>
         </View>
     )

@@ -288,7 +288,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
 
                         <View style={styles.row}>
                             <View style={styles.quantityContainer}>
-                                <TextInput dense
+                                <TextInput
+                                    dense
                                     label="Quantity *"
                                     value={stockInStore.formData.quantity.toString()}
                                     onChangeText={text => {
@@ -408,7 +409,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             </HelperText>
                         )}
 
-                        <TextInput dense
+                        <TextInput
+                            dense
                             label="Supplier Invoice"
                             value={stockInStore.formData.supplierInvoice || ''}
                             onChangeText={text =>
@@ -426,7 +428,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             Stock In Details
                         </Text>
 
-                        <TextInput dense
+                        <TextInput
+                            dense
                             label="Date *"
                             value={stockInStore.formData.date}
                             onChangeText={text => updateField('date', text)}
@@ -436,7 +439,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             placeholder="YYYY-MM-DD"
                         />
 
-                        <TextInput dense
+                        <TextInput
+                            dense
                             label="Received By *"
                             value={stockInStore.formData.receivedBy}
                             onChangeText={text =>
@@ -487,7 +491,8 @@ const StockInForm = observer(({ onCancel }: StockInFormProps) => {
                             ))}
                         </Menu>
 
-                        <TextInput dense
+                        <TextInput
+                            dense
                             label="Notes"
                             value={stockInStore.formData.notes || ''}
                             onChangeText={text => updateField('notes', text)}

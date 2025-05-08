@@ -32,7 +32,7 @@ const StockInFilterForm = observer(() => {
 
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
-    
+
     // Date picker states - separate for start and end dates
     const [startDatePickerVisible, setStartDatePickerVisible] = useState(false)
     const [endDatePickerVisible, setEndDatePickerVisible] = useState(false)
@@ -41,11 +41,15 @@ const StockInFilterForm = observer(() => {
     const [lotNumber, setLotNumber] = useState(
         stockInStore.filters.lotNumber || ''
     )
-    
+
     // Date range state
     const [dateRange, setDateRange] = useState({
-        startDate: stockInStore.filters.startDate ? new Date(stockInStore.filters.startDate) : undefined,
-        endDate: stockInStore.filters.endDate ? new Date(stockInStore.filters.endDate) : undefined,
+        startDate: stockInStore.filters.startDate
+            ? new Date(stockInStore.filters.startDate)
+            : undefined,
+        endDate: stockInStore.filters.endDate
+            ? new Date(stockInStore.filters.endDate)
+            : undefined,
     })
 
     // Status options for dropdown
@@ -95,8 +99,12 @@ const StockInFilterForm = observer(() => {
             priority: stockInStore.filters.priority,
             supplierId: stockInStore.filters.supplierId,
             lotNumber: lotNumber || undefined,
-            startDate: dateRange.startDate ? dateRange.startDate.toISOString() : undefined,
-            endDate: dateRange.endDate ? dateRange.endDate.toISOString() : undefined,
+            startDate: dateRange.startDate
+                ? dateRange.startDate.toISOString()
+                : undefined,
+            endDate: dateRange.endDate
+                ? dateRange.endDate.toISOString()
+                : undefined,
         })
     }
 
@@ -129,35 +137,43 @@ const StockInFilterForm = observer(() => {
 
     // Get priority button style based on selection state
     const getPriorityButtonStyle = (priorityValue: number) => {
-        const isSelected = priorityValue === stockInStore.filters.priority;
+        const isSelected = priorityValue === stockInStore.filters.priority
         return [
             styles.priorityButton,
             {
-                backgroundColor: isSelected ? 
-                    (priorityValue === PRIORITY.High ? '#ff5252' : 
-                     priorityValue === PRIORITY.Medium ? '#fb8c00' : 
-                     '#4caf50') : 
-                    'transparent',
+                backgroundColor: isSelected
+                    ? priorityValue === PRIORITY.High
+                        ? '#ff5252'
+                        : priorityValue === PRIORITY.Medium
+                        ? '#fb8c00'
+                        : '#4caf50'
+                    : 'transparent',
                 borderWidth: 1,
-                borderColor: priorityValue === PRIORITY.High ? '#ff5252' : 
-                             priorityValue === PRIORITY.Medium ? '#fb8c00' : 
-                             '#4caf50'
-            }
-        ];
+                borderColor:
+                    priorityValue === PRIORITY.High
+                        ? '#ff5252'
+                        : priorityValue === PRIORITY.Medium
+                        ? '#fb8c00'
+                        : '#4caf50',
+            },
+        ]
     }
-    
+
     // Get text style based on selection state
     const getPriorityTextStyle = (priorityValue: number) => {
-        const isSelected = priorityValue === stockInStore.filters.priority;
+        const isSelected = priorityValue === stockInStore.filters.priority
         return [
             styles.priorityButtonText,
             {
-                color: isSelected ? 'white' : 
-                      (priorityValue === PRIORITY.High ? '#ff5252' : 
-                       priorityValue === PRIORITY.Medium ? '#fb8c00' : 
-                       '#4caf50')
-            }
-        ];
+                color: isSelected
+                    ? 'white'
+                    : priorityValue === PRIORITY.High
+                    ? '#ff5252'
+                    : priorityValue === PRIORITY.Medium
+                    ? '#fb8c00'
+                    : '#4caf50',
+            },
+        ]
     }
 
     return (
@@ -183,15 +199,17 @@ const StockInFilterForm = observer(() => {
                 >
                     {/* Row 1: Code and Lot Number in one row */}
                     <View style={styles.filterRow}>
-                        <TextInput dense
+                        <TextInput
+                            dense
                             label="Code"
                             value={code}
                             onChangeText={setCode}
                             mode="outlined"
                             style={styles.halfInput}
                         />
-                        
-                        <TextInput dense
+
+                        <TextInput
+                            dense
                             label="Lot Number"
                             value={lotNumber}
                             onChangeText={setLotNumber}
@@ -207,19 +225,35 @@ const StockInFilterForm = observer(() => {
                                 visible={statusMenuVisible}
                                 onDismiss={() => setStatusMenuVisible(false)}
                                 anchor={
-                                    <TextInput dense
+                                    <TextInput
+                                        dense
                                         label="Status"
-                                        value={stockInStore.filters.status
-                                            ? statusOptions.find(
-                                                s => s.value === stockInStore.filters.status
-                                            )?.label || stockInStore.filters.status
-                                            : ''}
+                                        value={
+                                            stockInStore.filters.status
+                                                ? statusOptions.find(
+                                                      s =>
+                                                          s.value ===
+                                                          stockInStore.filters
+                                                              .status
+                                                  )?.label ||
+                                                  stockInStore.filters.status
+                                                : ''
+                                        }
                                         placeholder="Select Status"
                                         mode="outlined"
                                         style={styles.input}
                                         editable={false}
-                                        right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
-                                        onTouchStart={() => setStatusMenuVisible(true)}
+                                        right={
+                                            <TextInput.Icon
+                                                icon="menu-down"
+                                                onPress={() =>
+                                                    setStatusMenuVisible(true)
+                                                }
+                                            />
+                                        }
+                                        onTouchStart={() =>
+                                            setStatusMenuVisible(true)
+                                        }
                                     />
                                 }
                             >
@@ -247,25 +281,40 @@ const StockInFilterForm = observer(() => {
                                 ))}
                             </Menu>
                         </View>
-                        
+
                         <View style={styles.halfInput}>
                             <Menu
                                 visible={supplierMenuVisible}
                                 onDismiss={() => setSupplierMenuVisible(false)}
                                 anchor={
-                                    <TextInput dense
+                                    <TextInput
+                                        dense
                                         label="Supplier"
-                                        value={stockInStore.filters.supplierId
-                                            ? masterDataStore.suppliers.data.find(
-                                                s => s.id === stockInStore.filters.supplierId
-                                            )?.name || 'Selected'
-                                            : ''}
+                                        value={
+                                            stockInStore.filters.supplierId
+                                                ? masterDataStore.suppliers.data.find(
+                                                      s =>
+                                                          s.id ===
+                                                          stockInStore.filters
+                                                              .supplierId
+                                                  )?.name || 'Selected'
+                                                : ''
+                                        }
                                         placeholder="Select Supplier"
                                         mode="outlined"
                                         style={styles.input}
                                         editable={false}
-                                        right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
-                                        onTouchStart={() => setSupplierMenuVisible(true)}
+                                        right={
+                                            <TextInput.Icon
+                                                icon="menu-down"
+                                                onPress={() =>
+                                                    setSupplierMenuVisible(true)
+                                                }
+                                            />
+                                        }
+                                        onTouchStart={() =>
+                                            setSupplierMenuVisible(true)
+                                        }
                                     />
                                 }
                                 style={styles.supplierMenu}
@@ -290,7 +339,9 @@ const StockInFilterForm = observer(() => {
                                                     stockInStore.mergeFilters({
                                                         supplierId: supplier.id,
                                                     })
-                                                    setSupplierMenuVisible(false)
+                                                    setSupplierMenuVisible(
+                                                        false
+                                                    )
                                                 }}
                                                 title={`${supplier.name} (${supplier.code})`}
                                             />
@@ -303,46 +354,85 @@ const StockInFilterForm = observer(() => {
                     {/* Row 3: Date range on left and Priority buttons on right */}
                     <View style={styles.filterRow}>
                         <View style={styles.dateRangeContainer}>
-                            <Text variant="bodySmall" style={styles.dateRangeLabel}>Date Range</Text>
+                            <Text
+                                variant="bodySmall"
+                                style={styles.dateRangeLabel}
+                            >
+                                Date Range
+                            </Text>
                             {/* Date inputs in two rows */}
-                            <TextInput 
+                            <TextInput
                                 dense
                                 label="From"
-                                value={dateRange.startDate ? formatDate(dateRange.startDate.toISOString()) : ''}
+                                value={
+                                    dateRange.startDate
+                                        ? formatDate(
+                                              dateRange.startDate.toISOString()
+                                          )
+                                        : ''
+                                }
                                 placeholder="Start Date"
                                 mode="outlined"
                                 style={styles.verticalDateInput}
                                 editable={false}
-                                right={<TextInput.Icon icon="calendar" onPress={() => setStartDatePickerVisible(true)} />}
-                                onTouchStart={() => setStartDatePickerVisible(true)}
+                                right={
+                                    <TextInput.Icon
+                                        icon="calendar"
+                                        onPress={() =>
+                                            setStartDatePickerVisible(true)
+                                        }
+                                    />
+                                }
+                                onTouchStart={() =>
+                                    setStartDatePickerVisible(true)
+                                }
                             />
-                            
-                            <TextInput 
+
+                            <TextInput
                                 dense
                                 label="To"
-                                value={dateRange.endDate ? formatDate(dateRange.endDate.toISOString()) : ''}
+                                value={
+                                    dateRange.endDate
+                                        ? formatDate(
+                                              dateRange.endDate.toISOString()
+                                          )
+                                        : ''
+                                }
                                 placeholder="End Date"
                                 mode="outlined"
                                 style={styles.verticalDateInput}
                                 editable={false}
-                                right={<TextInput.Icon icon="calendar" onPress={() => setEndDatePickerVisible(true)} />}
-                                onTouchStart={() => setEndDatePickerVisible(true)}
+                                right={
+                                    <TextInput.Icon
+                                        icon="calendar"
+                                        onPress={() =>
+                                            setEndDatePickerVisible(true)
+                                        }
+                                    />
+                                }
+                                onTouchStart={() =>
+                                    setEndDatePickerVisible(true)
+                                }
                             />
-                            
+
                             {/* Date Picker Modals */}
                             <DatePickerModal
                                 locale="en"
                                 mode="single"
                                 visible={startDatePickerVisible}
-                                onDismiss={() => setStartDatePickerVisible(false)}
+                                onDismiss={() =>
+                                    setStartDatePickerVisible(false)
+                                }
                                 date={dateRange.startDate}
-                                onConfirm={(params) => {
+                                onConfirm={params => {
                                     if (params.date) {
-                                        onConfirmStartDate({ date: params.date });
+                                        onConfirmStartDate({
+                                            date: params.date,
+                                        })
                                     }
                                 }}
                             />
-                            
+
                             <DatePickerModal
                                 locale="en"
                                 mode="single"
@@ -351,28 +441,46 @@ const StockInFilterForm = observer(() => {
                                 date={dateRange.endDate}
                                 onConfirm={({ date }) => {
                                     if (date) {
-                                        onConfirmEndDate({ date });
+                                        onConfirmEndDate({ date })
                                     }
                                 }}
                             />
                         </View>
-                        
+
                         <View style={styles.priorityInputContainer}>
-                            <Text variant="bodySmall" style={styles.priorityLabel}>Priority</Text>
+                            <Text
+                                variant="bodySmall"
+                                style={styles.priorityLabel}
+                            >
+                                Priority
+                            </Text>
                             <View style={styles.priorityButtonsContainer}>
-                                {priorityOptions.map((option) => (
+                                {priorityOptions.map(option => (
                                     <TouchableRipple
                                         key={option.value}
-                                        style={getPriorityButtonStyle(option.value)}
+                                        style={getPriorityButtonStyle(
+                                            option.value
+                                        )}
                                         onPress={() => {
-                                            if (stockInStore.filters.priority === option.value) {
-                                                stockInStore.mergeFilters({ priority: undefined });
+                                            if (
+                                                stockInStore.filters
+                                                    .priority === option.value
+                                            ) {
+                                                stockInStore.mergeFilters({
+                                                    priority: undefined,
+                                                })
                                             } else {
-                                                stockInStore.mergeFilters({ priority: option.value });
+                                                stockInStore.mergeFilters({
+                                                    priority: option.value,
+                                                })
                                             }
                                         }}
                                     >
-                                        <Text style={getPriorityTextStyle(option.value)}>
+                                        <Text
+                                            style={getPriorityTextStyle(
+                                                option.value
+                                            )}
+                                        >
                                             {option.label}
                                         </Text>
                                     </TouchableRipple>
@@ -451,7 +559,8 @@ const StockInFilterForm = observer(() => {
                                         )?.name || 'Selected'}
                                     </Chip>
                                 )}
-                                {stockInStore.filters.priority !== undefined && (
+                                {stockInStore.filters.priority !==
+                                    undefined && (
                                     <Chip
                                         mode="outlined"
                                         onClose={() =>
@@ -463,7 +572,8 @@ const StockInFilterForm = observer(() => {
                                             styles.filterChip,
                                             {
                                                 borderColor: getPriorityColor(
-                                                    stockInStore.filters.priority
+                                                    stockInStore.filters
+                                                        .priority
                                                 ),
                                             },
                                         ]}
@@ -480,7 +590,7 @@ const StockInFilterForm = observer(() => {
                                         onClose={() => {
                                             setDateRange({
                                                 startDate: undefined,
-                                                endDate: undefined
+                                                endDate: undefined,
                                             })
                                         }}
                                         style={styles.filterChip}
@@ -490,8 +600,8 @@ const StockInFilterForm = observer(() => {
                                             ? formatDate(dateRange.startDate)
                                             : 'Any'}{' '}
                                         to{' '}
-                                        {dateRange.endDate 
-                                            ? formatDate(dateRange.endDate) 
+                                        {dateRange.endDate
+                                            ? formatDate(dateRange.endDate)
                                             : 'Any'}
                                     </Chip>
                                 )}
