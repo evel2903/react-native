@@ -6,6 +6,10 @@ import GetStockInsUseCase from './Application/UseCases/GetStockInsUseCase'
 import CreateStockInUseCase from './Application/UseCases/CreateStockInUseCase'
 import { GetCurrentApprovalStageUseCase } from './Application/UseCases/GetCurrentApprovalStageUseCase'
 import { CreateApprovalRequestUseCase } from './Application/UseCases/CreateApprovalRequestUseCase'
+import GetStockInByIdUseCase from './Application/UseCases/GetStockInByIdUseCase'
+import UpdateStockInStatusUseCase from './Application/UseCases/UpdateStockInStatusUseCase'
+import DeleteStockInUseCase from './Application/UseCases/DeleteStockInUseCase'
+import UpdateStockInUseCase from './Application/UseCases/UpdateStockInUseCase'
 
 @module({
     providers: [
@@ -17,6 +21,10 @@ import { CreateApprovalRequestUseCase } from './Application/UseCases/CreateAppro
         CreateStockInUseCase,
         GetCurrentApprovalStageUseCase,
         CreateApprovalRequestUseCase,
+        GetStockInByIdUseCase,
+        UpdateStockInStatusUseCase,
+        DeleteStockInUseCase,
+        UpdateStockInUseCase,
         {
             useClass: StockInStore,
             scope: 'Transient',

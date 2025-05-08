@@ -3,15 +3,17 @@ import { makeAutoObservable, runInAction } from 'mobx'
 import StockInStoreState from '../../Types/StockInStoreState'
 import GetStockInsPayload from '@/src/StockIn/Application/Types/GetStockInsPayload'
 import StockInEntity from '@/src/StockIn/Domain/Entities/StockInEntity'
-import {
-    IStockInRepository,
-    IStockInRepositoryToken,
-} from '@/src/StockIn/Domain/Specifications/IStockInRepository'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import CreateStockInPayload from '@/src/StockIn/Application/Types/CreateStockInPayload'
 import { GetCurrentApprovalStageUseCase } from '@/src/StockIn/Application/UseCases/GetCurrentApprovalStageUseCase'
 import { CreateApprovalRequestUseCase } from '@/src/StockIn/Application/UseCases/CreateApprovalRequestUseCase'
 import { ApprovalStage } from '@/src/StockIn/Domain/Entities/ApprovalStage'
+import GetStockInsUseCase from '@/src/StockIn/Application/UseCases/GetStockInsUseCase'
+import CreateStockInUseCase from '@/src/StockIn/Application/UseCases/CreateStockInUseCase'
+import GetStockInByIdUseCase from '@/src/StockIn/Application/UseCases/GetStockInByIdUseCase'
+import UpdateStockInStatusUseCase from '@/src/StockIn/Application/UseCases/UpdateStockInStatusUseCase'
+import DeleteStockInUseCase from '@/src/StockIn/Application/UseCases/DeleteStockInUseCase'
+import UpdateStockInUseCase from '@/src/StockIn/Application/UseCases/UpdateStockInUseCase'
 
 @injectable()
 export class StockInStore implements StockInStoreState {
@@ -63,8 +65,18 @@ export class StockInStore implements StockInStoreState {
     };
 
     constructor(
-        @inject(IStockInRepositoryToken)
-        private readonly stockInRepository: IStockInRepository,
+        @inject(GetStockInsUseCase)
+        private readonly getStockInsUseCase: GetStockInsUseCase,
+        @inject(CreateStockInUseCase)
+        private readonly createStockInUseCase: CreateStockInUseCase,
+        @inject(GetStockInByIdUseCase)
+        private readonly getStockInByIdUseCase: GetStockInByIdUseCase,
+        @inject(UpdateStockInStatusUseCase)
+        private readonly updateStockInStatusUseCase: UpdateStockInStatusUseCase,
+        @inject(DeleteStockInUseCase)
+        private readonly deleteStockInUseCase: DeleteStockInUseCase,
+        @inject(UpdateStockInUseCase)
+        private readonly updateStockInUseCase: UpdateStockInUseCase,
         @inject(GetCurrentApprovalStageUseCase)
         private readonly getCurrentApprovalStageUseCase: GetCurrentApprovalStageUseCase,
         @inject(CreateApprovalRequestUseCase)
@@ -144,7 +156,7 @@ export class StockInStore implements StockInStoreState {
         this.setError(null);
 
         try {
-            const response = await this.stockInRepository.getStockIns(payload);
+            const response = await this.getStockInsUseCase.execute(payload);
 
             runInAction(() => {
                 this.setResults(response.results);
@@ -180,7 +192,7 @@ export class StockInStore implements StockInStoreState {
         this.setError(null);
 
         try {
-            const stockIn = await this.stockInRepository.getStockInById(id);
+            const stockIn = await this.getStockInByIdUseCase.execute(id);
 
             runInAction(() => {
                 this.setSelectedStockIn(stockIn);
@@ -216,7 +228,7 @@ export class StockInStore implements StockInStoreState {
             // If payload is provided, use it; otherwise use the store's formData
             const data = payload || this.formData;
     
-            const stockIn = await this.stockInRepository.createStockIn(data as any);
+            const stockIn = await this.createStockInUseCase.execute(data as any);
     
             runInAction(() => {
                 // Always add the new stock in to the results, regardless of current list state
@@ -267,11 +279,10 @@ export class StockInStore implements StockInStoreState {
         const apiStatus = status === 'completed' ? 'APPROVED' : 'CANCELLED';
 
         try {
-            const updatedStockIn =
-                await this.stockInRepository.updateStockInStatus(
-                    id,
-                    apiStatus as StockInEntity['status']
-                );
+            const updatedStockIn = await this.updateStockInStatusUseCase.execute({
+                id,
+                status: apiStatus as StockInEntity['status']
+            });
 
             runInAction(() => {
                 // Update in the results list if present
@@ -312,13 +323,7 @@ export class StockInStore implements StockInStoreState {
         this.setError(null);
     
         try {
-            // Check if repository has the deleteStockIn method
-            if (!this.stockInRepository.deleteStockIn) {
-                throw new Error('Delete functionality not available');
-            }
-            
-            // Properly call the repository method with the ID
-            const success = await this.stockInRepository.deleteStockIn(id);
+            const success = await this.deleteStockInUseCase.execute(id);
             
             if (success) {
                 runInAction(() => {
@@ -361,7 +366,10 @@ export class StockInStore implements StockInStoreState {
         this.setError(null);
     
         try {
-            const updatedStockIn = await this.stockInRepository.updateStockIn(id, payload);
+            const updatedStockIn = await this.updateStockInUseCase.execute({
+                id,
+                data: payload
+            });
     
             runInAction(() => {
                 // Update in the results list if present
@@ -393,8 +401,6 @@ export class StockInStore implements StockInStoreState {
             });
         }
     }
-
-    // New methods for approval workflow
 
     // Get current approval stage
     async getCurrentApprovalStage(resourceName: string, stockStatus: string) {
