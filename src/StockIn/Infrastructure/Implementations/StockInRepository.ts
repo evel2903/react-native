@@ -207,6 +207,29 @@ class StockInRepository implements IStockInRepository {
                 : new Error(`Failed to delete stock in record with ID ${id}`)
         }
     }
+    public async updateStockIn(id: string, payload: any): Promise<StockInEntity> {
+        try {
+            // Use the regular API endpoint for updating stock in
+            const response = await this.httpClient.patch<any, any>(
+                `${this.apiBaseUrl}/${id}`,
+                payload
+            )
+
+            // Check if the response has the expected structure
+            if (!response) {
+                throw new Error('Failed to update stock in')
+            }
+
+            // Transform the response to domain entity using StockInDto
+            const stockInDto = plainToInstance(StockInDto, response)
+            return stockInDto.toDomain()
+        } catch (error) {
+            console.error(`Error updating stock in with ID ${id}:`, error)
+            throw error instanceof Error
+                ? error
+                : new Error(`Failed to update stock in with ID ${id}`)
+        }
+    }
 }
 
 export default StockInRepository

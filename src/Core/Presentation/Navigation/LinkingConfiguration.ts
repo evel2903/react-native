@@ -15,7 +15,6 @@ const linking: LinkingOptions<RootStackParamList> = {
             Auth: 'auth',
             Home: 'home',
             StockIn: 'stock-in',
-            StockInProcess: 'stock-in/:id/process',
             NotFound: '*',
         },
     },

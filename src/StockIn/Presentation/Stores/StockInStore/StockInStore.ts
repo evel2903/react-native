@@ -341,6 +341,45 @@ export class StockInStore implements StockInStoreState {
             });
         }
     }
+    
+    // Update stock in
+    async updateStockIn(id: string, payload: any) {
+        this.setIsLoading(true);
+        this.setError(null);
+    
+        try {
+            const updatedStockIn = await this.stockInRepository.updateStockIn(id, payload);
+    
+            runInAction(() => {
+                // Update in the results list if present
+                const index = this.results.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    this.results[index] = updatedStockIn;
+                }
+    
+                // Update selected stock in
+                this.setSelectedStockIn(updatedStockIn);
+            });
+    
+            return updatedStockIn;
+        } catch (error) {
+            console.error('Error updating stock in:', error);
+    
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to update stock in'
+                );
+            });
+    
+            return null;
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false);
+            });
+        }
+    }
 
     // Filter methods for each filter type
     filterByCode(code?: string) {

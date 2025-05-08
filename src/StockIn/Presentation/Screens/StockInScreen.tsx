@@ -84,7 +84,7 @@ const StockInScreen = observer(() => {
 
     const handleEdit = (id: string) => {
         // Edit functionality would be implemented here
-        console.log('Edit stock in:', id)
+        navigation.navigate('StockInEdit', { id })
     }
 
     // Updated to show delete confirmation dialog

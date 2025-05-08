@@ -22,7 +22,7 @@ export type RootStackParamList = {
     StockIn: undefined
     StockInAdd: undefined // Added StockInAdd route
     StockInView: { id: string }
-    StockInProcess: { id: string }
+    StockInEdit: { id: string }
     StockOut: undefined
     StockOutProcess: { id: string }
     NotFound: undefined

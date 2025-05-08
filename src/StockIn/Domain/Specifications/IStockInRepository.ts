@@ -3,7 +3,6 @@
 import StockInEntity from '../Entities/StockInEntity'
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
-import IHttpClient from '@/src/Core/Domain/Specifications/IHttpClient'
 
 export const IStockInRepositoryToken = Symbol('IStockInRepository')
 
@@ -22,6 +21,9 @@ export interface IStockInRepository {
 
     createStockIn: (data: CreateStockInPayload) => Promise<StockInEntity>
 
-    // Optional: Add deleteStockIn method
+    // New method for updating stock in records
+    updateStockIn: (id: string, data: any) => Promise<StockInEntity>
+
+    // Optional methods
     deleteStockIn?: (id: string) => Promise<boolean>
 }
