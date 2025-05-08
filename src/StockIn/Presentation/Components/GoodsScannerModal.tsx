@@ -33,7 +33,7 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
     isLoading,
 }) => {
     const [hasPermission, setHasPermission] = useState<boolean | null>(null)
-    const [scanMode, setScanMode] = useState(false)
+    const [scanMode, setScanMode] = useState(true) // Changed to true to default to scanner mode
     const [scannedData, setScannedData] = useState<string | null>(null)
     const [searchCode, setSearchCode] = useState('')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -62,6 +62,7 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
             setErrorMessage(null)
             setFoundGoods(null)
             setScannerActive(true)
+            setScanMode(true) // Added to ensure scanner mode is active when modal opens
         }
     }, [visible])
 

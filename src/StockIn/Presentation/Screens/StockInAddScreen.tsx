@@ -20,6 +20,7 @@ import {
     Surface,
     TouchableRipple,
     ActivityIndicator,
+    List,
 } from 'react-native-paper'
 import { formatDate } from '@/src/Core/Utils'
 import { DatePickerModal } from 'react-native-paper-dates'
@@ -52,6 +53,39 @@ interface GoodsItem {
     notes: string
 }
 
+// Custom Accordion Component with centered title
+const CenteredAccordion = ({ 
+    title, 
+    expanded, 
+    onPress, 
+    children 
+}: { 
+    title: string, 
+    expanded: boolean, 
+    onPress: () => void, 
+    children: React.ReactNode 
+}) => {
+    return (
+        <List.Accordion
+            title={title}
+            expanded={expanded}
+            onPress={onPress}
+            style={styles.accordion}
+            titleStyle={styles.accordionTitle}
+            // Custom right icon that changes based on expanded state
+            right={props => 
+                <List.Icon 
+                    {...props} 
+                    icon={expanded ? "chevron-up" : "chevron-down"} 
+                    style={styles.accordionIcon} 
+                />
+            }
+        >
+            {children}
+        </List.Accordion>
+    );
+};
+
 const StockInAddScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
     const stockInStore = useStockInStore()
@@ -71,6 +105,9 @@ const StockInAddScreen = observer(() => {
     const [status, setStatus] = useState(Status.Draft)
     const [notes, setNotes] = useState('')
     const [priority, setPriority] = useState(2) // Default to Medium priority
+
+    // Accordion state
+    const [infoExpanded, setInfoExpanded] = useState(true)
 
     // Goods list
     const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
@@ -346,6 +383,242 @@ const StockInAddScreen = observer(() => {
         ];
     }
 
+    // Render the form content inside the accordion
+    const renderFormContent = () => (
+        <>
+            {/* Row 1: Code and Supplier */}
+            <View style={styles.row}>
+                <View style={styles.inputHalf}>
+                    <TextInput dense
+                        label="Code"
+                        value={code}
+                        onChangeText={setCode}
+                        mode="outlined"
+                        style={styles.input}
+                        placeholder="Auto-generated"
+                    />
+                </View>
+                <View style={styles.inputHalf}>
+                    <Menu
+                        visible={supplierMenuVisible}
+                        onDismiss={() =>
+                            setSupplierMenuVisible(false)
+                        }
+                        anchor={
+                            <TextInput dense
+                                label="Supplier"
+                                value={
+                                    supplierId
+                                        ? masterDataStore.suppliers.data.find(
+                                              s =>
+                                                  s.id ===
+                                                  supplierId
+                                          )?.name ||
+                                          ''
+                                        : ''
+                                }
+                                placeholder="Select Supplier"
+                                mode="outlined"
+                                style={styles.input}
+                                editable={false}
+                                error={!!errors.supplierId}
+                                right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
+                                onTouchStart={() => setSupplierMenuVisible(true)}
+                            />
+                        }
+                    >
+                        {masterDataStore.suppliers.data
+                            .filter(
+                                s =>
+                                    s.isActive &&
+                                    !s.isDeleted
+                            )
+                            .map(s => (
+                                <Menu.Item
+                                    key={s.id}
+                                    onPress={() => {
+                                        setSupplierId(s.id)
+                                        setSupplierMenuVisible(
+                                            false
+                                        )
+                                    }}
+                                    title={s.name}
+                                />
+                            ))}
+                    </Menu>
+                    {errors.supplierId && (
+                        <Text style={styles.errorText}>
+                            {errors.supplierId}
+                        </Text>
+                    )}
+                </View>
+            </View>
+
+            {/* Row 2: Lot Number and Stock In Date */}
+            <View style={styles.row}>
+                <View style={styles.inputHalf}>
+                    <TextInput dense
+                        label="Lot number"
+                        value={lotNumber}
+                        onChangeText={setLotNumber}
+                        mode="outlined"
+                        style={styles.input}
+                    />
+                </View>
+                <View style={styles.inputHalf}>
+                    {/* Date picker as TextInput */}
+                    <TextInput dense
+                        label="Stock in date"
+                        value={formatDate(stockInDate)}
+                        mode="outlined"
+                        style={styles.input}
+                        editable={false}
+                        error={!!errors.stockInDate}
+                        right={<TextInput.Icon icon="calendar" onPress={() => setStockInDatePickerVisible(true)} />}
+                        onTouchStart={() => setStockInDatePickerVisible(true)}
+                    />
+                    
+                    {/* Stock In Date Picker Modal */}
+                    <DatePickerModal
+                        locale="en"
+                        mode="single"
+                        visible={stockInDatePickerVisible}
+                        onDismiss={() => setStockInDatePickerVisible(false)}
+                        date={selectedStockInDate}
+                        onConfirm={({ date }) => {
+                            if (date) {
+                                onConfirmStockInDate({ date });
+                            }
+                        }}
+                    />
+                    
+                    {errors.stockInDate && (
+                        <Text style={styles.errorText}>
+                            {errors.stockInDate}
+                        </Text>
+                    )}
+                </View>
+            </View>
+
+            {/* Row 3: Created by and Description */}
+            <View style={styles.row}>
+                <View style={styles.inputHalf}>
+                    <TextInput dense
+                        label="Created by"
+                        value={authStore.user?.name || ''}
+                        editable={false}
+                        mode="outlined"
+                        style={styles.input}
+                    />
+                </View>
+                <View style={styles.inputHalf}>
+                    <TextInput dense
+                        label="Approved by"
+                        value=""
+                        editable={false}
+                        mode="outlined"
+                        style={styles.input}
+                        placeholder="Pending approval"
+                    />
+                </View>
+            </View>
+
+            {/* Row 4: Total Cost and Status */}
+            <View style={styles.row}>
+                <View style={styles.inputHalf}>
+                    <TextInput dense
+                        label="Total cost"
+                        value={totalAmount}
+                        onChangeText={setTotalAmount}
+                        mode="outlined"
+                        editable={false}
+                        style={styles.input}
+                        keyboardType="numeric"
+                    />
+                </View>
+                <View style={styles.inputHalf}>
+                    <Menu
+                        visible={statusMenuVisible}
+                        onDismiss={() =>
+                            setStatusMenuVisible(false)
+                        }
+                        anchor={
+                            <TextInput dense
+                                label="Status"
+                                value={status}
+                                mode="outlined"
+                                editable={false}
+                                style={styles.input}
+                                right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
+                                onTouchStart={() => setStatusMenuVisible(true)}
+                            />
+                        }
+                    >
+                        <Menu.Item
+                            onPress={() => {
+                                setStatus(Status.Draft)
+                                setStatusMenuVisible(false)
+                            }}
+                            title="DRAFT"
+                        />
+                        <Menu.Item
+                            onPress={() => {
+                                setStatus(Status.Pending)
+                                setStatusMenuVisible(false)
+                            }}
+                            title="PENDING"
+                        />
+                    </Menu>
+                </View>
+            </View>
+
+            {/* Row 5: Note and Priority */}
+            <View style={styles.noteRow}>
+                <View style={styles.inputFull}>
+                    <TextInput dense
+                        label="Note"
+                        value={notes}
+                        onChangeText={setNotes}
+                        mode="outlined"
+                        multiline
+                        numberOfLines={4}
+                        style={[styles.input, styles.noteInput]}
+                    />
+                </View>
+                <View style={styles.priorityContainer}>
+                    <View style={styles.priorityButtonsContainer}>
+                        <TouchableRipple
+                            style={getPriorityButtonStyle(PRIORITY.High)}
+                            onPress={() => setPriority(PRIORITY.High)}
+                        >
+                            <Text style={getPriorityTextStyle(PRIORITY.High)}>
+                                {getPriorityDisplayName(PRIORITY.High)}
+                            </Text>
+                        </TouchableRipple>
+                        
+                        <TouchableRipple
+                            style={getPriorityButtonStyle(PRIORITY.Medium)}
+                            onPress={() => setPriority(PRIORITY.Medium)}
+                        >
+                            <Text style={getPriorityTextStyle(PRIORITY.Medium)}>
+                                {getPriorityDisplayName(PRIORITY.Medium)}
+                            </Text>
+                        </TouchableRipple>
+                        
+                        <TouchableRipple
+                            style={getPriorityButtonStyle(PRIORITY.Low)}
+                            onPress={() => setPriority(PRIORITY.Low)}
+                        >
+                            <Text style={getPriorityTextStyle(PRIORITY.Low)}>
+                                {getPriorityDisplayName(PRIORITY.Low)}
+                            </Text>
+                        </TouchableRipple>
+                    </View>
+                </View>
+            </View>
+        </>
+    );
+
     return (
         <View
             style={[
@@ -366,237 +639,17 @@ const StockInAddScreen = observer(() => {
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <ScrollView style={styles.scrollView}>
-                            <Surface style={styles.formCard} elevation={1}>
-                                {/* Row 1: Code and Supplier */}
-                                <View style={styles.row}>
-                                    <View style={styles.inputHalf}>
-                                        <TextInput dense
-                                            label="Code"
-                                            value={code}
-                                            onChangeText={setCode}
-                                            mode="outlined"
-                                            style={styles.input}
-                                            placeholder="Auto-generated"
-                                        />
+                            {/* Accordion for form info section */}
+                            <Surface style={styles.accordionContainer} elevation={1}>
+                                <CenteredAccordion
+                                    title="Stock In Information"
+                                    expanded={infoExpanded}
+                                    onPress={() => setInfoExpanded(!infoExpanded)}
+                                >
+                                    <View style={styles.formContent}>
+                                        {renderFormContent()}
                                     </View>
-                                    <View style={styles.inputHalf}>
-                                        <Menu
-                                            visible={supplierMenuVisible}
-                                            onDismiss={() =>
-                                                setSupplierMenuVisible(false)
-                                            }
-                                            anchor={
-                                                <TextInput dense
-                                                    label="Supplier"
-                                                    value={
-                                                        supplierId
-                                                            ? masterDataStore.suppliers.data.find(
-                                                                  s =>
-                                                                      s.id ===
-                                                                      supplierId
-                                                              )?.name ||
-                                                              ''
-                                                            : ''
-                                                    }
-                                                    placeholder="Select Supplier"
-                                                    mode="outlined"
-                                                    style={styles.input}
-                                                    editable={false}
-                                                    error={!!errors.supplierId}
-                                                    right={<TextInput.Icon icon="menu-down" onPress={() => setSupplierMenuVisible(true)} />}
-                                                    onTouchStart={() => setSupplierMenuVisible(true)}
-                                                />
-                                            }
-                                        >
-                                            {masterDataStore.suppliers.data
-                                                .filter(
-                                                    s =>
-                                                        s.isActive &&
-                                                        !s.isDeleted
-                                                )
-                                                .map(s => (
-                                                    <Menu.Item
-                                                        key={s.id}
-                                                        onPress={() => {
-                                                            setSupplierId(s.id)
-                                                            setSupplierMenuVisible(
-                                                                false
-                                                            )
-                                                        }}
-                                                        title={s.name}
-                                                    />
-                                                ))}
-                                        </Menu>
-                                        {errors.supplierId && (
-                                            <Text style={styles.errorText}>
-                                                {errors.supplierId}
-                                            </Text>
-                                        )}
-                                    </View>
-                                </View>
-
-                                {/* Row 2: Lot Number and Stock In Date */}
-                                <View style={styles.row}>
-                                    <View style={styles.inputHalf}>
-                                        <TextInput dense
-                                            label="Lot number"
-                                            value={lotNumber}
-                                            onChangeText={setLotNumber}
-                                            mode="outlined"
-                                            style={styles.input}
-                                        />
-                                    </View>
-                                    <View style={styles.inputHalf}>
-                                        {/* Date picker as TextInput */}
-                                        <TextInput dense
-                                            label="Stock in date"
-                                            value={formatDate(stockInDate)}
-                                            mode="outlined"
-                                            style={styles.input}
-                                            editable={false}
-                                            error={!!errors.stockInDate}
-                                            right={<TextInput.Icon icon="calendar" onPress={() => setStockInDatePickerVisible(true)} />}
-                                            onTouchStart={() => setStockInDatePickerVisible(true)}
-                                        />
-                                        
-                                        {/* Stock In Date Picker Modal */}
-                                        <DatePickerModal
-                                            locale="en"
-                                            mode="single"
-                                            visible={stockInDatePickerVisible}
-                                            onDismiss={() => setStockInDatePickerVisible(false)}
-                                            date={selectedStockInDate}
-                                            onConfirm={({ date }) => {
-                                                if (date) {
-                                                    onConfirmStockInDate({ date });
-                                                }
-                                            }}
-                                        />
-                                        
-                                        {errors.stockInDate && (
-                                            <Text style={styles.errorText}>
-                                                {errors.stockInDate}
-                                            </Text>
-                                        )}
-                                    </View>
-                                </View>
-
-                                {/* Row 3: Created by and Description */}
-                                <View style={styles.row}>
-                                    <View style={styles.inputHalf}>
-                                        <TextInput dense
-                                            label="Created by"
-                                            value={authStore.user?.name || ''}
-                                            editable={false}
-                                            mode="outlined"
-                                            style={styles.input}
-                                        />
-                                    </View>
-                                    <View style={styles.inputHalf}>
-                                        <TextInput dense
-                                            label="Approved by"
-                                            value=""
-                                            editable={false}
-                                            mode="outlined"
-                                            style={styles.input}
-                                            placeholder="Pending approval"
-                                        />
-                                    </View>
-                                </View>
-
-                                {/* Row 4: Total Cost and Status */}
-                                <View style={styles.row}>
-                                    <View style={styles.inputHalf}>
-                                        <TextInput dense
-                                            label="Total cost"
-                                            value={totalAmount}
-                                            onChangeText={setTotalAmount}
-                                            mode="outlined"
-                                            editable={false}
-                                            style={styles.input}
-                                            keyboardType="numeric"
-                                        />
-                                    </View>
-                                    <View style={styles.inputHalf}>
-                                        <Menu
-                                            visible={statusMenuVisible}
-                                            onDismiss={() =>
-                                                setStatusMenuVisible(false)
-                                            }
-                                            anchor={
-                                                <TextInput dense
-                                                    label="Status"
-                                                    value={status}
-                                                    mode="outlined"
-                                                    editable={false}
-                                                    style={styles.input}
-                                                    right={<TextInput.Icon icon="menu-down" onPress={() => setStatusMenuVisible(true)} />}
-                                                    onTouchStart={() => setStatusMenuVisible(true)}
-                                                />
-                                            }
-                                        >
-                                            <Menu.Item
-                                                onPress={() => {
-                                                    setStatus(Status.Draft)
-                                                    setStatusMenuVisible(false)
-                                                }}
-                                                title="DRAFT"
-                                            />
-                                            <Menu.Item
-                                                onPress={() => {
-                                                    setStatus(Status.Pending)
-                                                    setStatusMenuVisible(false)
-                                                }}
-                                                title="PENDING"
-                                            />
-                                        </Menu>
-                                    </View>
-                                </View>
-
-                                {/* Row 5: Note and Priority */}
-                                <View style={styles.noteRow}>
-                                    <View style={styles.inputFull}>
-                                        <TextInput dense
-                                            label="Note"
-                                            value={notes}
-                                            onChangeText={setNotes}
-                                            mode="outlined"
-                                            multiline
-                                            numberOfLines={4}
-                                            style={[styles.input, styles.noteInput]}
-                                        />
-                                    </View>
-                                    <View style={styles.priorityContainer}>
-                                        <View style={styles.priorityButtonsContainer}>
-                                            <TouchableRipple
-                                                style={getPriorityButtonStyle(PRIORITY.High)}
-                                                onPress={() => setPriority(PRIORITY.High)}
-                                            >
-                                                <Text style={getPriorityTextStyle(PRIORITY.High)}>
-                                                    {getPriorityDisplayName(PRIORITY.High)}
-                                                </Text>
-                                            </TouchableRipple>
-                                            
-                                            <TouchableRipple
-                                                style={getPriorityButtonStyle(PRIORITY.Medium)}
-                                                onPress={() => setPriority(PRIORITY.Medium)}
-                                            >
-                                                <Text style={getPriorityTextStyle(PRIORITY.Medium)}>
-                                                    {getPriorityDisplayName(PRIORITY.Medium)}
-                                                </Text>
-                                            </TouchableRipple>
-                                            
-                                            <TouchableRipple
-                                                style={getPriorityButtonStyle(PRIORITY.Low)}
-                                                onPress={() => setPriority(PRIORITY.Low)}
-                                            >
-                                                <Text style={getPriorityTextStyle(PRIORITY.Low)}>
-                                                    {getPriorityDisplayName(PRIORITY.Low)}
-                                                </Text>
-                                            </TouchableRipple>
-                                        </View>
-                                    </View>
-                                </View>
+                                </CenteredAccordion>
                             </Surface>
 
                             {/* Goods List */}
@@ -696,6 +749,25 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
     },
+    // Accordion styles
+    accordionContainer: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    accordion: {
+        padding: 0,
+    },
+    accordionTitle: {
+        fontWeight: 'bold',
+    },
+    accordionIcon: {
+        margin: 0, // Remove default margin
+    },
+    formContent: {
+        padding: 12,
+    },
+    // Original form styles
     formCard: {
         padding: 12,
         borderRadius: 8,
