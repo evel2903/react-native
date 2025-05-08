@@ -295,44 +295,50 @@ export class StockInStore implements StockInStoreState {
     }
     // Delete stock in
     async deleteStockIn(id: string) {
-        this.setIsLoading(true)
-        this.setError(null)
-
+        this.setIsLoading(true);
+        this.setError(null);
+    
         try {
-            // Call HTTP client directly as there's no repository method
-            const url = `/api/stock-in/${id}`
-
-            // Get the HTTP client from repository to maintain consistency
-            await this.stockInRepository.deleteStockIn
-
-            runInAction(() => {
-                // Remove from the results list if present
-                this.results = this.results.filter(item => item.id !== id)
-                this.count = this.count - 1
-
-                // If it was the selected one, clear selection
-                if (this.selectedStockIn && this.selectedStockIn.id === id) {
-                    this.setSelectedStockIn(null)
-                }
-            })
-
-            return true
+            // Check if repository has the deleteStockIn method
+            if (!this.stockInRepository.deleteStockIn) {
+                throw new Error('Delete functionality not available');
+            }
+            
+            // Properly call the repository method with the ID
+            const success = await this.stockInRepository.deleteStockIn(id);
+            
+            if (success) {
+                runInAction(() => {
+                    // Remove from the results list if present
+                    this.results = this.results.filter(item => item.id !== id);
+                    this.count = this.count - 1;
+                    
+                    // If it was the selected one, clear selection
+                    if (this.selectedStockIn && this.selectedStockIn.id === id) {
+                        this.setSelectedStockIn(null);
+                    }
+                });
+                
+                return true;
+            } else {
+                throw new Error('Failed to delete stock in record');
+            }
         } catch (error) {
-            console.error('Error deleting stock in:', error)
-
+            console.error('Error deleting stock in:', error);
+            
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to delete stock in record'
-                )
-            })
-
-            return false
+                );
+            });
+            
+            return false;
         } finally {
             runInAction(() => {
-                this.setIsLoading(false)
-            })
+                this.setIsLoading(false);
+            });
         }
     }
 

@@ -195,13 +195,11 @@ class StockInRepository implements IStockInRepository {
             const response = await this.httpClient.delete<any>(
                 `${this.apiBaseUrl}/${id}`
             )
-
-            // Check if the response indicates success
-            if (response && response.success) {
-                return true
-            } else {
-                throw new Error('Failed to delete stock in record')
-            }
+    
+            // For 204 responses, the successful deletion is indicated by the status code itself
+            // The response might be null, undefined, or an empty object
+            // We can simply return true if we reach this point without exceptions
+            return true
         } catch (error) {
             console.error(`Error deleting stock in with ID ${id}:`, error)
             throw error instanceof Error
