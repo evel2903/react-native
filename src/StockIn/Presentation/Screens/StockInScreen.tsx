@@ -30,10 +30,13 @@ import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { StatusBar } from 'expo-status-bar'
 import StockInListItem from '../Components/StockInListItem'
 import StockInFilterForm from '../Components/StockInFilterForm'
+import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
+import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
 
 const StockInScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
     const stockInStore = useStockInStore()
+    const authStore = useAuthStore()
     const theme = useTheme()
     const [refreshing, setRefreshing] = useState(false)
     const windowHeight = Dimensions.get('window').height
@@ -42,6 +45,16 @@ const StockInScreen = observer(() => {
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
     const [stockToDelete, setStockToDelete] = useState<string | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
+
+    // Add states for approval dialogs
+    const [approvalDialogVisible, setApprovalDialogVisible] = useState(false)
+    const [stockToApprove, setStockToApprove] = useState<string | null>(null)
+    const [isApproving, setIsApproving] = useState(false)
+
+    // Add states for request approval dialogs
+    const [requestApprovalDialogVisible, setRequestApprovalDialogVisible] = useState(false)
+    const [stockToRequestApproval, setStockToRequestApproval] = useState<string | null>(null)
+    const [isRequestingApproval, setIsRequestingApproval] = useState(false)
 
     // Add snackbar state
     const [snackbarVisible, setSnackbarVisible] = useState(false)
@@ -73,9 +86,52 @@ const StockInScreen = observer(() => {
         stockInStore.toggleFilterVisible()
     }
 
+    // Handle approval request
+    const handleRequestApproval = (id: string) => {
+        setStockToRequestApproval(id)
+        setRequestApprovalDialogVisible(true)
+    }
+
+    // Confirm the approval request
+    const confirmRequestApproval = async () => {
+        if (!stockToRequestApproval || !authStore.user?.id) return
+
+        setIsRequestingApproval(true)
+
+        try {
+            const result = await stockInStore.requestApproval(
+                stockToRequestApproval,
+                authStore.user.id
+            )
+
+            if (result) {
+                showSnackbar('Approval request sent successfully')
+            } else {
+                showSnackbar('Failed to request approval')
+            }
+        } catch (error) {
+            console.error('Error requesting approval:', error)
+            showSnackbar('An error occurred while requesting approval')
+        } finally {
+            setIsRequestingApproval(false)
+            setRequestApprovalDialogVisible(false)
+            setStockToRequestApproval(null)
+        }
+    }
+
+    // Handle approve
     const handleApprove = (id: string) => {
-        // Approve functionality would be implemented here
-        console.log('Approve stock in:', id)
+        setStockToApprove(id)
+        setApprovalDialogVisible(true)
+    }
+
+    // Confirm approval
+    const confirmApprove = async () => {
+        // Approval functionality would be implemented here
+        setApprovalDialogVisible(false)
+        setStockToApprove(null)
+        // For now, just show a message
+        showSnackbar('Approval functionality to be implemented')
     }
 
     const handleView = (id: string) => {
@@ -218,6 +274,7 @@ const StockInScreen = observer(() => {
                             <StockInListItem
                                 item={item}
                                 onApprove={handleApprove}
+                                onRequestApproval={handleRequestApproval}
                                 onView={handleView}
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
@@ -259,6 +316,61 @@ const StockInScreen = observer(() => {
                                 textColor={theme.theme.colors.error}
                             >
                                 Delete
+                            </Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
+
+                {/* Request Approval Dialog */}
+                <Portal>
+                    <Dialog
+                        visible={requestApprovalDialogVisible}
+                        onDismiss={() => setRequestApprovalDialogVisible(false)}
+                    >
+                        <Dialog.Title>Request Approval</Dialog.Title>
+                        <Dialog.Content>
+                            <Text variant="bodyMedium">
+                                Are you sure you want to request approval for this stock in record?
+                                This will send it to the approval workflow.
+                            </Text>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={() => setRequestApprovalDialogVisible(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onPress={confirmRequestApproval}
+                                loading={isRequestingApproval}
+                                disabled={isRequestingApproval}
+                            >
+                                Request Approval
+                            </Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
+
+                {/* Approve Dialog */}
+                <Portal>
+                    <Dialog
+                        visible={approvalDialogVisible}
+                        onDismiss={() => setApprovalDialogVisible(false)}
+                    >
+                        <Dialog.Title>Approve Stock In</Dialog.Title>
+                        <Dialog.Content>
+                            <Text variant="bodyMedium">
+                                Are you sure you want to approve this stock in record?
+                            </Text>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={() => setApprovalDialogVisible(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onPress={confirmApprove}
+                                loading={isApproving}
+                                disabled={isApproving}
+                            >
+                                Approve
                             </Button>
                         </Dialog.Actions>
                     </Dialog>
@@ -322,4 +434,7 @@ const styles = StyleSheet.create({
     },
 })
 
-export default withProviders(StockInStoreProvider)(StockInScreen)
+export default withProviders(
+    StockInStoreProvider, 
+    AuthStoreProvider
+)(StockInScreen)

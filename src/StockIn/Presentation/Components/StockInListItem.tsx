@@ -25,6 +25,7 @@ import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthSt
 interface StockInListItemProps {
     item: StockInEntity
     onApprove: (id: string) => void
+    onRequestApproval: (id: string) => void
     onView: (id: string) => void
     onEdit: (id: string) => void
     onDelete: (id: string) => void
@@ -33,6 +34,7 @@ interface StockInListItemProps {
 const StockInListItem: React.FC<StockInListItemProps> = ({
     item,
     onApprove,
+    onRequestApproval,
     onView,
     onEdit,
     onDelete,
@@ -157,29 +159,43 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                                 />
                             )}
                     </View>
-                    {/* Only show Approve button if valid for approval and user has approval permission */}
-                    {item.isValidForApprovalRequest === true &&
-                        authStore.hasPermission(
-                            'approval_request_decisions:create'
-                        ) && (
-                            <Button
-                                mode="outlined"
-                                style={[
-                                    styles.approveButton,
-                                    {
-                                        borderColor: getStatusDetails(
-                                            Status.Approved
-                                        ).color,
-                                    },
-                                ]}
-                                textColor={
-                                    getStatusDetails(Status.Approved).color
-                                }
-                                onPress={() => onApprove(item.id)}
-                            >
-                                Approve
-                            </Button>
-                        )}
+                    <View style={styles.actionButtons}>
+                        {/* Request Approval button - only show for Draft status */}
+                        {item.status === Status.Draft &&
+                            authStore.hasPermission('approval_requests:create') && (
+                                <Button
+                                    mode="outlined"
+                                    style={styles.requestButton}
+                                    onPress={() => onRequestApproval(item.id)}
+                                >
+                                    Request Approval
+                                </Button>
+                            )}
+                        
+                        {/* Approve button - only show if valid for approval */}
+                        {item.isValidForApprovalRequest === true &&
+                            authStore.hasPermission(
+                                'approval_request_decisions:create'
+                            ) && (
+                                <Button
+                                    mode="outlined"
+                                    style={[
+                                        styles.approveButton,
+                                        {
+                                            borderColor: getStatusDetails(
+                                                Status.Approved
+                                            ).color,
+                                        },
+                                    ]}
+                                    textColor={
+                                        getStatusDetails(Status.Approved).color
+                                    }
+                                    onPress={() => onApprove(item.id)}
+                                >
+                                    Approve
+                                </Button>
+                            )}
+                    </View>
                 </View>
             </Card.Content>
         </Card>
@@ -264,7 +280,19 @@ const styles = StyleSheet.create({
         paddingBottom: 0,
         marginTop: 8,
     },
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 8,
+    },
     approveButton: {
+        borderRadius: 4,
+        borderWidth: 1,
+        fontSize: 12,
+        textAlign: 'center',
+        lineHeight: 16,
+    },
+    requestButton: {
         borderRadius: 4,
         borderWidth: 1,
         fontSize: 12,

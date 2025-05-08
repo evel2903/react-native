@@ -4,6 +4,8 @@ import { IStockInRepositoryToken } from './Domain/Specifications/IStockInReposit
 import StockInRepository from './Infrastructure/Implementations/StockInRepository'
 import GetStockInsUseCase from './Application/UseCases/GetStockInsUseCase'
 import CreateStockInUseCase from './Application/UseCases/CreateStockInUseCase'
+import { GetCurrentApprovalStageUseCase } from './Application/UseCases/GetCurrentApprovalStageUseCase'
+import { CreateApprovalRequestUseCase } from './Application/UseCases/CreateApprovalRequestUseCase'
 
 @module({
     providers: [
@@ -12,7 +14,9 @@ import CreateStockInUseCase from './Application/UseCases/CreateStockInUseCase'
             useClass: StockInRepository,
         },
         GetStockInsUseCase,
-        CreateStockInUseCase, // Added CreateStockInUseCase
+        CreateStockInUseCase,
+        GetCurrentApprovalStageUseCase,
+        CreateApprovalRequestUseCase,
         {
             useClass: StockInStore,
             scope: 'Transient',

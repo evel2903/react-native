@@ -1,5 +1,9 @@
 import { injectable, inject } from 'inversiland'
-import { IStockInRepository } from '../../Domain/Specifications/IStockInRepository'
+import { 
+    IStockInRepository
+} from '../../Domain/Specifications/IStockInRepository'
+import { ApprovalStage } from '../../Domain/Entities/ApprovalStage'
+import { ApprovalRequest } from '../../Domain/Entities/ApprovalRequest'
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
@@ -20,6 +24,10 @@ class StockInRepository implements IStockInRepository {
     
     // Regular API endpoint - used for all other operations
     private readonly apiBaseUrl = '/api/stock-in'
+
+    // Approval API endpoints
+    private readonly approvalStageUrl = '/api/approval-stage'
+    private readonly approvalRequestUrl = '/api/approval-request'
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
@@ -207,6 +215,7 @@ class StockInRepository implements IStockInRepository {
                 : new Error(`Failed to delete stock in record with ID ${id}`)
         }
     }
+
     public async updateStockIn(id: string, payload: any): Promise<StockInEntity> {
         try {
             // Use the regular API endpoint for updating stock in
@@ -228,6 +237,62 @@ class StockInRepository implements IStockInRepository {
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to update stock in with ID ${id}`)
+        }
+    }
+
+    // New method for getting the current approval stage
+    public async getCurrentApprovalStage(
+        resourceName: string, 
+        stockStatus: string
+    ): Promise<ApprovalStage> {
+        try {
+            const url = `${this.approvalStageUrl}/get-current-stage?resourceName=${resourceName}&stockStatus=${stockStatus}`;
+            
+            const response = await this.httpClient.get<{ data: ApprovalStage }>(url);
+            
+            if (!response || !response.data) {
+                throw new Error('Failed to get current approval stage');
+            }
+            
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching current approval stage:', error);
+            throw error instanceof Error
+                ? error
+                : new Error('Failed to get current approval stage');
+        }
+    }
+    
+    // New method for creating an approval request
+    public async createApprovalRequest(
+        objectId: string,
+        currentStageId: string,
+        objectType: string,
+        requesterId: string
+    ): Promise<ApprovalRequest> {
+        try {
+            const payload = {
+                objectId,
+                currentStageId,
+                objectType,
+                requesterId
+            };
+            
+            const response = await this.httpClient.post<
+                typeof payload,
+                { data: ApprovalRequest }
+            >(this.approvalRequestUrl, payload);
+            
+            if (!response || !response.data) {
+                throw new Error('Failed to create approval request');
+            }
+            
+            return response.data;
+        } catch (error) {
+            console.error('Error creating approval request:', error);
+            throw error instanceof Error
+                ? error
+                : new Error('Failed to create approval request');
         }
     }
 }

@@ -9,12 +9,15 @@ import {
 } from '@/src/StockIn/Domain/Specifications/IStockInRepository'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import CreateStockInPayload from '@/src/StockIn/Application/Types/CreateStockInPayload'
+import { GetCurrentApprovalStageUseCase } from '@/src/StockIn/Application/UseCases/GetCurrentApprovalStageUseCase'
+import { CreateApprovalRequestUseCase } from '@/src/StockIn/Application/UseCases/CreateApprovalRequestUseCase'
+import { ApprovalStage } from '@/src/StockIn/Domain/Entities/ApprovalStage'
 
 @injectable()
 export class StockInStore implements StockInStoreState {
-    isLoading = false
-    results: StockInEntity[] = []
-    count = 0
+    isLoading = false;
+    results: StockInEntity[] = [];
+    count = 0;
     filters = {
         code: undefined as string | undefined,
         status: undefined as
@@ -30,15 +33,20 @@ export class StockInStore implements StockInStoreState {
         startDate: undefined as string | undefined,
         endDate: undefined as string | undefined,
         search: undefined as string | undefined,
-    }
+    };
     pagination = {
         page: 1,
         pageSize: 10,
-    }
+    };
 
-    selectedStockIn: StockInEntity | null = null
-    error: string | null = null
-    filterVisible = false
+    // Approval workflow state
+    isApprovalProcessing = false;
+    approvalError: string | null = null;
+    currentApprovalStage: ApprovalStage | null = null;
+
+    selectedStockIn: StockInEntity | null = null;
+    error: string | null = null;
+    filterVisible = false;
 
     // Form data for creating new stock in
     formData: CreateStockInPayload = {
@@ -52,66 +60,70 @@ export class StockInStore implements StockInStoreState {
         supplierInvoice: '',
         notes: '',
         status: 'pending',
-    }
+    };
 
     constructor(
         @inject(IStockInRepositoryToken)
-        private readonly stockInRepository: IStockInRepository
+        private readonly stockInRepository: IStockInRepository,
+        @inject(GetCurrentApprovalStageUseCase)
+        private readonly getCurrentApprovalStageUseCase: GetCurrentApprovalStageUseCase,
+        @inject(CreateApprovalRequestUseCase)
+        private readonly createApprovalRequestUseCase: CreateApprovalRequestUseCase
     ) {
-        makeAutoObservable(this)
+        makeAutoObservable(this);
         // Load stock ins on store initialization
-        this.getStockIns()
+        this.getStockIns();
     }
 
     get pageCount() {
-        return Math.ceil(this.count / this.pagination.pageSize)
+        return Math.ceil(this.count / this.pagination.pageSize);
     }
 
     get isEmpty(): boolean {
-        return this.results.length === 0
+        return this.results.length === 0;
     }
 
     setIsLoading = (isLoading: boolean) => {
-        this.isLoading = isLoading
-    }
+        this.isLoading = isLoading;
+    };
 
     setResults = (results: StockInEntity[]) => {
-        this.results = results
-    }
+        this.results = results;
+    };
 
     setCount = (count: number) => {
-        this.count = count
-    }
+        this.count = count;
+    };
 
     setFilterVisible = (visible: boolean) => {
-        this.filterVisible = visible
-    }
+        this.filterVisible = visible;
+    };
 
     toggleFilterVisible = () => {
-        this.filterVisible = !this.filterVisible
-    }
+        this.filterVisible = !this.filterVisible;
+    };
 
     mergeFilters = (payload: Partial<StockInStoreState['filters']>) => {
-        Object.assign(this.filters, payload)
-    }
+        Object.assign(this.filters, payload);
+    };
 
     mergePagination = (
         payload: Partial<StockInStoreState['pagination']>
     ): void => {
-        Object.assign(this.pagination, payload)
-    }
+        Object.assign(this.pagination, payload);
+    };
 
     setError = (error: string | null) => {
-        this.error = error
-    }
+        this.error = error;
+    };
 
     setSelectedStockIn = (stockIn: StockInEntity | null) => {
-        this.selectedStockIn = stockIn
-    }
+        this.selectedStockIn = stockIn;
+    };
 
     updateFormData = (payload: Partial<CreateStockInPayload>) => {
-        Object.assign(this.formData, payload)
-    }
+        Object.assign(this.formData, payload);
+    };
 
     // Get stock ins with current filters and pagination
     async getStockIns() {
@@ -126,72 +138,72 @@ export class StockInStore implements StockInStoreState {
             startDate: this.filters.startDate,
             endDate: this.filters.endDate,
             search: this.filters.search,
-        }
+        };
 
-        this.setIsLoading(true)
-        this.setError(null)
+        this.setIsLoading(true);
+        this.setError(null);
 
         try {
-            const response = await this.stockInRepository.getStockIns(payload)
+            const response = await this.stockInRepository.getStockIns(payload);
 
             runInAction(() => {
-                this.setResults(response.results)
-                this.setCount(response.count)
-            })
+                this.setResults(response.results);
+                this.setCount(response.count);
+            });
 
-            return response
+            return response;
         } catch (error) {
-            console.error('Error fetching stock ins:', error)
+            console.error('Error fetching stock ins:', error);
 
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to fetch stock ins'
-                )
+                );
                 // Ensure we clear any previous results
-                this.setResults([])
-                this.setCount(0)
-            })
+                this.setResults([]);
+                this.setCount(0);
+            });
 
-            return null
+            return null;
         } finally {
             runInAction(() => {
-                this.setIsLoading(false)
-            })
+                this.setIsLoading(false);
+            });
         }
     }
 
     // Get stock in details by ID
     async getStockInDetails(id: string) {
-        this.setIsLoading(true)
-        this.setError(null)
+        this.setIsLoading(true);
+        this.setError(null);
 
         try {
-            const stockIn = await this.stockInRepository.getStockInById(id)
+            const stockIn = await this.stockInRepository.getStockInById(id);
 
             runInAction(() => {
-                this.setSelectedStockIn(stockIn)
-            })
+                this.setSelectedStockIn(stockIn);
+            });
 
-            return stockIn
+            return stockIn;
         } catch (error) {
-            console.error('Error fetching stock in details:', error)
+            console.error('Error fetching stock in details:', error);
 
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to fetch stock in details'
-                )
-                this.setSelectedStockIn(null)
-            })
+                );
+                this.setSelectedStockIn(null);
+            });
 
-            return null
+            return null;
         } finally {
             runInAction(() => {
-                this.setIsLoading(false)
-            })
+                this.setIsLoading(false);
+            });
         }
     }
 
@@ -248,51 +260,52 @@ export class StockInStore implements StockInStoreState {
 
     // Update stock in status
     async updateStatus(id: string, status: 'completed' | 'cancelled') {
-        this.setIsLoading(true)
-        this.setError(null)
+        this.setIsLoading(true);
+        this.setError(null);
 
         // Map the simplified status to the actual API status value
-        const apiStatus = status === 'completed' ? 'APPROVED' : 'CANCELLED'
+        const apiStatus = status === 'completed' ? 'APPROVED' : 'CANCELLED';
 
         try {
             const updatedStockIn =
                 await this.stockInRepository.updateStockInStatus(
                     id,
                     apiStatus as StockInEntity['status']
-                )
+                );
 
             runInAction(() => {
                 // Update in the results list if present
-                const index = this.results.findIndex(item => item.id === id)
+                const index = this.results.findIndex(item => item.id === id);
                 if (index !== -1) {
-                    this.results[index] = updatedStockIn
+                    this.results[index] = updatedStockIn;
                 }
 
                 // Update selected stock in if it's the current one
                 if (this.selectedStockIn && this.selectedStockIn.id === id) {
-                    this.setSelectedStockIn(updatedStockIn)
+                    this.setSelectedStockIn(updatedStockIn);
                 }
-            })
+            });
 
-            return updatedStockIn
+            return updatedStockIn;
         } catch (error) {
-            console.error('Error updating stock in status:', error)
+            console.error('Error updating stock in status:', error);
 
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to update status'
-                )
-            })
+                );
+            });
 
-            return null
+            return null;
         } finally {
             runInAction(() => {
-                this.setIsLoading(false)
-            })
+                this.setIsLoading(false);
+            });
         }
     }
+
     // Delete stock in
     async deleteStockIn(id: string) {
         this.setIsLoading(true);
@@ -381,57 +394,141 @@ export class StockInStore implements StockInStoreState {
         }
     }
 
+    // New methods for approval workflow
+
+    // Get current approval stage
+    async getCurrentApprovalStage(resourceName: string, stockStatus: string) {
+        runInAction(() => {
+            this.isApprovalProcessing = true;
+            this.approvalError = null;
+        });
+
+        try {
+            const stage = await this.getCurrentApprovalStageUseCase.execute({
+                resourceName,
+                stockStatus
+            });
+
+            runInAction(() => {
+                this.currentApprovalStage = stage;
+            });
+
+            return stage;
+        } catch (error) {
+            console.error('Error getting current approval stage:', error);
+            
+            runInAction(() => {
+                this.approvalError = error instanceof Error
+                    ? error.message
+                    : 'Failed to get current approval stage';
+            });
+            
+            return null;
+        } finally {
+            runInAction(() => {
+                this.isApprovalProcessing = false;
+            });
+        }
+    }
+
+    // Request approval for a stock in
+    async requestApproval(stockInId: string, userId: string) {
+        runInAction(() => {
+            this.isApprovalProcessing = true;
+            this.approvalError = null;
+        });
+
+        try {
+            // First get the current stage
+            const stage = await this.getCurrentApprovalStage('stockins', 'DRAFT');
+            
+            if (!stage) {
+                throw new Error('Could not determine current approval stage');
+            }
+
+            // Then create the approval request
+            const approvalRequest = await this.createApprovalRequestUseCase.execute({
+                objectId: stockInId,
+                currentStageId: stage.id,
+                objectType: 'StockIn',
+                requesterId: userId
+            });
+
+            // Refresh the stock in details to get updated status
+            await this.getStockInDetails(stockInId);
+            
+            // Refresh the list
+            await this.getStockIns();
+
+            return approvalRequest;
+        } catch (error) {
+            console.error('Error requesting approval:', error);
+            
+            runInAction(() => {
+                this.approvalError = error instanceof Error
+                    ? error.message
+                    : 'Failed to request approval';
+            });
+            
+            return null;
+        } finally {
+            runInAction(() => {
+                this.isApprovalProcessing = false;
+            });
+        }
+    }
+
     // Filter methods for each filter type
     filterByCode(code?: string) {
-        this.filters.code = code
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.code = code;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     filterByStatus(status?: StockInEntity['status']) {
-        this.filters.status = status
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.status = status;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     filterByPriority(priority?: PriorityType) {
-        this.filters.priority = priority
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.priority = priority;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     filterBySupplier(supplierId?: string) {
-        this.filters.supplierId = supplierId
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.supplierId = supplierId;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     filterByLotNumber(lotNumber?: string) {
-        this.filters.lotNumber = lotNumber
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.lotNumber = lotNumber;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     // Filter by date range
     filterByDateRange(startDate?: string, endDate?: string) {
-        this.filters.startDate = startDate
-        this.filters.endDate = endDate
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.startDate = startDate;
+        this.filters.endDate = endDate;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     // Apply all filters at once
     applyFilters(filters: Partial<StockInStoreState['filters']>) {
-        this.mergeFilters(filters)
-        this.pagination.page = 1
-        this.getStockIns()
+        this.mergeFilters(filters);
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     // Search
     search(query?: string) {
-        this.filters.search = query && query.length > 0 ? query : undefined
-        this.pagination.page = 1
-        this.getStockIns()
+        this.filters.search = query && query.length > 0 ? query : undefined;
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     // Reset filters
@@ -445,16 +542,16 @@ export class StockInStore implements StockInStoreState {
             startDate: undefined,
             endDate: undefined,
             search: undefined,
-        }
-        this.pagination.page = 1
-        this.getStockIns()
+        };
+        this.pagination.page = 1;
+        this.getStockIns();
     }
 
     // Go to page
     goToPage(page: number) {
         if (page >= 1 && page <= this.pageCount) {
-            this.pagination.page = page
-            this.getStockIns()
+            this.pagination.page = page;
+            this.getStockIns();
         }
     }
 }
