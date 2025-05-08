@@ -84,6 +84,8 @@ export default class StockInDto extends ResponseDto<StockInEntity> {
             details: this.details.map(detail => ({
                 id: detail.id,
                 goodsId: detail.goodsId,
+                goodsCode: detail.goodsCode, // Map the goodsCode property
+                goodsName: detail.goodsName, // Map the goodsName property
                 quantity: detail.quantity,
                 price: detail.price,
                 expiryDate: detail.expiryDate,

@@ -15,7 +15,11 @@ import IHttpClient, {
 
 @injectable()
 class StockInRepository implements IStockInRepository {
-    private readonly baseUrl = '/api/mobile/stock-in'
+    // Mobile API endpoint - used for getStockIns only
+    private readonly mobileBaseUrl = '/api/mobile/stock-in'
+    
+    // Regular API endpoint - used for all other operations
+    private readonly apiBaseUrl = '/api/stock-in'
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
@@ -25,11 +29,11 @@ class StockInRepository implements IStockInRepository {
         payload: CreateStockInPayload
     ): Promise<StockInEntity> {
         try {
-            // Make API request to create stock in
+            // Make API request to create stock in using the regular API endpoint
             const response = await this.httpClient.post<
                 CreateStockInPayload,
                 any
-            >(this.baseUrl, payload)
+            >(this.apiBaseUrl, payload)
 
             if (!response) {
                 throw new Error('Failed to create stock in record')
@@ -95,7 +99,8 @@ class StockInRepository implements IStockInRepository {
                 queryParams.append('search', payload.search)
             }
 
-            const url = `${this.baseUrl}?${queryParams.toString()}`
+            // Use the mobile API endpoint for getStockIns
+            const url = `${this.mobileBaseUrl}?${queryParams.toString()}`
 
             // Make API request
             const response = await this.httpClient.get<StockInListResponseDto>(
@@ -130,8 +135,9 @@ class StockInRepository implements IStockInRepository {
 
     public async getStockInById(id: string): Promise<StockInEntity> {
         try {
+            // Use the regular API endpoint for getStockInById
             const response = await this.httpClient.get<any>(
-                `${this.baseUrl}/${id}`
+                `${this.apiBaseUrl}/${id}`
             )
 
             // Check if the response has the expected structure
@@ -139,8 +145,14 @@ class StockInRepository implements IStockInRepository {
                 throw new Error('Stock in record not found')
             }
 
+            // API responds with { data: { ... stockInData } }
+            // Extract the actual stock data from the nested data property
+            if (!response.data) {
+                throw new Error('Stock in record data is missing')
+            }
+
             // Transform the response to domain entity using StockInDto
-            const stockInDto = plainToInstance(StockInDto, response)
+            const stockInDto = plainToInstance(StockInDto, response.data)
             return stockInDto.toDomain()
         } catch (error) {
             console.error(`Error fetching stock in with ID ${id}:`, error)
@@ -155,11 +167,11 @@ class StockInRepository implements IStockInRepository {
         status: StockInEntity['status']
     ): Promise<StockInEntity> {
         try {
-            // Make API request to update status
+            // Use the regular API endpoint for updateStockInStatus
             const response = await this.httpClient.patch<
                 { status: StockInEntity['status'] },
                 any
-            >(`${this.baseUrl}/${id}/status`, { status })
+            >(`${this.apiBaseUrl}/${id}/status`, { status })
 
             // Check if the response has the expected structure
             if (!response) {
@@ -179,9 +191,9 @@ class StockInRepository implements IStockInRepository {
 
     public async deleteStockIn(id: string): Promise<boolean> {
         try {
-            // Make API request to delete stock in
+            // Use the regular API endpoint for deleteStockIn
             const response = await this.httpClient.delete<any>(
-                `${this.baseUrl}/${id}`
+                `${this.apiBaseUrl}/${id}`
             )
 
             // Check if the response indicates success
