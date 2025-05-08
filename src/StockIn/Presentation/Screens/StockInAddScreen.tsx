@@ -391,6 +391,7 @@ const StockInAddScreen = observer(() => {
                 <View style={styles.inputHalf}>
                     <TextInput dense
                         label="Code"
+                        disabled
                         value={code}
                         onChangeText={setCode}
                         mode="outlined"
@@ -506,7 +507,7 @@ const StockInAddScreen = observer(() => {
                     <TextInput dense
                         label="Created by"
                         value={authStore.user?.name || ''}
-                        editable={false}
+                        disabled
                         mode="outlined"
                         style={styles.input}
                     />
@@ -515,7 +516,7 @@ const StockInAddScreen = observer(() => {
                     <TextInput dense
                         label="Approved by"
                         value=""
-                        editable={false}
+                        disabled
                         mode="outlined"
                         style={styles.input}
                         placeholder="Pending approval"
@@ -531,7 +532,7 @@ const StockInAddScreen = observer(() => {
                         value={totalAmount}
                         onChangeText={setTotalAmount}
                         mode="outlined"
-                        editable={false}
+                        disabled
                         style={styles.input}
                         keyboardType="numeric"
                     />

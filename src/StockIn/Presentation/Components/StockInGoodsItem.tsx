@@ -42,7 +42,7 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
                     <TextInput dense
                         value={item.goodsCode}
                         mode="outlined"
-                        editable={false}
+                        disabled
                         style={styles.goodsCodeInput}
                     />
                 </View>
@@ -64,7 +64,7 @@ const StockInGoodsItem: React.FC<StockInGoodsItemProps> = ({
                     value={formatDate(item.expiryDate)}
                     mode="outlined"
                     style={styles.goodsItemFullInput}
-                    editable={false}
+                    disabled
                     right={<TextInput.Icon icon="calendar" onPress={() => setExpiryDatePickerVisible(true)} />}
                     onTouchStart={() => setExpiryDatePickerVisible(true)}
                 />
