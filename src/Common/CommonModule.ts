@@ -7,6 +7,7 @@ import { GetCategoriesUseCase } from './Application/UseCases/GetCategoriesUseCas
 import { GetUnitsUseCase } from './Application/UseCases/GetUnitsUseCase'
 import { GetSuppliersUseCase } from './Application/UseCases/GetSuppliersUseCase'
 import { GetGoodsUseCase } from './Application/UseCases/GetGoodsUseCase'
+import { GetGoodsByCodeUseCase } from './Application/UseCases/GetGoodsByCodeUseCase'
 
 @module({
     providers: [
@@ -18,6 +19,7 @@ import { GetGoodsUseCase } from './Application/UseCases/GetGoodsUseCase'
         GetUnitsUseCase,
         GetSuppliersUseCase,
         GetGoodsUseCase,
+        GetGoodsByCodeUseCase,
         {
             useClass: MasterDataStore,
             scope: 'Singleton',

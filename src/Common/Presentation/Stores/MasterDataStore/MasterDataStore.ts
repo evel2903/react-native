@@ -6,14 +6,11 @@ import { GetCategoriesUseCase } from '@/src/Common/Application/UseCases/GetCateg
 import { GetUnitsUseCase } from '@/src/Common/Application/UseCases/GetUnitsUseCase'
 import { GetSuppliersUseCase } from '@/src/Common/Application/UseCases/GetSuppliersUseCase'
 import { GetGoodsUseCase } from '@/src/Common/Application/UseCases/GetGoodsUseCase'
+import { GetGoodsByCodeUseCase } from '@/src/Common/Application/UseCases/GetGoodsByCodeUseCase'
 import { CategoryEntity } from '@/src/Common/Domain/Entities/CategoryEntity'
 import { UnitEntity } from '@/src/Common/Domain/Entities/UnitEntity'
 import { SupplierEntity } from '@/src/Common/Domain/Entities/SupplierEntity'
 import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
-import {
-    IMasterDataRepository,
-    IMasterDataRepositoryToken,
-} from '@/src/Common/Domain/Specifications/IMasterDataRepository'
 
 @injectable()
 export class MasterDataStore implements MasterDataStoreState {
@@ -50,8 +47,8 @@ export class MasterDataStore implements MasterDataStoreState {
         private readonly getSuppliersUseCase: GetSuppliersUseCase,
         @inject(GetGoodsUseCase)
         private readonly getGoodsUseCase: GetGoodsUseCase,
-        @inject(IMasterDataRepositoryToken)
-        private readonly masterDataRepository: IMasterDataRepository
+        @inject(GetGoodsByCodeUseCase)
+        private readonly getGoodsByCodeUseCase: GetGoodsByCodeUseCase
     ) {
         makeAutoObservable(this)
     }
@@ -172,10 +169,10 @@ export class MasterDataStore implements MasterDataStoreState {
         return this.goods.data.find(item => item.id === id)
     }
 
-    // New method to fetch goods by code using the repository directly
+    // Updated method to use the use case instead of the repository directly
     async getGoodsByCode(code: string): Promise<GoodsEntity | null> {
         try {
-            return await this.masterDataRepository.getGoodsByCode(code)
+            return await this.getGoodsByCodeUseCase.execute(code)
         } catch (error) {
             console.error(`Error fetching goods with code ${code}:`, error)
             return null
