@@ -179,7 +179,7 @@ class StockInRepository implements IStockInRepository {
             const response = await this.httpClient.patch<
                 { status: StockInEntity['status'] },
                 any
-            >(`${this.apiBaseUrl}/${id}/status`, { status })
+            >(`${this.apiBaseUrl}/${id}/base`, { status })
 
             // Check if the response has the expected structure
             if (!response) {

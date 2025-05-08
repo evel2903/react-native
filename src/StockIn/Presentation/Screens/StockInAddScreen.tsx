@@ -344,7 +344,7 @@ const StockInAddScreen = observer(() => {
                 // before navigating back to the list screen
                 setTimeout(() => {
                     navigation.goBack()
-                }, 1500)
+                }, 500)
             } else {
                 showSnackbar('Failed to create stock in')
             }

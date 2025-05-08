@@ -443,7 +443,7 @@ export class StockInStore implements StockInStoreState {
             this.isApprovalProcessing = true;
             this.approvalError = null;
         });
-
+    
         try {
             // First get the current stage
             const stage = await this.getCurrentApprovalStage('stockins', 'DRAFT');
@@ -451,7 +451,7 @@ export class StockInStore implements StockInStoreState {
             if (!stage) {
                 throw new Error('Could not determine current approval stage');
             }
-
+    
             // Then create the approval request
             const approvalRequest = await this.createApprovalRequestUseCase.execute({
                 objectId: stockInId,
@@ -459,13 +459,22 @@ export class StockInStore implements StockInStoreState {
                 objectType: 'StockIn',
                 requesterId: userId
             });
-
+    
+            // If approval request was successful, update the stock in status
+            if (approvalRequest && approvalRequest.status) {
+                // Update the stock status to match the approval request status
+                await this.updateStockInStatusUseCase.execute({
+                    id: stockInId,
+                    status: approvalRequest.status as StockInEntity['status']
+                });
+            }
+            
             // Refresh the stock in details to get updated status
             await this.getStockInDetails(stockInId);
             
             // Refresh the list
             await this.getStockIns();
-
+    
             return approvalRequest;
         } catch (error) {
             console.error('Error requesting approval:', error);
