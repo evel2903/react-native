@@ -109,6 +109,11 @@ const StockInAddScreen = observer(() => {
     const [notes, setNotes] = useState('')
     const [priority, setPriority] = useState(2) // Default to Medium priority
 
+    // Status options for dropdown - using the same format as StockInFilterForm
+    const statusOptions = [
+        { value: Status.Draft, label: 'Draft' },
+    ]
+
     // Accordion state
     const [infoExpanded, setInfoExpanded] = useState(true)
 
@@ -565,9 +570,13 @@ const StockInAddScreen = observer(() => {
                             <TextInput
                                 dense
                                 label="Status"
-                                value={status}
+                                value={
+                                    statusOptions.find(
+                                        s => s.value === status
+                                    )?.label || ''
+                                }
                                 mode="outlined"
-                                editable={false}
+                                disabled
                                 style={styles.input}
                                 right={
                                     <TextInput.Icon
@@ -581,20 +590,16 @@ const StockInAddScreen = observer(() => {
                             />
                         }
                     >
-                        <Menu.Item
-                            onPress={() => {
-                                setStatus(Status.Draft)
-                                setStatusMenuVisible(false)
-                            }}
-                            title="DRAFT"
-                        />
-                        <Menu.Item
-                            onPress={() => {
-                                setStatus(Status.Pending)
-                                setStatusMenuVisible(false)
-                            }}
-                            title="PENDING"
-                        />
+                        {statusOptions.map(option => (
+                            <Menu.Item
+                                key={option.value}
+                                onPress={() => {
+                                    setStatus(option.value)
+                                    setStatusMenuVisible(false)
+                                }}
+                                title={option.label}
+                            />
+                        ))}
                     </Menu>
                 </View>
             </View>
