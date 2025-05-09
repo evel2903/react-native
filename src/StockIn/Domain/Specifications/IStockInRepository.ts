@@ -19,7 +19,8 @@ export interface IStockInRepository {
 
     updateStockInStatus: (
         id: string,
-        status: StockInEntity['status']
+        status: StockInEntity['status'],
+        stateId: string
     ) => Promise<StockInEntity>
 
     createStockIn: (data: CreateStockInPayload) => Promise<StockInEntity>

@@ -21,7 +21,8 @@ export default class UpdateStockInStatusUseCase
     ): Promise<StockInEntity> {
         return this.stockInRepository.updateStockInStatus(
             payload.id,
-            payload.status
+            payload.status,
+            payload.stateId
         )
     }
 }

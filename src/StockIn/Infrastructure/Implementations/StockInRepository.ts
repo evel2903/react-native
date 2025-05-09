@@ -171,14 +171,15 @@ class StockInRepository implements IStockInRepository {
 
     public async updateStockInStatus(
         id: string,
-        status: StockInEntity['status']
+        status: StockInEntity['status'],
+        stateId: string
     ): Promise<StockInEntity> {
         try {
             // Use the regular API endpoint for updateStockInStatus
             const response = await this.httpClient.patch<
-                { status: StockInEntity['status'] },
+                { status: StockInEntity['status'], stateId: string },
                 any
-            >(`${this.apiBaseUrl}/${id}/base`, { status })
+            >(`${this.apiBaseUrl}/${id}/base`, { status, stateId })
 
             // Check if the response has the expected structure
             if (!response) {

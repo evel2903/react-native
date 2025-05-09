@@ -279,7 +279,7 @@ export class StockInStore implements StockInStoreState {
     }
 
     // Update stock in status
-    async updateStatus(id: string, status: 'completed' | 'cancelled') {
+    async updateStatus(id: string, status: 'completed' | 'cancelled', stateId: "") {
         this.setIsLoading(true)
         this.setError(null)
 
@@ -291,6 +291,7 @@ export class StockInStore implements StockInStoreState {
                 await this.updateStockInStatusUseCase.execute({
                     id,
                     status: apiStatus as StockInEntity['status'],
+                    stateId: stateId,
                 })
 
             runInAction(() => {
@@ -483,6 +484,7 @@ export class StockInStore implements StockInStoreState {
                 await this.updateStockInStatusUseCase.execute({
                     id: stockInId,
                     status: approvalRequest.status as StockInEntity['status'],
+                    stateId: stage.id,
                 })
             }
 
@@ -535,6 +537,7 @@ export class StockInStore implements StockInStoreState {
                     await this.updateStockInStatusUseCase.execute({
                         id,
                         status: 'APPROVED' as StockInEntity['status'],
+                        stateId: decision.stageId,
                     })
 
                 runInAction(() => {
@@ -588,6 +591,7 @@ export class StockInStore implements StockInStoreState {
                 await this.updateStockInStatusUseCase.execute({
                     id,
                     status: 'REJECTED' as StockInEntity['status'],
+                    stateId: '',
                 })
 
             runInAction(() => {
