@@ -5,6 +5,7 @@ import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
 import CreateStockInPayload from '../../Application/Types/CreateStockInPayload'
 import { ApprovalStage } from '../Entities/ApprovalStage'
 import { ApprovalRequest } from '../Entities/ApprovalRequest'
+import { ApprovalDecision } from '../Entities/ApprovalDecision'
 
 export const IStockInRepositoryToken = Symbol('IStockInRepository')
 
@@ -38,6 +39,12 @@ export interface IStockInRepository {
         objectType: string,
         requesterId: string
     ) => Promise<ApprovalRequest>
+
+    createApprovalDecision: (
+        requestId: string,
+        approverId: string,
+        comment: string
+    ) => Promise<ApprovalDecision>
 
     // Optional methods
     deleteStockIn?: (id: string) => Promise<boolean>

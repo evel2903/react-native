@@ -14,6 +14,8 @@ import GetStockInByIdUseCase from '@/src/StockIn/Application/UseCases/GetStockIn
 import UpdateStockInStatusUseCase from '@/src/StockIn/Application/UseCases/UpdateStockInStatusUseCase'
 import DeleteStockInUseCase from '@/src/StockIn/Application/UseCases/DeleteStockInUseCase'
 import UpdateStockInUseCase from '@/src/StockIn/Application/UseCases/UpdateStockInUseCase'
+import { ApprovalDecision } from '@/src/StockIn/Domain/Entities/ApprovalDecision'
+import { CreateApprovalDecisionUseCase } from '@/src/StockIn/Application/UseCases/CreateApprovalDecisionUseCase'
 
 @injectable()
 export class StockInStore implements StockInStoreState {
@@ -45,6 +47,7 @@ export class StockInStore implements StockInStoreState {
     isApprovalProcessing = false
     approvalError: string | null = null
     currentApprovalStage: ApprovalStage | null = null
+    approvalDecision: ApprovalDecision | null = null
 
     selectedStockIn: StockInEntity | null = null
     error: string | null = null
@@ -80,7 +83,9 @@ export class StockInStore implements StockInStoreState {
         @inject(GetCurrentApprovalStageUseCase)
         private readonly getCurrentApprovalStageUseCase: GetCurrentApprovalStageUseCase,
         @inject(CreateApprovalRequestUseCase)
-        private readonly createApprovalRequestUseCase: CreateApprovalRequestUseCase
+        private readonly createApprovalRequestUseCase: CreateApprovalRequestUseCase,
+        @inject(CreateApprovalDecisionUseCase)
+        private readonly createApprovalDecisionUseCase: CreateApprovalDecisionUseCase
     ) {
         makeAutoObservable(this)
         // Load stock ins on store initialization
@@ -504,30 +509,47 @@ export class StockInStore implements StockInStoreState {
     }
 
     // Approve stock in
-    async approveStockIn(id: string) {
+    async approveStockIn(id: string, requestId: string, approverId: string) {
         this.setIsLoading(true)
         this.setError(null)
 
         try {
-            // Update status to APPROVED
-            const updatedStockIn =
-                await this.updateStockInStatusUseCase.execute({
-                    id,
-                    status: 'APPROVED' as StockInEntity['status'],
-                })
-
-            runInAction(() => {
-                // Update in the results list if present
-                const index = this.results.findIndex(item => item.id === id)
-                if (index !== -1) {
-                    this.results[index] = updatedStockIn
-                }
-
-                // Update selected stock in if it's the current one
-                if (this.selectedStockIn && this.selectedStockIn.id === id) {
-                    this.setSelectedStockIn(updatedStockIn)
-                }
+            // Create approval decision
+            const decision = await this.createApprovalDecisionUseCase.execute({
+                requestId,
+                approverId,
+                comment: 'Request approved successfully',
             })
+
+            // Store the approval decision
+            runInAction(() => {
+                this.approvalDecision = decision
+            })
+
+            // Update the stock status if necessary
+            if (decision && decision.requestStatus === 'APPROVED') {
+                const updatedStockIn =
+                    await this.updateStockInStatusUseCase.execute({
+                        id,
+                        status: 'APPROVED' as StockInEntity['status'],
+                    })
+
+                runInAction(() => {
+                    // Update in the results list if present
+                    const index = this.results.findIndex(item => item.id === id)
+                    if (index !== -1) {
+                        this.results[index] = updatedStockIn
+                    }
+
+                    // Update selected stock in if it's the current one
+                    if (
+                        this.selectedStockIn &&
+                        this.selectedStockIn.id === id
+                    ) {
+                        this.setSelectedStockIn(updatedStockIn)
+                    }
+                })
+            }
 
             // Refresh the list to get updated data
             await this.getStockIns()

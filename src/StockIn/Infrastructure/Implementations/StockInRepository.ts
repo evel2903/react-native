@@ -14,6 +14,7 @@ import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
     IHttpClientToken,
 } from '@/src/Core/Domain/Specifications/IHttpClient'
+import { ApprovalDecision } from '../../Domain/Entities/ApprovalDecision'
 
 @injectable()
 class StockInRepository implements IStockInRepository {
@@ -296,6 +297,38 @@ class StockInRepository implements IStockInRepository {
             throw error instanceof Error
                 ? error
                 : new Error('Failed to create approval request')
+        }
+    }
+    public async createApprovalDecision(
+        requestId: string,
+        approverId: string,
+        comment: string
+    ): Promise<ApprovalDecision> {
+        try {
+            const payload = {
+                requestId,
+                approverId,
+                comment,
+            }
+
+            // Assuming we have an endpoint for approval decisions
+            const url = '/api/approval-request-decisions'
+
+            const response = await this.httpClient.post<
+                typeof payload,
+                { data: ApprovalDecision }
+            >(url, payload)
+
+            if (!response || !response.data) {
+                throw new Error('Failed to create approval decision')
+            }
+
+            return response.data
+        } catch (error) {
+            console.error('Error creating approval decision:', error)
+            throw error instanceof Error
+                ? error
+                : new Error('Failed to create approval decision')
         }
     }
 }

@@ -49,6 +49,9 @@ const StockInScreen = observer(() => {
     // Dialog states for approval
     const [approvalDialogVisible, setApprovalDialogVisible] = useState(false)
     const [stockToApprove, setStockToApprove] = useState<string | null>(null)
+    const [requestIdToApprove, setRequestIdToApprove] = useState<string | null>(
+        null
+    )
     const [isApproving, setIsApproving] = useState(false)
 
     // Dialog states for rejection
@@ -128,20 +131,30 @@ const StockInScreen = observer(() => {
     }
 
     // Handle approve
-    const handleApprove = (id: string) => {
+    const handleApprove = (id: string, requestId: string) => {
         setStockToApprove(id)
+        setRequestIdToApprove(requestId)
         setApprovalDialogVisible(true)
     }
 
     // Confirm approval
     const confirmApprove = async () => {
-        if (!stockToApprove) return
+        console.log('confirmApprove called')
+        console.log('stockToApprove:', stockToApprove)
+        console.log('requestIdToApprove:', requestIdToApprove)
+        console.log('authStore.user.id:', authStore.user?.id)
+        if (!stockToApprove || !requestIdToApprove || !authStore.user?.id)
+            return
 
         setIsApproving(true)
 
         try {
-            // Call the approve method in the store (to be implemented)
-            const success = await stockInStore.approveStockIn(stockToApprove)
+            // Call the updated approve method with all required parameters
+            const success = await stockInStore.approveStockIn(
+                stockToApprove,
+                requestIdToApprove,
+                authStore.user.id
+            )
 
             if (success) {
                 showSnackbar('Stock in approved successfully')
@@ -155,6 +168,7 @@ const StockInScreen = observer(() => {
             setIsApproving(false)
             setApprovalDialogVisible(false)
             setStockToApprove(null)
+            setRequestIdToApprove(null)
         }
     }
 

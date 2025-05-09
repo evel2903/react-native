@@ -6,6 +6,7 @@ import GetStockInsUseCase from './Application/UseCases/GetStockInsUseCase'
 import CreateStockInUseCase from './Application/UseCases/CreateStockInUseCase'
 import { GetCurrentApprovalStageUseCase } from './Application/UseCases/GetCurrentApprovalStageUseCase'
 import { CreateApprovalRequestUseCase } from './Application/UseCases/CreateApprovalRequestUseCase'
+import { CreateApprovalDecisionUseCase } from './Application/UseCases/CreateApprovalDecisionUseCase'
 import GetStockInByIdUseCase from './Application/UseCases/GetStockInByIdUseCase'
 import UpdateStockInStatusUseCase from './Application/UseCases/UpdateStockInStatusUseCase'
 import DeleteStockInUseCase from './Application/UseCases/DeleteStockInUseCase'
@@ -21,6 +22,7 @@ import UpdateStockInUseCase from './Application/UseCases/UpdateStockInUseCase'
         CreateStockInUseCase,
         GetCurrentApprovalStageUseCase,
         CreateApprovalRequestUseCase,
+        CreateApprovalDecisionUseCase,
         GetStockInByIdUseCase,
         UpdateStockInStatusUseCase,
         DeleteStockInUseCase,

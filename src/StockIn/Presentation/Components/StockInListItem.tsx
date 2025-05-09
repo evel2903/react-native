@@ -24,7 +24,7 @@ import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthSt
 
 interface StockInListItemProps {
     item: StockInEntity
-    onApprove: (id: string) => void
+    onApprove: (id: string, requestId: string) => void
     onReject: (id: string) => void // New prop for reject action
     onRequestApproval: (id: string) => void
     onView: (id: string) => void
@@ -218,7 +218,14 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                                     textColor={
                                         getStatusDetails(Status.Approved).color
                                     }
-                                    onPress={() => onApprove(item.id)}
+                                    onPress={() =>
+                                        onApprove(
+                                            item.id,
+                                            item.isValidForApprovalRequest
+                                                ? item.approvalRequestId
+                                                : ''
+                                        )
+                                    }
                                 >
                                     Approve
                                 </Button>
