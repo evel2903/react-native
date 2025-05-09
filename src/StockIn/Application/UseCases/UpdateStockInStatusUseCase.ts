@@ -7,8 +7,8 @@ import { UseCase } from 'src/Core/Application/UseCase'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
 
 interface UpdateStockInStatusPayload {
-    id: string;
-    status: StockInEntity['status'];
+    id: string
+    status: StockInEntity['status']
 }
 
 @injectable()
@@ -20,7 +20,9 @@ export default class UpdateStockInStatusUseCase
         private readonly stockInRepository: IStockInRepository
     ) {}
 
-    public execute(payload: UpdateStockInStatusPayload): Promise<StockInEntity> {
+    public execute(
+        payload: UpdateStockInStatusPayload
+    ): Promise<StockInEntity> {
         return this.stockInRepository.updateStockInStatus(
             payload.id,
             payload.status

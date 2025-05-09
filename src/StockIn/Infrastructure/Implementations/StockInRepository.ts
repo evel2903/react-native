@@ -1,7 +1,5 @@
 import { injectable, inject } from 'inversiland'
-import { 
-    IStockInRepository
-} from '../../Domain/Specifications/IStockInRepository'
+import { IStockInRepository } from '../../Domain/Specifications/IStockInRepository'
 import { ApprovalStage } from '../../Domain/Entities/ApprovalStage'
 import { ApprovalRequest } from '../../Domain/Entities/ApprovalRequest'
 import GetStockInsPayload from '../../Application/Types/GetStockInsPayload'
@@ -21,7 +19,7 @@ import IHttpClient, {
 class StockInRepository implements IStockInRepository {
     // Mobile API endpoint - used for getStockIns only
     private readonly mobileBaseUrl = '/api/mobile/stock-in'
-    
+
     // Regular API endpoint - used for all other operations
     private readonly apiBaseUrl = '/api/stock-in'
 
@@ -203,7 +201,7 @@ class StockInRepository implements IStockInRepository {
             const response = await this.httpClient.delete<any>(
                 `${this.apiBaseUrl}/${id}`
             )
-    
+
             // For 204 responses, the successful deletion is indicated by the status code itself
             // The response might be null, undefined, or an empty object
             // We can simply return true if we reach this point without exceptions
@@ -216,7 +214,10 @@ class StockInRepository implements IStockInRepository {
         }
     }
 
-    public async updateStockIn(id: string, payload: any): Promise<StockInEntity> {
+    public async updateStockIn(
+        id: string,
+        payload: any
+    ): Promise<StockInEntity> {
         try {
             // Use the regular API endpoint for updating stock in
             const response = await this.httpClient.patch<any, any>(
@@ -242,27 +243,29 @@ class StockInRepository implements IStockInRepository {
 
     // New method for getting the current approval stage
     public async getCurrentApprovalStage(
-        resourceName: string, 
+        resourceName: string,
         stockStatus: string
     ): Promise<ApprovalStage> {
         try {
-            const url = `${this.approvalStageUrl}/get-current-stage?resourceName=${resourceName}&stockStatus=${stockStatus}`;
-            
-            const response = await this.httpClient.get<{ data: ApprovalStage }>(url);
-            
+            const url = `${this.approvalStageUrl}/get-current-stage?resourceName=${resourceName}&stockStatus=${stockStatus}`
+
+            const response = await this.httpClient.get<{ data: ApprovalStage }>(
+                url
+            )
+
             if (!response || !response.data) {
-                throw new Error('Failed to get current approval stage');
+                throw new Error('Failed to get current approval stage')
             }
-            
-            return response.data;
+
+            return response.data
         } catch (error) {
-            console.error('Error fetching current approval stage:', error);
+            console.error('Error fetching current approval stage:', error)
             throw error instanceof Error
                 ? error
-                : new Error('Failed to get current approval stage');
+                : new Error('Failed to get current approval stage')
         }
     }
-    
+
     // New method for creating an approval request
     public async createApprovalRequest(
         objectId: string,
@@ -275,24 +278,24 @@ class StockInRepository implements IStockInRepository {
                 objectId,
                 currentStageId,
                 objectType,
-                requesterId
-            };
-            
+                requesterId,
+            }
+
             const response = await this.httpClient.post<
                 typeof payload,
                 { data: ApprovalRequest }
-            >(this.approvalRequestUrl, payload);
-            
+            >(this.approvalRequestUrl, payload)
+
             if (!response || !response.data) {
-                throw new Error('Failed to create approval request');
+                throw new Error('Failed to create approval request')
             }
-            
-            return response.data;
+
+            return response.data
         } catch (error) {
-            console.error('Error creating approval request:', error);
+            console.error('Error creating approval request:', error)
             throw error instanceof Error
                 ? error
-                : new Error('Failed to create approval request');
+                : new Error('Failed to create approval request')
         }
     }
 }

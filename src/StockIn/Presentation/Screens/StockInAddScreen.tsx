@@ -110,9 +110,7 @@ const StockInAddScreen = observer(() => {
     const [priority, setPriority] = useState(2) // Default to Medium priority
 
     // Status options for dropdown - using the same format as StockInFilterForm
-    const statusOptions = [
-        { value: Status.Draft, label: 'Draft' },
-    ]
+    const statusOptions = [{ value: Status.Draft, label: 'Draft' }]
 
     // Accordion state
     const [infoExpanded, setInfoExpanded] = useState(true)
@@ -305,13 +303,13 @@ const StockInAddScreen = observer(() => {
             showSnackbar('Please fill in all required fields')
             return
         }
-    
+
         setIsLoading(true)
-    
+
         try {
             // Format date to ISO
             const isoDate = new Date(stockInDate).toISOString()
-    
+
             // Prepare payload according to API requirements
             const payload = {
                 code,
@@ -333,13 +331,13 @@ const StockInAddScreen = observer(() => {
                     notes: item.notes,
                 })),
             }
-    
+
             // Call store to save data
             const result = await stockInStore.createStockIn(payload)
-    
+
             if (result) {
                 showSnackbar('Stock in created successfully')
-                
+
                 // Short timeout to allow the user to see the success message
                 // before navigating back to the list screen
                 setTimeout(() => {
@@ -574,9 +572,8 @@ const StockInAddScreen = observer(() => {
                                 dense
                                 label="Status"
                                 value={
-                                    statusOptions.find(
-                                        s => s.value === status
-                                    )?.label || ''
+                                    statusOptions.find(s => s.value === status)
+                                        ?.label || ''
                                 }
                                 mode="outlined"
                                 disabled

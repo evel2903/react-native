@@ -21,7 +21,10 @@ import { formatDate, formatCurrency } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
-import { RootScreenNavigationProp, RootStackParamList } from '@/src/Core/Presentation/Navigation/Types/Index'
+import {
+    RootScreenNavigationProp,
+    RootStackParamList,
+} from '@/src/Core/Presentation/Navigation/Types/Index'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
 import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
@@ -116,7 +119,7 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
             />
         </View>
 
-                                {item.notes && (
+        {item.notes && (
             <View style={styles.goodsItemRow}>
                 <TextInput
                     dense
@@ -133,7 +136,7 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
     </Surface>
 )
 
-type StockInViewScreenRouteProp = RouteProp<RootStackParamList, 'StockInView'>;
+type StockInViewScreenRouteProp = RouteProp<RootStackParamList, 'StockInView'>
 
 const StockInViewScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
@@ -142,7 +145,7 @@ const StockInViewScreen = observer(() => {
     const masterDataStore = useMasterDataStore()
     const authStore = useAuthStore()
     const theme = useTheme()
-    
+
     // Get stock ID from route params
     const stockId = route.params?.id
 
@@ -162,10 +165,12 @@ const StockInViewScreen = observer(() => {
                     masterDataStore.loadSuppliers(),
                     masterDataStore.loadUnits(),
                 ])
-                
+
                 // Load stock details
                 if (stockId) {
-                    const success = await stockInStore.getStockInDetails(stockId)
+                    const success = await stockInStore.getStockInDetails(
+                        stockId
+                    )
                     if (!success) {
                         showSnackbar('Failed to load stock in details')
                     }
@@ -194,8 +199,9 @@ const StockInViewScreen = observer(() => {
 
     // Get priority button style for display purposes
     const getPriorityButtonStyle = (priorityValue: number) => {
-        const isSelected = stockInStore.selectedStockIn && 
-                           stockInStore.selectedStockIn.priority === priorityValue
+        const isSelected =
+            stockInStore.selectedStockIn &&
+            stockInStore.selectedStockIn.priority === priorityValue
         return [
             styles.priorityButton,
             {
@@ -219,8 +225,9 @@ const StockInViewScreen = observer(() => {
 
     // Get text style based on selection state
     const getPriorityTextStyle = (priorityValue: number) => {
-        const isSelected = stockInStore.selectedStockIn && 
-                           stockInStore.selectedStockIn.priority === priorityValue
+        const isSelected =
+            stockInStore.selectedStockIn &&
+            stockInStore.selectedStockIn.priority === priorityValue
         return [
             styles.priorityButtonText,
             {
@@ -238,9 +245,9 @@ const StockInViewScreen = observer(() => {
     // Render the form content inside the accordion
     const renderFormContent = () => {
         const stockInData = stockInStore.selectedStockIn
-        
+
         if (!stockInData) return null
-        
+
         return (
             <>
                 {/* Row 1: Code and Supplier */}
@@ -260,10 +267,10 @@ const StockInViewScreen = observer(() => {
                             dense
                             label="Supplier"
                             value={
-                                stockInData?.supplier?.name || 
+                                stockInData?.supplier?.name ||
                                 masterDataStore.suppliers.data.find(
                                     s => s.id === stockInData?.supplierId
-                                )?.name || 
+                                )?.name ||
                                 ''
                             }
                             mode="outlined"
@@ -289,7 +296,11 @@ const StockInViewScreen = observer(() => {
                         <TextInput
                             dense
                             label="Stock in date"
-                            value={stockInData?.inDate ? formatDate(stockInData.inDate) : ''}
+                            value={
+                                stockInData?.inDate
+                                    ? formatDate(stockInData.inDate)
+                                    : ''
+                            }
                             mode="outlined"
                             style={styles.input}
                             editable={false}
@@ -328,7 +339,9 @@ const StockInViewScreen = observer(() => {
                         <TextInput
                             dense
                             label="Total cost"
-                            value={formatCurrency(stockInData?.totalAmount || '0')}
+                            value={formatCurrency(
+                                stockInData?.totalAmount || '0'
+                            )}
                             mode="outlined"
                             editable={false}
                             style={styles.input}
@@ -338,7 +351,9 @@ const StockInViewScreen = observer(() => {
                         <TextInput
                             dense
                             label="Status"
-                            value={getStatusDisplayName(stockInData?.status as Status)}
+                            value={getStatusDisplayName(
+                                stockInData?.status as Status
+                            )}
                             mode="outlined"
                             editable={false}
                             style={styles.input}
@@ -366,7 +381,9 @@ const StockInViewScreen = observer(() => {
                                 style={getPriorityButtonStyle(PRIORITY.High)}
                                 disabled
                             >
-                                <Text style={getPriorityTextStyle(PRIORITY.High)}>
+                                <Text
+                                    style={getPriorityTextStyle(PRIORITY.High)}
+                                >
                                     {getPriorityDisplayName(PRIORITY.High)}
                                 </Text>
                             </TouchableRipple>
@@ -375,7 +392,11 @@ const StockInViewScreen = observer(() => {
                                 style={getPriorityButtonStyle(PRIORITY.Medium)}
                                 disabled
                             >
-                                <Text style={getPriorityTextStyle(PRIORITY.Medium)}>
+                                <Text
+                                    style={getPriorityTextStyle(
+                                        PRIORITY.Medium
+                                    )}
+                                >
                                     {getPriorityDisplayName(PRIORITY.Medium)}
                                 </Text>
                             </TouchableRipple>
@@ -384,7 +405,9 @@ const StockInViewScreen = observer(() => {
                                 style={getPriorityButtonStyle(PRIORITY.Low)}
                                 disabled
                             >
-                                <Text style={getPriorityTextStyle(PRIORITY.Low)}>
+                                <Text
+                                    style={getPriorityTextStyle(PRIORITY.Low)}
+                                >
                                     {getPriorityDisplayName(PRIORITY.Low)}
                                 </Text>
                             </TouchableRipple>
@@ -411,8 +434,13 @@ const StockInViewScreen = observer(() => {
 
                 {isLoading || !stockInStore.selectedStockIn ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={theme.theme.colors.primary} />
-                        <Text style={styles.loadingText}>Loading stock in details...</Text>
+                        <ActivityIndicator
+                            size="large"
+                            color={theme.theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>
+                            Loading stock in details...
+                        </Text>
                     </View>
                 ) : (
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -442,17 +470,21 @@ const StockInViewScreen = observer(() => {
                                 </Text>
                             </View>
 
-                            {!stockInStore.selectedStockIn?.details || stockInStore.selectedStockIn.details.length === 0 ? (
+                            {!stockInStore.selectedStockIn?.details ||
+                            stockInStore.selectedStockIn.details.length ===
+                                0 ? (
                                 <Text style={styles.emptyListText}>
                                     No items in this stock in record.
                                 </Text>
                             ) : (
-                                stockInStore.selectedStockIn.details.map(item => (
-                                    <ReadOnlyGoodsItem
-                                        key={item.id}
-                                        item={item}
-                                    />
-                                ))
+                                stockInStore.selectedStockIn.details.map(
+                                    item => (
+                                        <ReadOnlyGoodsItem
+                                            key={item.id}
+                                            item={item}
+                                        />
+                                    )
+                                )
                             )}
 
                             {/* Action Button - Back button */}

@@ -25,6 +25,7 @@ import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthSt
 interface StockInListItemProps {
     item: StockInEntity
     onApprove: (id: string) => void
+    onReject: (id: string) => void // New prop for reject action
     onRequestApproval: (id: string) => void
     onView: (id: string) => void
     onEdit: (id: string) => void
@@ -34,6 +35,7 @@ interface StockInListItemProps {
 const StockInListItem: React.FC<StockInListItemProps> = ({
     item,
     onApprove,
+    onReject, // Add new reject handler
     onRequestApproval,
     onView,
     onEdit,
@@ -162,7 +164,9 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                     <View style={styles.actionButtons}>
                         {/* Request Approval button - only show for Draft status */}
                         {item.status === Status.Draft &&
-                            authStore.hasPermission('approval_requests:create') && (
+                            authStore.hasPermission(
+                                'approval_requests:create'
+                            ) && (
                                 <Button
                                     mode="outlined"
                                     style={styles.requestButton}
@@ -171,7 +175,31 @@ const StockInListItem: React.FC<StockInListItemProps> = ({
                                     Request Approval
                                 </Button>
                             )}
-                        
+
+                        {/* Reject button - only show if valid for approval */}
+                        {item.isValidForApprovalRequest === true &&
+                            authStore.hasPermission(
+                                'approval_request_decisions:create'
+                            ) && (
+                                <Button
+                                    mode="outlined"
+                                    style={[
+                                        styles.rejectButton,
+                                        {
+                                            borderColor: getStatusDetails(
+                                                Status.Rejected
+                                            ).color,
+                                        },
+                                    ]}
+                                    textColor={
+                                        getStatusDetails(Status.Rejected).color
+                                    }
+                                    onPress={() => onReject(item.id)}
+                                >
+                                    Reject
+                                </Button>
+                            )}
+
                         {/* Approve button - only show if valid for approval */}
                         {item.isValidForApprovalRequest === true &&
                             authStore.hasPermission(
@@ -286,6 +314,13 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     approveButton: {
+        borderRadius: 4,
+        borderWidth: 1,
+        fontSize: 12,
+        textAlign: 'center',
+        lineHeight: 16,
+    },
+    rejectButton: {
         borderRadius: 4,
         borderWidth: 1,
         fontSize: 12,

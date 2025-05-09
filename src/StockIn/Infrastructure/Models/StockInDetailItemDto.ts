@@ -9,10 +9,10 @@ export class StockInDetailItemDto {
     goodsId!: string
 
     @Expose()
-    goodsCode!: string  // Added property from API response
+    goodsCode!: string // Added property from API response
 
     @Expose()
-    goodsName!: string  // Added property from API response
+    goodsName!: string // Added property from API response
 
     @Expose()
     quantity!: number

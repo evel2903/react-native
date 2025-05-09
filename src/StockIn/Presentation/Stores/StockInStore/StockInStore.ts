@@ -17,9 +17,9 @@ import UpdateStockInUseCase from '@/src/StockIn/Application/UseCases/UpdateStock
 
 @injectable()
 export class StockInStore implements StockInStoreState {
-    isLoading = false;
-    results: StockInEntity[] = [];
-    count = 0;
+    isLoading = false
+    results: StockInEntity[] = []
+    count = 0
     filters = {
         code: undefined as string | undefined,
         status: undefined as
@@ -35,20 +35,20 @@ export class StockInStore implements StockInStoreState {
         startDate: undefined as string | undefined,
         endDate: undefined as string | undefined,
         search: undefined as string | undefined,
-    };
+    }
     pagination = {
         page: 1,
         pageSize: 10,
-    };
+    }
 
     // Approval workflow state
-    isApprovalProcessing = false;
-    approvalError: string | null = null;
-    currentApprovalStage: ApprovalStage | null = null;
+    isApprovalProcessing = false
+    approvalError: string | null = null
+    currentApprovalStage: ApprovalStage | null = null
 
-    selectedStockIn: StockInEntity | null = null;
-    error: string | null = null;
-    filterVisible = false;
+    selectedStockIn: StockInEntity | null = null
+    error: string | null = null
+    filterVisible = false
 
     // Form data for creating new stock in
     formData: CreateStockInPayload = {
@@ -62,7 +62,7 @@ export class StockInStore implements StockInStoreState {
         supplierInvoice: '',
         notes: '',
         status: 'pending',
-    };
+    }
 
     constructor(
         @inject(GetStockInsUseCase)
@@ -82,60 +82,60 @@ export class StockInStore implements StockInStoreState {
         @inject(CreateApprovalRequestUseCase)
         private readonly createApprovalRequestUseCase: CreateApprovalRequestUseCase
     ) {
-        makeAutoObservable(this);
+        makeAutoObservable(this)
         // Load stock ins on store initialization
-        this.getStockIns();
+        this.getStockIns()
     }
 
     get pageCount() {
-        return Math.ceil(this.count / this.pagination.pageSize);
+        return Math.ceil(this.count / this.pagination.pageSize)
     }
 
     get isEmpty(): boolean {
-        return this.results.length === 0;
+        return this.results.length === 0
     }
 
     setIsLoading = (isLoading: boolean) => {
-        this.isLoading = isLoading;
-    };
+        this.isLoading = isLoading
+    }
 
     setResults = (results: StockInEntity[]) => {
-        this.results = results;
-    };
+        this.results = results
+    }
 
     setCount = (count: number) => {
-        this.count = count;
-    };
+        this.count = count
+    }
 
     setFilterVisible = (visible: boolean) => {
-        this.filterVisible = visible;
-    };
+        this.filterVisible = visible
+    }
 
     toggleFilterVisible = () => {
-        this.filterVisible = !this.filterVisible;
-    };
+        this.filterVisible = !this.filterVisible
+    }
 
     mergeFilters = (payload: Partial<StockInStoreState['filters']>) => {
-        Object.assign(this.filters, payload);
-    };
+        Object.assign(this.filters, payload)
+    }
 
     mergePagination = (
         payload: Partial<StockInStoreState['pagination']>
     ): void => {
-        Object.assign(this.pagination, payload);
-    };
+        Object.assign(this.pagination, payload)
+    }
 
     setError = (error: string | null) => {
-        this.error = error;
-    };
+        this.error = error
+    }
 
     setSelectedStockIn = (stockIn: StockInEntity | null) => {
-        this.selectedStockIn = stockIn;
-    };
+        this.selectedStockIn = stockIn
+    }
 
     updateFormData = (payload: Partial<CreateStockInPayload>) => {
-        Object.assign(this.formData, payload);
-    };
+        Object.assign(this.formData, payload)
+    }
 
     // Get stock ins with current filters and pagination
     async getStockIns() {
@@ -150,91 +150,91 @@ export class StockInStore implements StockInStoreState {
             startDate: this.filters.startDate,
             endDate: this.filters.endDate,
             search: this.filters.search,
-        };
+        }
 
-        this.setIsLoading(true);
-        this.setError(null);
+        this.setIsLoading(true)
+        this.setError(null)
 
         try {
-            const response = await this.getStockInsUseCase.execute(payload);
+            const response = await this.getStockInsUseCase.execute(payload)
 
             runInAction(() => {
-                this.setResults(response.results);
-                this.setCount(response.count);
-            });
+                this.setResults(response.results)
+                this.setCount(response.count)
+            })
 
-            return response;
+            return response
         } catch (error) {
-            console.error('Error fetching stock ins:', error);
+            console.error('Error fetching stock ins:', error)
 
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to fetch stock ins'
-                );
+                )
                 // Ensure we clear any previous results
-                this.setResults([]);
-                this.setCount(0);
-            });
+                this.setResults([])
+                this.setCount(0)
+            })
 
-            return null;
+            return null
         } finally {
             runInAction(() => {
-                this.setIsLoading(false);
-            });
+                this.setIsLoading(false)
+            })
         }
     }
 
     // Get stock in details by ID
     async getStockInDetails(id: string) {
-        this.setIsLoading(true);
-        this.setError(null);
+        this.setIsLoading(true)
+        this.setError(null)
 
         try {
-            const stockIn = await this.getStockInByIdUseCase.execute(id);
+            const stockIn = await this.getStockInByIdUseCase.execute(id)
 
             runInAction(() => {
-                this.setSelectedStockIn(stockIn);
-            });
+                this.setSelectedStockIn(stockIn)
+            })
 
-            return stockIn;
+            return stockIn
         } catch (error) {
-            console.error('Error fetching stock in details:', error);
+            console.error('Error fetching stock in details:', error)
 
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to fetch stock in details'
-                );
-                this.setSelectedStockIn(null);
-            });
+                )
+                this.setSelectedStockIn(null)
+            })
 
-            return null;
+            return null
         } finally {
             runInAction(() => {
-                this.setIsLoading(false);
-            });
+                this.setIsLoading(false)
+            })
         }
     }
 
     // Create new stock in
     async createStockIn(payload?: Record<string, any>) {
-        this.setIsLoading(true);
-        this.setError(null);
-    
+        this.setIsLoading(true)
+        this.setError(null)
+
         try {
             // If payload is provided, use it; otherwise use the store's formData
-            const data = payload || this.formData;
-    
-            const stockIn = await this.createStockInUseCase.execute(data as any);
-    
+            const data = payload || this.formData
+
+            const stockIn = await this.createStockInUseCase.execute(data as any)
+
             runInAction(() => {
                 // Always add the new stock in to the results, regardless of current list state
-                this.results = [stockIn, ...this.results];
-                this.count = this.count + 1;
-    
+                this.results = [stockIn, ...this.results]
+                this.count = this.count + 1
+
                 // Reset form data
                 this.formData = {
                     productId: '',
@@ -247,303 +247,411 @@ export class StockInStore implements StockInStoreState {
                     supplierInvoice: '',
                     notes: '',
                     status: 'pending',
-                };
-            });
-    
-            return stockIn;
+                }
+            })
+
+            return stockIn
         } catch (error) {
-            console.error('Error creating stock in:', error);
-    
+            console.error('Error creating stock in:', error)
+
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to create stock in'
-                );
-            });
-    
-            return null;
+                )
+            })
+
+            return null
         } finally {
             runInAction(() => {
-                this.setIsLoading(false);
-            });
+                this.setIsLoading(false)
+            })
         }
     }
 
     // Update stock in status
     async updateStatus(id: string, status: 'completed' | 'cancelled') {
-        this.setIsLoading(true);
-        this.setError(null);
+        this.setIsLoading(true)
+        this.setError(null)
 
         // Map the simplified status to the actual API status value
-        const apiStatus = status === 'completed' ? 'APPROVED' : 'CANCELLED';
+        const apiStatus = status === 'completed' ? 'APPROVED' : 'CANCELLED'
 
         try {
-            const updatedStockIn = await this.updateStockInStatusUseCase.execute({
-                id,
-                status: apiStatus as StockInEntity['status']
-            });
+            const updatedStockIn =
+                await this.updateStockInStatusUseCase.execute({
+                    id,
+                    status: apiStatus as StockInEntity['status'],
+                })
 
             runInAction(() => {
                 // Update in the results list if present
-                const index = this.results.findIndex(item => item.id === id);
+                const index = this.results.findIndex(item => item.id === id)
                 if (index !== -1) {
-                    this.results[index] = updatedStockIn;
+                    this.results[index] = updatedStockIn
                 }
 
                 // Update selected stock in if it's the current one
                 if (this.selectedStockIn && this.selectedStockIn.id === id) {
-                    this.setSelectedStockIn(updatedStockIn);
+                    this.setSelectedStockIn(updatedStockIn)
                 }
-            });
+            })
 
-            return updatedStockIn;
+            return updatedStockIn
         } catch (error) {
-            console.error('Error updating stock in status:', error);
+            console.error('Error updating stock in status:', error)
 
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to update status'
-                );
-            });
+                )
+            })
 
-            return null;
+            return null
         } finally {
             runInAction(() => {
-                this.setIsLoading(false);
-            });
+                this.setIsLoading(false)
+            })
         }
     }
 
     // Delete stock in
     async deleteStockIn(id: string) {
-        this.setIsLoading(true);
-        this.setError(null);
-    
+        this.setIsLoading(true)
+        this.setError(null)
+
         try {
-            const success = await this.deleteStockInUseCase.execute(id);
-            
+            const success = await this.deleteStockInUseCase.execute(id)
+
             if (success) {
                 runInAction(() => {
                     // Remove from the results list if present
-                    this.results = this.results.filter(item => item.id !== id);
-                    this.count = this.count - 1;
-                    
+                    this.results = this.results.filter(item => item.id !== id)
+                    this.count = this.count - 1
+
                     // If it was the selected one, clear selection
-                    if (this.selectedStockIn && this.selectedStockIn.id === id) {
-                        this.setSelectedStockIn(null);
+                    if (
+                        this.selectedStockIn &&
+                        this.selectedStockIn.id === id
+                    ) {
+                        this.setSelectedStockIn(null)
                     }
-                });
-                
-                return true;
+                })
+
+                return true
             } else {
-                throw new Error('Failed to delete stock in record');
+                throw new Error('Failed to delete stock in record')
             }
         } catch (error) {
-            console.error('Error deleting stock in:', error);
-            
+            console.error('Error deleting stock in:', error)
+
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to delete stock in record'
-                );
-            });
-            
-            return false;
+                )
+            })
+
+            return false
         } finally {
             runInAction(() => {
-                this.setIsLoading(false);
-            });
+                this.setIsLoading(false)
+            })
         }
     }
-    
+
     // Update stock in
     async updateStockIn(id: string, payload: any) {
-        this.setIsLoading(true);
-        this.setError(null);
-    
+        this.setIsLoading(true)
+        this.setError(null)
+
         try {
             const updatedStockIn = await this.updateStockInUseCase.execute({
                 id,
-                data: payload
-            });
-    
+                data: payload,
+            })
+
             runInAction(() => {
                 // Update in the results list if present
-                const index = this.results.findIndex(item => item.id === id);
+                const index = this.results.findIndex(item => item.id === id)
                 if (index !== -1) {
-                    this.results[index] = updatedStockIn;
+                    this.results[index] = updatedStockIn
                 }
-    
+
                 // Update selected stock in
-                this.setSelectedStockIn(updatedStockIn);
-            });
-    
-            return updatedStockIn;
+                this.setSelectedStockIn(updatedStockIn)
+            })
+
+            return updatedStockIn
         } catch (error) {
-            console.error('Error updating stock in:', error);
-    
+            console.error('Error updating stock in:', error)
+
             runInAction(() => {
                 this.setError(
                     error instanceof Error
                         ? error.message
                         : 'Failed to update stock in'
-                );
-            });
-    
-            return null;
+                )
+            })
+
+            return null
         } finally {
             runInAction(() => {
-                this.setIsLoading(false);
-            });
+                this.setIsLoading(false)
+            })
         }
     }
 
     // Get current approval stage
     async getCurrentApprovalStage(resourceName: string, stockStatus: string) {
         runInAction(() => {
-            this.isApprovalProcessing = true;
-            this.approvalError = null;
-        });
+            this.isApprovalProcessing = true
+            this.approvalError = null
+        })
 
         try {
             const stage = await this.getCurrentApprovalStageUseCase.execute({
                 resourceName,
-                stockStatus
-            });
+                stockStatus,
+            })
 
             runInAction(() => {
-                this.currentApprovalStage = stage;
-            });
+                this.currentApprovalStage = stage
+            })
 
-            return stage;
+            return stage
         } catch (error) {
-            console.error('Error getting current approval stage:', error);
-            
+            console.error('Error getting current approval stage:', error)
+
             runInAction(() => {
-                this.approvalError = error instanceof Error
-                    ? error.message
-                    : 'Failed to get current approval stage';
-            });
-            
-            return null;
+                this.approvalError =
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to get current approval stage'
+            })
+
+            return null
         } finally {
             runInAction(() => {
-                this.isApprovalProcessing = false;
-            });
+                this.isApprovalProcessing = false
+            })
         }
     }
 
     // Request approval for a stock in
     async requestApproval(stockInId: string, userId: string) {
         runInAction(() => {
-            this.isApprovalProcessing = true;
-            this.approvalError = null;
-        });
-    
+            this.isApprovalProcessing = true
+            this.approvalError = null
+        })
+
         try {
             // First get the current stage
-            const stage = await this.getCurrentApprovalStage('stockins', 'DRAFT');
-            
+            const stage = await this.getCurrentApprovalStage(
+                'stockins',
+                'DRAFT'
+            )
+
             if (!stage) {
-                throw new Error('Could not determine current approval stage');
+                throw new Error('Could not determine current approval stage')
             }
-    
+
             // Then create the approval request
-            const approvalRequest = await this.createApprovalRequestUseCase.execute({
-                objectId: stockInId,
-                currentStageId: stage.id,
-                objectType: 'StockIn',
-                requesterId: userId
-            });
-    
+            const approvalRequest =
+                await this.createApprovalRequestUseCase.execute({
+                    objectId: stockInId,
+                    currentStageId: stage.id,
+                    objectType: 'StockIn',
+                    requesterId: userId,
+                })
+
             // If approval request was successful, update the stock in status
             if (approvalRequest && approvalRequest.status) {
                 // Update the stock status to match the approval request status
                 await this.updateStockInStatusUseCase.execute({
                     id: stockInId,
-                    status: approvalRequest.status as StockInEntity['status']
-                });
+                    status: approvalRequest.status as StockInEntity['status'],
+                })
             }
-            
+
             // Refresh the stock in details to get updated status
-            await this.getStockInDetails(stockInId);
-            
+            await this.getStockInDetails(stockInId)
+
             // Refresh the list
-            await this.getStockIns();
-    
-            return approvalRequest;
+            await this.getStockIns()
+
+            return approvalRequest
         } catch (error) {
-            console.error('Error requesting approval:', error);
-            
+            console.error('Error requesting approval:', error)
+
             runInAction(() => {
-                this.approvalError = error instanceof Error
-                    ? error.message
-                    : 'Failed to request approval';
-            });
-            
-            return null;
+                this.approvalError =
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to request approval'
+            })
+
+            return null
         } finally {
             runInAction(() => {
-                this.isApprovalProcessing = false;
-            });
+                this.isApprovalProcessing = false
+            })
+        }
+    }
+
+    // Approve stock in
+    async approveStockIn(id: string) {
+        this.setIsLoading(true)
+        this.setError(null)
+
+        try {
+            // Update status to APPROVED
+            const updatedStockIn =
+                await this.updateStockInStatusUseCase.execute({
+                    id,
+                    status: 'APPROVED' as StockInEntity['status'],
+                })
+
+            runInAction(() => {
+                // Update in the results list if present
+                const index = this.results.findIndex(item => item.id === id)
+                if (index !== -1) {
+                    this.results[index] = updatedStockIn
+                }
+
+                // Update selected stock in if it's the current one
+                if (this.selectedStockIn && this.selectedStockIn.id === id) {
+                    this.setSelectedStockIn(updatedStockIn)
+                }
+            })
+
+            // Refresh the list to get updated data
+            await this.getStockIns()
+
+            return true
+        } catch (error) {
+            console.error('Error approving stock in:', error)
+
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to approve stock in'
+                )
+            })
+
+            return false
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false)
+            })
+        }
+    }
+
+    // Reject stock in
+    async rejectStockIn(id: string) {
+        this.setIsLoading(true)
+        this.setError(null)
+
+        try {
+            // Update status to REJECTED
+            const updatedStockIn =
+                await this.updateStockInStatusUseCase.execute({
+                    id,
+                    status: 'REJECTED' as StockInEntity['status'],
+                })
+
+            runInAction(() => {
+                // Update in the results list if present
+                const index = this.results.findIndex(item => item.id === id)
+                if (index !== -1) {
+                    this.results[index] = updatedStockIn
+                }
+
+                // Update selected stock in if it's the current one
+                if (this.selectedStockIn && this.selectedStockIn.id === id) {
+                    this.setSelectedStockIn(updatedStockIn)
+                }
+            })
+
+            // Refresh the list to get updated data
+            await this.getStockIns()
+
+            return true
+        } catch (error) {
+            console.error('Error rejecting stock in:', error)
+
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to reject stock in'
+                )
+            })
+
+            return false
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false)
+            })
         }
     }
 
     // Filter methods for each filter type
     filterByCode(code?: string) {
-        this.filters.code = code;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.code = code
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     filterByStatus(status?: StockInEntity['status']) {
-        this.filters.status = status;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.status = status
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     filterByPriority(priority?: PriorityType) {
-        this.filters.priority = priority;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.priority = priority
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     filterBySupplier(supplierId?: string) {
-        this.filters.supplierId = supplierId;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.supplierId = supplierId
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     filterByLotNumber(lotNumber?: string) {
-        this.filters.lotNumber = lotNumber;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.lotNumber = lotNumber
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     // Filter by date range
     filterByDateRange(startDate?: string, endDate?: string) {
-        this.filters.startDate = startDate;
-        this.filters.endDate = endDate;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.startDate = startDate
+        this.filters.endDate = endDate
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     // Apply all filters at once
     applyFilters(filters: Partial<StockInStoreState['filters']>) {
-        this.mergeFilters(filters);
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.mergeFilters(filters)
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     // Search
     search(query?: string) {
-        this.filters.search = query && query.length > 0 ? query : undefined;
-        this.pagination.page = 1;
-        this.getStockIns();
+        this.filters.search = query && query.length > 0 ? query : undefined
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     // Reset filters
@@ -557,16 +665,16 @@ export class StockInStore implements StockInStoreState {
             startDate: undefined,
             endDate: undefined,
             search: undefined,
-        };
-        this.pagination.page = 1;
-        this.getStockIns();
+        }
+        this.pagination.page = 1
+        this.getStockIns()
     }
 
     // Go to page
     goToPage(page: number) {
         if (page >= 1 && page <= this.pageCount) {
-            this.pagination.page = page;
-            this.getStockIns();
+            this.pagination.page = page
+            this.getStockIns()
         }
     }
 }

@@ -41,22 +41,30 @@ const StockInScreen = observer(() => {
     const [refreshing, setRefreshing] = useState(false)
     const windowHeight = Dimensions.get('window').height
 
-    // Add states for delete confirmation dialog
+    // Dialog states for delete
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
     const [stockToDelete, setStockToDelete] = useState<string | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
 
-    // Add states for approval dialogs
+    // Dialog states for approval
     const [approvalDialogVisible, setApprovalDialogVisible] = useState(false)
     const [stockToApprove, setStockToApprove] = useState<string | null>(null)
     const [isApproving, setIsApproving] = useState(false)
 
-    // Add states for request approval dialogs
-    const [requestApprovalDialogVisible, setRequestApprovalDialogVisible] = useState(false)
-    const [stockToRequestApproval, setStockToRequestApproval] = useState<string | null>(null)
+    // Dialog states for rejection
+    const [rejectDialogVisible, setRejectDialogVisible] = useState(false)
+    const [stockToReject, setStockToReject] = useState<string | null>(null)
+    const [isRejecting, setIsRejecting] = useState(false)
+
+    // Dialog states for request approval
+    const [requestApprovalDialogVisible, setRequestApprovalDialogVisible] =
+        useState(false)
+    const [stockToRequestApproval, setStockToRequestApproval] = useState<
+        string | null
+    >(null)
     const [isRequestingApproval, setIsRequestingApproval] = useState(false)
 
-    // Add snackbar state
+    // Snackbar state
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
 
@@ -127,11 +135,58 @@ const StockInScreen = observer(() => {
 
     // Confirm approval
     const confirmApprove = async () => {
-        // Approval functionality would be implemented here
-        setApprovalDialogVisible(false)
-        setStockToApprove(null)
-        // For now, just show a message
-        showSnackbar('Approval functionality to be implemented')
+        if (!stockToApprove) return
+
+        setIsApproving(true)
+
+        try {
+            // Call the approve method in the store (to be implemented)
+            const success = await stockInStore.approveStockIn(stockToApprove)
+
+            if (success) {
+                showSnackbar('Stock in approved successfully')
+            } else {
+                showSnackbar('Failed to approve stock in')
+            }
+        } catch (error) {
+            console.error('Error during approval:', error)
+            showSnackbar('An error occurred while approving')
+        } finally {
+            setIsApproving(false)
+            setApprovalDialogVisible(false)
+            setStockToApprove(null)
+        }
+    }
+
+    // Handle reject
+    const handleReject = (id: string) => {
+        setStockToReject(id)
+        setRejectDialogVisible(true)
+    }
+
+    // Confirm rejection
+    const confirmReject = async () => {
+        if (!stockToReject) return
+
+        setIsRejecting(true)
+
+        try {
+            // Call the reject method in the store (to be implemented)
+            const success = await stockInStore.rejectStockIn(stockToReject)
+
+            if (success) {
+                showSnackbar('Stock in rejected successfully')
+            } else {
+                showSnackbar('Failed to reject stock in')
+            }
+        } catch (error) {
+            console.error('Error during rejection:', error)
+            showSnackbar('An error occurred while rejecting')
+        } finally {
+            setIsRejecting(false)
+            setRejectDialogVisible(false)
+            setStockToReject(null)
+        }
     }
 
     const handleView = (id: string) => {
@@ -274,6 +329,7 @@ const StockInScreen = observer(() => {
                             <StockInListItem
                                 item={item}
                                 onApprove={handleApprove}
+                                onReject={handleReject}
                                 onRequestApproval={handleRequestApproval}
                                 onView={handleView}
                                 onEdit={handleEdit}
@@ -330,12 +386,17 @@ const StockInScreen = observer(() => {
                         <Dialog.Title>Request Approval</Dialog.Title>
                         <Dialog.Content>
                             <Text variant="bodyMedium">
-                                Are you sure you want to request approval for this stock in record?
-                                This will send it to the approval workflow.
+                                Are you sure you want to request approval for
+                                this stock in record? This will send it to the
+                                approval workflow.
                             </Text>
                         </Dialog.Content>
                         <Dialog.Actions>
-                            <Button onPress={() => setRequestApprovalDialogVisible(false)}>
+                            <Button
+                                onPress={() =>
+                                    setRequestApprovalDialogVisible(false)
+                                }
+                            >
                                 Cancel
                             </Button>
                             <Button
@@ -358,11 +419,14 @@ const StockInScreen = observer(() => {
                         <Dialog.Title>Approve Stock In</Dialog.Title>
                         <Dialog.Content>
                             <Text variant="bodyMedium">
-                                Are you sure you want to approve this stock in record?
+                                Are you sure you want to approve this stock in
+                                record?
                             </Text>
                         </Dialog.Content>
                         <Dialog.Actions>
-                            <Button onPress={() => setApprovalDialogVisible(false)}>
+                            <Button
+                                onPress={() => setApprovalDialogVisible(false)}
+                            >
                                 Cancel
                             </Button>
                             <Button
@@ -371,6 +435,37 @@ const StockInScreen = observer(() => {
                                 disabled={isApproving}
                             >
                                 Approve
+                            </Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
+
+                {/* Reject Dialog */}
+                <Portal>
+                    <Dialog
+                        visible={rejectDialogVisible}
+                        onDismiss={() => setRejectDialogVisible(false)}
+                    >
+                        <Dialog.Title>Reject Stock In</Dialog.Title>
+                        <Dialog.Content>
+                            <Text variant="bodyMedium">
+                                Are you sure you want to reject this stock in
+                                record?
+                            </Text>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button
+                                onPress={() => setRejectDialogVisible(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onPress={confirmReject}
+                                loading={isRejecting}
+                                disabled={isRejecting}
+                                textColor={theme.theme.colors.error}
+                            >
+                                Reject
                             </Button>
                         </Dialog.Actions>
                     </Dialog>
@@ -435,6 +530,6 @@ const styles = StyleSheet.create({
 })
 
 export default withProviders(
-    StockInStoreProvider, 
+    StockInStoreProvider,
     AuthStoreProvider
 )(StockInScreen)

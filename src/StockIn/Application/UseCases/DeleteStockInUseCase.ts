@@ -16,9 +16,9 @@ export default class DeleteStockInUseCase
 
     public execute(id: string): Promise<boolean> {
         if (!this.stockInRepository.deleteStockIn) {
-            throw new Error('Delete functionality not available');
+            throw new Error('Delete functionality not available')
         }
-        
+
         return this.stockInRepository.deleteStockIn(id)
     }
 }

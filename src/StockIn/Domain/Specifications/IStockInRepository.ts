@@ -27,12 +27,15 @@ export interface IStockInRepository {
     updateStockIn: (id: string, data: any) => Promise<StockInEntity>
 
     // Approval process methods
-    getCurrentApprovalStage: (resourceName: string, stockStatus: string) => Promise<ApprovalStage>
-    
+    getCurrentApprovalStage: (
+        resourceName: string,
+        stockStatus: string
+    ) => Promise<ApprovalStage>
+
     createApprovalRequest: (
-        objectId: string, 
-        currentStageId: string, 
-        objectType: string, 
+        objectId: string,
+        currentStageId: string,
+        objectType: string,
         requesterId: string
     ) => Promise<ApprovalRequest>
 

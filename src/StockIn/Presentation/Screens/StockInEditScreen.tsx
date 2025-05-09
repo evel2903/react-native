@@ -27,7 +27,10 @@ import { DatePickerModal } from 'react-native-paper-dates'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
-import { RootScreenNavigationProp, RootStackParamList } from '@/src/Core/Presentation/Navigation/Types/Index'
+import {
+    RootScreenNavigationProp,
+    RootStackParamList,
+} from '@/src/Core/Presentation/Navigation/Types/Index'
 import { observer } from 'mobx-react'
 import { useStockInStore } from '../Stores/StockInStore/UseStockInStore'
 import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
@@ -90,7 +93,7 @@ const CenteredAccordion = ({
     )
 }
 
-type StockInEditScreenRouteProp = RouteProp<RootStackParamList, 'StockInEdit'>;
+type StockInEditScreenRouteProp = RouteProp<RootStackParamList, 'StockInEdit'>
 
 const StockInEditScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockIn'>>()
@@ -99,7 +102,7 @@ const StockInEditScreen = observer(() => {
     const masterDataStore = useMasterDataStore()
     const authStore = useAuthStore()
     const theme = useTheme()
-    
+
     // Get stock ID from route params
     const stockId = route.params?.id
 
@@ -116,11 +119,13 @@ const StockInEditScreen = observer(() => {
     const [status, setStatus] = useState(Status.Draft)
     const [notes, setNotes] = useState('')
     const [priority, setPriority] = useState(2) // Default to Medium priority
-    
+
     // Goods list
     const [goodsItems, setGoodsItems] = useState<GoodsItem[]>([])
     const [currentItem, setCurrentItem] = useState<GoodsItem | null>(null)
-    const [currentItemIndex, setCurrentItemIndex] = useState<number | null>(null)
+    const [currentItemIndex, setCurrentItemIndex] = useState<number | null>(
+        null
+    )
 
     // UI state
     const [infoExpanded, setInfoExpanded] = useState(true)
@@ -129,17 +134,16 @@ const StockInEditScreen = observer(() => {
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
-    
+
     // Modals and menus state
     const [supplierMenuVisible, setSupplierMenuVisible] = useState(false)
     const [statusMenuVisible, setStatusMenuVisible] = useState(false)
-    const [stockInDatePickerVisible, setStockInDatePickerVisible] = useState(false)
+    const [stockInDatePickerVisible, setStockInDatePickerVisible] =
+        useState(false)
     const [scannerModalVisible, setScannerModalVisible] = useState(false)
 
     // Status options
-    const statusOptions = [
-        { value: Status.Draft, label: 'Draft' },
-    ]
+    const statusOptions = [{ value: Status.Draft, label: 'Draft' }]
 
     // Fetch stock data and master data when component mounts
     useEffect(() => {
@@ -151,35 +155,46 @@ const StockInEditScreen = observer(() => {
                     masterDataStore.loadSuppliers(),
                     masterDataStore.loadUnits(),
                 ])
-                
+
                 // Load stock details
                 if (stockId) {
-                    const stockIn = await stockInStore.getStockInDetails(stockId)
+                    const stockIn = await stockInStore.getStockInDetails(
+                        stockId
+                    )
                     if (stockIn) {
                         // Populate form fields with stock data
                         setCode(stockIn.code || '')
                         setSupplierId(stockIn.supplierId || '')
                         setLotNumber(stockIn.lotNumber || '')
-                        setStockInDate(stockIn.inDate?.split('T')[0] || new Date().toISOString().split('T')[0])
-                        setSelectedStockInDate(new Date(stockIn.inDate || new Date()))
+                        setStockInDate(
+                            stockIn.inDate?.split('T')[0] ||
+                                new Date().toISOString().split('T')[0]
+                        )
+                        setSelectedStockInDate(
+                            new Date(stockIn.inDate || new Date())
+                        )
                         setDescription(stockIn.description || '')
                         setTotalAmount(stockIn.totalAmount?.toString() || '0')
-                        setStatus(stockIn.status as Status || Status.Draft)
+                        setStatus((stockIn.status as Status) || Status.Draft)
                         setNotes(stockIn.notes || '')
                         setPriority(stockIn.priority || 2)
-                        
+
                         // Convert stock in details to goods items
                         if (stockIn.details && stockIn.details.length > 0) {
-                            const items: GoodsItem[] = stockIn.details.map(detail => ({
-                                stockInId: stockId,
-                                goodsId: detail.goodsId,
-                                goodsCode: detail.goodsCode || '',
-                                goodsName: detail.goodsName || '',
-                                quantity: detail.quantity,
-                                price: parseFloat(detail.price),
-                                expiryDate: detail.expiryDate || new Date().toISOString(),
-                                notes: detail.notes || '',
-                            }))
+                            const items: GoodsItem[] = stockIn.details.map(
+                                detail => ({
+                                    stockInId: stockId,
+                                    goodsId: detail.goodsId,
+                                    goodsCode: detail.goodsCode || '',
+                                    goodsName: detail.goodsName || '',
+                                    quantity: detail.quantity,
+                                    price: parseFloat(detail.price),
+                                    expiryDate:
+                                        detail.expiryDate ||
+                                        new Date().toISOString(),
+                                    notes: detail.notes || '',
+                                })
+                            )
                             setGoodsItems(items)
                         }
                     } else {
@@ -335,13 +350,13 @@ const StockInEditScreen = observer(() => {
             showSnackbar('Please fill in all required fields')
             return
         }
-    
+
         setIsSubmitting(true)
-    
+
         try {
             // Format date to ISO
             const isoDate = new Date(stockInDate).toISOString()
-    
+
             // Prepare payload according to API requirements
             const payload = {
                 code,
@@ -364,13 +379,13 @@ const StockInEditScreen = observer(() => {
                     notes: item.notes,
                 })),
             }
-    
+
             // Call store to update data
             const result = await stockInStore.updateStockIn(stockId, payload)
-    
+
             if (result) {
                 showSnackbar('Stock in updated successfully')
-                
+
                 // Short timeout to allow the user to see the success message
                 // before navigating back to the list screen
                 setTimeout(() => {
@@ -561,7 +576,11 @@ const StockInEditScreen = observer(() => {
                     <TextInput
                         dense
                         label="Created by"
-                        value={stockInStore.selectedStockIn?.createdBy || authStore.user?.name || ''}
+                        value={
+                            stockInStore.selectedStockIn?.createdBy ||
+                            authStore.user?.name ||
+                            ''
+                        }
                         disabled
                         mode="outlined"
                         style={styles.input}
@@ -602,9 +621,8 @@ const StockInEditScreen = observer(() => {
                                 dense
                                 label="Status"
                                 value={
-                                    statusOptions.find(
-                                        s => s.value === status
-                                    )?.label || ''
+                                    statusOptions.find(s => s.value === status)
+                                        ?.label || ''
                                 }
                                 mode="outlined"
                                 disabled
@@ -699,8 +717,13 @@ const StockInEditScreen = observer(() => {
 
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color={theme.theme.colors.primary} />
-                        <Text style={styles.loadingText}>Loading stock in details...</Text>
+                        <ActivityIndicator
+                            size="large"
+                            color={theme.theme.colors.primary}
+                        />
+                        <Text style={styles.loadingText}>
+                            Loading stock in details...
+                        </Text>
                     </View>
                 ) : (
                     <KeyboardAvoidingView
@@ -748,8 +771,8 @@ const StockInEditScreen = observer(() => {
 
                                 {goodsItems.length === 0 ? (
                                     <Text style={styles.emptyListText}>
-                                        No items added yet. Click the + button to
-                                        add goods.
+                                        No items added yet. Click the + button
+                                        to add goods.
                                     </Text>
                                 ) : (
                                     goodsItems.map(item => (
