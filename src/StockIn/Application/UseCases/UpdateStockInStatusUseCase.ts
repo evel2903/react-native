@@ -5,11 +5,7 @@ import {
 } from '../../Domain/Specifications/IStockInRepository'
 import { UseCase } from 'src/Core/Application/UseCase'
 import StockInEntity from '../../Domain/Entities/StockInEntity'
-
-interface UpdateStockInStatusPayload {
-    id: string
-    status: StockInEntity['status']
-}
+import { UpdateStockInStatusPayload } from '../Types/UpdateStockInStatusPayload'
 
 @injectable()
 export default class UpdateStockInStatusUseCase

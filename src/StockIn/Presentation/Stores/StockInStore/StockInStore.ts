@@ -16,6 +16,7 @@ import DeleteStockInUseCase from '@/src/StockIn/Application/UseCases/DeleteStock
 import UpdateStockInUseCase from '@/src/StockIn/Application/UseCases/UpdateStockInUseCase'
 import { ApprovalDecision } from '@/src/StockIn/Domain/Entities/ApprovalDecision'
 import { CreateApprovalDecisionUseCase } from '@/src/StockIn/Application/UseCases/CreateApprovalDecisionUseCase'
+import { GetApprovalRequestIdUseCase } from '@/src/StockIn/Application/UseCases/GetApprovalRequestIdUseCase'
 
 @injectable()
 export class StockInStore implements StockInStoreState {
@@ -85,7 +86,9 @@ export class StockInStore implements StockInStoreState {
         @inject(CreateApprovalRequestUseCase)
         private readonly createApprovalRequestUseCase: CreateApprovalRequestUseCase,
         @inject(CreateApprovalDecisionUseCase)
-        private readonly createApprovalDecisionUseCase: CreateApprovalDecisionUseCase
+        private readonly createApprovalDecisionUseCase: CreateApprovalDecisionUseCase,
+        @inject(GetApprovalRequestIdUseCase)
+        private readonly getApprovalRequestIdUseCase: GetApprovalRequestIdUseCase
     ) {
         makeAutoObservable(this)
         // Load stock ins on store initialization
@@ -616,6 +619,43 @@ export class StockInStore implements StockInStoreState {
             })
 
             return false
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false)
+            })
+        }
+    }
+
+    // Get approval request ID
+    async getApprovalRequestId(objectId: string): Promise<string | null> {
+        this.setIsLoading(true)
+        this.setError(null)
+
+        try {
+            const requestId = await this.getApprovalRequestIdUseCase.execute({
+                objectId,
+                objectType: 'StockIn',
+            })
+
+            if (!requestId) {
+                console.warn(
+                    `No approval request ID found for stock in ${objectId}`
+                )
+            }
+
+            return requestId
+        } catch (error) {
+            console.error('Error fetching approval request ID:', error)
+
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to fetch approval request ID'
+                )
+            })
+
+            return null
         } finally {
             runInAction(() => {
                 this.setIsLoading(false)

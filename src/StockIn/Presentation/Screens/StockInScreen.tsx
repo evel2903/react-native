@@ -131,10 +131,25 @@ const StockInScreen = observer(() => {
     }
 
     // Handle approve
-    const handleApprove = (id: string, requestId: string) => {
-        setStockToApprove(id)
-        setRequestIdToApprove(requestId)
-        setApprovalDialogVisible(true)
+    const handleApprove = async (id: string) => {
+        try {
+            // If requestId is not provided or is empty, fetch it first
+            let approvalRequestId =
+                (await stockInStore.getApprovalRequestId(id)) ?? undefined
+
+            if (!approvalRequestId) {
+                showSnackbar('Could not retrieve approval request information')
+                return
+            }
+
+            // Now that we have the request ID, set the state and show the dialog
+            setStockToApprove(id)
+            setRequestIdToApprove(approvalRequestId)
+            setApprovalDialogVisible(true)
+        } catch (error) {
+            console.error('Error preparing approval:', error)
+            showSnackbar('An error occurred while preparing approval')
+        }
     }
 
     // Confirm approval

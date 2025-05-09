@@ -11,6 +11,7 @@ import GetStockInByIdUseCase from './Application/UseCases/GetStockInByIdUseCase'
 import UpdateStockInStatusUseCase from './Application/UseCases/UpdateStockInStatusUseCase'
 import DeleteStockInUseCase from './Application/UseCases/DeleteStockInUseCase'
 import UpdateStockInUseCase from './Application/UseCases/UpdateStockInUseCase'
+import { GetApprovalRequestIdUseCase } from './Application/UseCases/GetApprovalRequestIdUseCase'
 
 @module({
     providers: [
@@ -23,6 +24,7 @@ import UpdateStockInUseCase from './Application/UseCases/UpdateStockInUseCase'
         GetCurrentApprovalStageUseCase,
         CreateApprovalRequestUseCase,
         CreateApprovalDecisionUseCase,
+        GetApprovalRequestIdUseCase,
         GetStockInByIdUseCase,
         UpdateStockInStatusUseCase,
         DeleteStockInUseCase,

@@ -312,11 +312,11 @@ class StockInRepository implements IStockInRepository {
             }
 
             // Assuming we have an endpoint for approval decisions
-            const url = '/api/approval-request-decisions'
+            const url = '/api/approval-request-decision/approved'
 
             const response = await this.httpClient.post<
                 typeof payload,
-                { data: ApprovalDecision }
+                { data: any }
             >(url, payload)
 
             if (!response || !response.data) {
@@ -329,6 +329,29 @@ class StockInRepository implements IStockInRepository {
             throw error instanceof Error
                 ? error
                 : new Error('Failed to create approval decision')
+        }
+    }
+
+    public async getApprovalRequestId(
+        objectId: string,
+        objectType: string = 'StockIn'
+    ): Promise<string | null> {
+        try {
+            const url = `/api/approval-request/to-approve/${objectId}/${objectType}/`
+
+            const response = await this.httpClient.get<{
+                data: { id: string }
+            }>(url)
+
+            if (!response || !response.data || !response.data.id) {
+                console.warn('No approval request ID found')
+                return null
+            }
+
+            return response.data.id
+        } catch (error) {
+            console.error('Error fetching approval request ID:', error)
+            return null
         }
     }
 }

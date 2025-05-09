@@ -24,7 +24,6 @@ export interface IStockInRepository {
 
     createStockIn: (data: CreateStockInPayload) => Promise<StockInEntity>
 
-    // New method for updating stock in records
     updateStockIn: (id: string, data: any) => Promise<StockInEntity>
 
     // Approval process methods
@@ -45,6 +44,12 @@ export interface IStockInRepository {
         approverId: string,
         comment: string
     ) => Promise<ApprovalDecision>
+
+    // New method for fetching approval request ID
+    getApprovalRequestId: (
+        objectId: string,
+        objectType?: string
+    ) => Promise<string | null>
 
     // Optional methods
     deleteStockIn?: (id: string) => Promise<boolean>
