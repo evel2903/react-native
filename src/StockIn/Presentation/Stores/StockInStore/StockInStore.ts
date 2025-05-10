@@ -279,7 +279,11 @@ export class StockInStore implements StockInStoreState {
     }
 
     // Update stock in status
-    async updateStatus(id: string, status: 'completed' | 'cancelled', stateId: "") {
+    async updateStatus(
+        id: string,
+        status: 'completed' | 'cancelled',
+        stateId: ''
+    ) {
         this.setIsLoading(true)
         this.setError(null)
 

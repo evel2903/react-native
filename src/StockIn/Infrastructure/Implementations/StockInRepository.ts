@@ -177,7 +177,7 @@ class StockInRepository implements IStockInRepository {
         try {
             // Use the regular API endpoint for updateStockInStatus
             const response = await this.httpClient.patch<
-                { status: StockInEntity['status'], stateId: string },
+                { status: StockInEntity['status']; stateId: string },
                 any
             >(`${this.apiBaseUrl}/${id}/base`, { status, stateId })
 

@@ -66,7 +66,6 @@ const StockInScreen = observer(() => {
         string | null
     >(null)
     const [isRequestingApproval, setIsRequestingApproval] = useState(false)
-    const [stateId, setStateId] = useState<string | null>(null)
 
     // Snackbar state
     const [snackbarVisible, setSnackbarVisible] = useState(false)

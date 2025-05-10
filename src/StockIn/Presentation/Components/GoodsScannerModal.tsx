@@ -348,15 +348,6 @@ const GoodsScannerModal: React.FC<GoodsScannerModalProps> = ({
                                                     styles.scannedDataContainer
                                                 }
                                             >
-                                                <Text>
-                                                    Scanned code:{' '}
-                                                    {scannedData.length > 30
-                                                        ? `${scannedData.substring(
-                                                              0,
-                                                              30
-                                                          )}...`
-                                                        : scannedData}
-                                                </Text>
                                                 <Button
                                                     mode="text"
                                                     onPress={() => {
