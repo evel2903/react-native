@@ -12,6 +12,7 @@ import { useTheme } from '../Theme/ThemeProvider'
 import { observer } from 'mobx-react'
 import { withProviders } from '../Utils/WithProviders'
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
+import StorageScreen from '@/src/Storage/Presentation/Screens/StorageScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -43,6 +44,7 @@ const RootNavigator = observer(() => {
             <Stack.Screen name="StockInAdd" component={StockInAddScreen} />
             <Stack.Screen name="StockInView" component={StockInViewScreen} />
             <Stack.Screen name="StockInEdit" component={StockInEditScreen} />
+            <Stack.Screen name="Storage" component={StorageScreen} />
             <Stack.Screen name="NotFound" component={NotFoundScreen} />
         </Stack.Navigator>
     )

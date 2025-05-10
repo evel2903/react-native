@@ -38,6 +38,12 @@ const HomeScreen = observer(() => {
             description: i18n.t('home.menuItems.stockInDescription'),
             onPress: () => navigation.navigate('StockIn'),
         },
+        {
+            title: 'Storage',
+            icon: 'warehouse', // Using a suitable icon for storage
+            description: 'Manage inventory and storage locations',
+            onPress: () => navigation.navigate('Storage'),
+        },
     ]
 
     return (

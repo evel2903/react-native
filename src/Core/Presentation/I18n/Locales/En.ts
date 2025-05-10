@@ -33,6 +33,8 @@ export default {
             stockOutDescription: 'Stock Out Feature',
             inventory: 'Inventory',
             inventoryDescription: 'Inventory Feature',
+            storage: 'Storage',
+            storageDescription: 'Manage inventory and storage locations',
         },
     },
     auth: {

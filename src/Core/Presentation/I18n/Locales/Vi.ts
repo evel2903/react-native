@@ -33,6 +33,8 @@ export default {
             stockOutDescription: 'Tính năng xuất kho',
             inventory: 'Kiểm kê',
             inventoryDescription: 'Tính năng kiểm kê hàng tồn kho',
+            storage: 'Kho hàng',
+            storageDescription: 'Quản lý kho và vị trí lưu trữ',
         },
     },
     auth: {

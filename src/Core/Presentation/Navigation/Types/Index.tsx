@@ -15,16 +15,11 @@ declare global {
 export type RootStackParamList = {
     Auth: undefined
     Home: undefined
-    Posts: undefined
-    Post: { id: number }
-    Inventory: undefined
-    InventoryProcess: { id: string }
     StockIn: undefined
-    StockInAdd: undefined // Added StockInAdd route
+    StockInAdd: undefined
     StockInView: { id: string }
     StockInEdit: { id: string }
-    StockOut: undefined
-    StockOutProcess: { id: string }
+    Storage: undefined
     NotFound: undefined
 }
 
