@@ -37,6 +37,13 @@ export default class StorageVoucherDto extends ResponseDto<StorageVoucherEntity>
     @Expose()
     assignedTo?: string
 
+    // New fields from updated API response
+    @Expose()
+    isValidForProcess?: boolean
+
+    @Expose()
+    assignedName?: string
+
     // Additional fields that might be in the detailed response
     @Expose()
     processedBy?: string
@@ -57,6 +64,9 @@ export default class StorageVoucherDto extends ResponseDto<StorageVoucherEntity>
             notes: this.notes || '',
             createdBy: this.createdBy || '',
             assignedTo: this.assignedTo || '',
+            // New fields mapping
+            isValidForProcess: this.isValidForProcess || false,
+            assignedName: this.assignedName || '',
             // Additional fields will be added to the entity if needed
         }
     }

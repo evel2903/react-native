@@ -12,4 +12,7 @@ export default interface StorageVoucherEntity {
     notes: string
     createdBy: string
     assignedTo: string
+    // New fields from updated API response
+    isValidForProcess: boolean
+    assignedName: string
 }

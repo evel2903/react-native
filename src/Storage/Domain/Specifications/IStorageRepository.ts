@@ -29,7 +29,10 @@ export interface IStorageRepository {
 
     createStorageVoucher: (data: any) => Promise<StorageVoucherEntity>
 
-    updateStorageVoucher: (id: string, data: any) => Promise<StorageVoucherEntity>
+    updateStorageVoucher: (
+        id: string,
+        data: any
+    ) => Promise<StorageVoucherEntity>
 
     // Optional methods
     deleteStorageVoucher?: (id: string) => Promise<boolean>

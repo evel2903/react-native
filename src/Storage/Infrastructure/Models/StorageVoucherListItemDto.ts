@@ -35,7 +35,14 @@ export class StorageVoucherListItemDto extends ResponseDto<StorageVoucherEntity>
     createdBy?: string
 
     @Expose()
-    assignedTo?: string
+    assignedTo!: string
+
+    // New fields from updated API response
+    @Expose()
+    isValidForProcess!: boolean
+
+    @Expose()
+    assignedName!: string
 
     toDomain(): StorageVoucherEntity {
         return {
@@ -49,7 +56,10 @@ export class StorageVoucherListItemDto extends ResponseDto<StorageVoucherEntity>
             status: this.status as StorageVoucherEntity['status'],
             notes: this.notes || '',
             createdBy: this.createdBy || '',
-            assignedTo: this.assignedTo || '',
+            assignedTo: this.assignedTo,
+            // New fields mapping
+            isValidForProcess: this.isValidForProcess,
+            assignedName: this.assignedName,
         }
     }
 }

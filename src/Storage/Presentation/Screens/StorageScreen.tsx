@@ -73,28 +73,9 @@ const StorageScreen = observer(() => {
         showSnackbar('View detail coming soon')
     }
 
-    const handleEdit = (id: string) => {
-        // This would navigate to edit, but we're not implementing that yet
-        showSnackbar('Edit functionality coming soon')
-    }
-
     // Handle process action
     const handleProcess = async (id: string) => {
-        try {
-            // Call the store method to process the voucher
-            const result = await storageStore.processStorageVoucher(id);
-            
-            if (result) {
-                showSnackbar('Storage voucher processed successfully');
-                // Refresh the list after processing
-                await storageStore.getStorageVouchers();
-            } else {
-                showSnackbar('Failed to process storage voucher');
-            }
-        } catch (error) {
-            console.error('Error processing storage voucher:', error);
-            showSnackbar('An error occurred while processing the voucher');
-        }
+        showSnackbar('Handle process functionality coming soon')
     }
 
     // Helper method to show snackbar message
@@ -109,7 +90,6 @@ const StorageScreen = observer(() => {
             setRefreshing(false)
         })
     }, [storageStore])
-
 
     return (
         <View

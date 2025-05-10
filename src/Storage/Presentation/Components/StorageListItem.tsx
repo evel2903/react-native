@@ -6,7 +6,7 @@ import {
     Divider,
     IconButton,
     Chip,
-    Button
+    Button,
 } from 'react-native-paper'
 import {
     PRIORITY,
@@ -29,6 +29,9 @@ interface StorageVoucher {
     notes: string
     createdBy: string
     assignedTo: string
+    // New fields from updated API response
+    isValidForProcess: boolean
+    assignedName: string
 }
 
 interface StorageListItemProps {
@@ -40,28 +43,26 @@ interface StorageListItemProps {
 const StorageListItem: React.FC<StorageListItemProps> = ({
     item,
     onView,
-    onProcess
+    onProcess,
 }) => {
     const authStore = useAuthStore()
-    console.log('StorageListItem', item);
-    
 
     // Get status details
     const getStatusDetails = (status: string) => {
         // Map status to color and display name
-        switch(status) {
+        switch (status) {
             case 'DRAFT':
-                return { color: '#ff9800', displayName: 'Draft' }  // Orange
+                return { color: '#ff9800', displayName: 'Draft' } // Orange
             case 'PENDING':
-                return { color: '#2196f3', displayName: 'Pending' }  // Blue
+                return { color: '#2196f3', displayName: 'Pending' } // Blue
             case 'APPROVED':
-                return { color: '#4caf50', displayName: 'Approved' }  // Green
+                return { color: '#4caf50', displayName: 'Approved' } // Green
             case 'REJECTED':
-                return { color: '#f44336', displayName: 'Rejected' }  // Red
+                return { color: '#f44336', displayName: 'Rejected' } // Red
             case 'CANCELLED':
-                return { color: '#757575', displayName: 'Cancelled' }  // Grey
+                return { color: '#757575', displayName: 'Cancelled' } // Grey
             default:
-                return { color: '#757575', displayName: status }  // Grey fallback
+                return { color: '#757575', displayName: status } // Grey fallback
         }
     }
 
@@ -94,12 +95,10 @@ const StorageListItem: React.FC<StorageListItemProps> = ({
                     Storage date: {formatDate(item.storageDate)}
                 </Text>
                 <Text style={styles.infoText}>
-                    Assigned to: {item.assignedTo || 'Not assigned'}
+                    Assigned to: {item.assignedName || 'Not assigned'}
                 </Text>
                 {item.notes && (
-                    <Text style={styles.infoText}>
-                        Notes: {item.notes}
-                    </Text>
+                    <Text style={styles.infoText}>Notes: {item.notes}</Text>
                 )}
 
                 {/* Timestamps & status */}
@@ -145,16 +144,15 @@ const StorageListItem: React.FC<StorageListItemProps> = ({
                     </View>
                     {/* Process button */}
                     <View style={styles.actionButtons}>
-                        {item.status === 'PENDING' &&
-                            authStore.hasPermission('storageVoucher:update') && (
-                                <Button
-                                    mode="outlined"
-                                    style={styles.processButton}
-                                    onPress={() => onProcess(item.id)}
-                                >
-                                    Process
-                                </Button>
-                            )}
+                        {item.isValidForProcess && (
+                            <Button
+                                mode="outlined"
+                                style={styles.processButton}
+                                onPress={() => onProcess(item.id)}
+                            >
+                                Process
+                            </Button>
+                        )}
                     </View>
                 </View>
             </Card.Content>
@@ -246,7 +244,7 @@ const styles = StyleSheet.create({
     processButton: {
         borderRadius: 4,
         borderWidth: 1,
-    }
+    },
 })
 
 export default StorageListItem

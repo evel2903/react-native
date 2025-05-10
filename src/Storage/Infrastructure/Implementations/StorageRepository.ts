@@ -1,15 +1,23 @@
 import { injectable, inject } from 'inversiland'
-import { IStorageRepository, GetStorageVouchersPayload } from '../../Domain/Specifications/IStorageRepository'
+import {
+    IStorageRepository,
+    GetStorageVouchersPayload,
+} from '../../Domain/Specifications/IStorageRepository'
 import StorageVoucherEntity from '../../Domain/Entities/StorageVoucherEntity'
 import { plainToInstance } from 'class-transformer'
-import IHttpClient, { IHttpClientToken } from '@/src/Core/Domain/Specifications/IHttpClient'
-import { StorageVoucherListItemDto, StorageVoucherListResponseDto } from '../Models/StorageVoucherListItemDto'
+import IHttpClient, {
+    IHttpClientToken,
+} from '@/src/Core/Domain/Specifications/IHttpClient'
+import {
+    StorageVoucherListItemDto,
+    StorageVoucherListResponseDto,
+} from '../Models/StorageVoucherListItemDto'
 import StorageVoucherDto from '../Models/StorageVoucherDto'
 
 @injectable()
 class StorageRepository implements IStorageRepository {
     // Base API URLs
-    private readonly apiBaseUrl = '/api/storage-vouchers'
+    private readonly apiBaseUrl = '/api/mobile/storage-vouchers'
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
@@ -62,7 +70,8 @@ class StorageRepository implements IStorageRepository {
 
             // Make API request
             const url = `${this.apiBaseUrl}?${queryParams.toString()}`
-            const response = await this.httpClient.get<StorageVoucherListResponseDto>(url)
+            const response =
+                await this.httpClient.get<StorageVoucherListResponseDto>(url)
 
             // Check if the response has the expected structure
             if (!response || !response.data || !Array.isArray(response.data)) {
@@ -90,9 +99,13 @@ class StorageRepository implements IStorageRepository {
         }
     }
 
-    public async getStorageVoucherById(id: string): Promise<StorageVoucherEntity> {
+    public async getStorageVoucherById(
+        id: string
+    ): Promise<StorageVoucherEntity> {
         try {
-            const response = await this.httpClient.get<any>(`${this.apiBaseUrl}/${id}`)
+            const response = await this.httpClient.get<any>(
+                `${this.apiBaseUrl}/${id}`
+            )
 
             // Check if the response has the expected structure
             if (!response) {
@@ -106,7 +119,10 @@ class StorageRepository implements IStorageRepository {
             const storageVoucherDto = plainToInstance(StorageVoucherDto, data)
             return storageVoucherDto.toDomain()
         } catch (error) {
-            console.error(`Error fetching storage voucher with ID ${id}:`, error)
+            console.error(
+                `Error fetching storage voucher with ID ${id}:`,
+                error
+            )
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to fetch storage voucher with ID ${id}`)
@@ -128,17 +144,27 @@ class StorageRepository implements IStorageRepository {
             }
 
             // Transform the response to domain entity
-            const storageVoucherDto = plainToInstance(StorageVoucherDto, response)
+            const storageVoucherDto = plainToInstance(
+                StorageVoucherDto,
+                response
+            )
             return storageVoucherDto.toDomain()
         } catch (error) {
-            console.error(`Error updating storage voucher status for ID ${id}:`, error)
+            console.error(
+                `Error updating storage voucher status for ID ${id}:`,
+                error
+            )
             throw error instanceof Error
                 ? error
-                : new Error(`Failed to update storage voucher status for ID ${id}`)
+                : new Error(
+                      `Failed to update storage voucher status for ID ${id}`
+                  )
         }
     }
 
-    public async createStorageVoucher(data: any): Promise<StorageVoucherEntity> {
+    public async createStorageVoucher(
+        data: any
+    ): Promise<StorageVoucherEntity> {
         try {
             const response = await this.httpClient.post<any, any>(
                 this.apiBaseUrl,
@@ -150,7 +176,10 @@ class StorageRepository implements IStorageRepository {
             }
 
             // Transform the response to domain entity
-            const storageVoucherDto = plainToInstance(StorageVoucherDto, response)
+            const storageVoucherDto = plainToInstance(
+                StorageVoucherDto,
+                response
+            )
             return storageVoucherDto.toDomain()
         } catch (error) {
             console.error('Error creating storage voucher:', error)
@@ -161,7 +190,7 @@ class StorageRepository implements IStorageRepository {
     }
 
     public async updateStorageVoucher(
-        id: string, 
+        id: string,
         data: any
     ): Promise<StorageVoucherEntity> {
         try {
@@ -175,10 +204,16 @@ class StorageRepository implements IStorageRepository {
             }
 
             // Transform the response to domain entity
-            const storageVoucherDto = plainToInstance(StorageVoucherDto, response)
+            const storageVoucherDto = plainToInstance(
+                StorageVoucherDto,
+                response
+            )
             return storageVoucherDto.toDomain()
         } catch (error) {
-            console.error(`Error updating storage voucher with ID ${id}:`, error)
+            console.error(
+                `Error updating storage voucher with ID ${id}:`,
+                error
+            )
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to update storage voucher with ID ${id}`)
@@ -186,7 +221,9 @@ class StorageRepository implements IStorageRepository {
     }
 
     // Method to process a storage voucher (this might need to be adjusted based on actual API)
-    public async processStorageVoucher(id: string): Promise<StorageVoucherEntity> {
+    public async processStorageVoucher(
+        id: string
+    ): Promise<StorageVoucherEntity> {
         try {
             const response = await this.httpClient.post<any, any>(
                 `${this.apiBaseUrl}/${id}/process`,
@@ -198,10 +235,16 @@ class StorageRepository implements IStorageRepository {
             }
 
             // Transform the response to domain entity
-            const storageVoucherDto = plainToInstance(StorageVoucherDto, response)
+            const storageVoucherDto = plainToInstance(
+                StorageVoucherDto,
+                response
+            )
             return storageVoucherDto.toDomain()
         } catch (error) {
-            console.error(`Error processing storage voucher with ID ${id}:`, error)
+            console.error(
+                `Error processing storage voucher with ID ${id}:`,
+                error
+            )
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to process storage voucher with ID ${id}`)

@@ -119,7 +119,9 @@ export class StorageStore implements StorageStoreState {
         this.setError(null)
 
         try {
-            const response = await this.getStorageVouchersUseCase.execute(payload)
+            const response = await this.getStorageVouchersUseCase.execute(
+                payload
+            )
 
             runInAction(() => {
                 this.setResults(response.results)
@@ -155,7 +157,8 @@ export class StorageStore implements StorageStoreState {
         this.setError(null)
 
         try {
-            const storageVoucher = await this.getStorageVoucherByIdUseCase.execute(id)
+            const storageVoucher =
+                await this.getStorageVoucherByIdUseCase.execute(id)
 
             runInAction(() => {
                 this.setSelectedStorageVoucher(storageVoucher)
@@ -188,7 +191,8 @@ export class StorageStore implements StorageStoreState {
         this.setError(null)
 
         try {
-            const processedVoucher = await this.processStorageVoucherUseCase.execute(id)
+            const processedVoucher =
+                await this.processStorageVoucherUseCase.execute(id)
 
             runInAction(() => {
                 // Update in the results list if present
@@ -198,7 +202,10 @@ export class StorageStore implements StorageStoreState {
                 }
 
                 // Update selected storage voucher if it's the current one
-                if (this.selectedStorageVoucher && this.selectedStorageVoucher.id === id) {
+                if (
+                    this.selectedStorageVoucher &&
+                    this.selectedStorageVoucher.id === id
+                ) {
                     this.setSelectedStorageVoucher(processedVoucher)
                 }
             })
@@ -222,7 +229,7 @@ export class StorageStore implements StorageStoreState {
             })
         }
     }
-    
+
     // Filter methods
     applyFilters(filters: Partial<StorageStoreState['filters']>) {
         this.mergeFilters(filters)
