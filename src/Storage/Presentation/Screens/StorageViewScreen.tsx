@@ -68,14 +68,14 @@ const CenteredAccordion = ({
     )
 }
 
-// Read-only version of the storage voucher item component
+// Read-only version of the storage voucher item component (updated to match stock in pattern)
 const ReadOnlyStorageVoucherItem = ({ item }: any) => (
     <Surface style={styles.itemCard} elevation={1}>
         <View style={styles.itemHeader}>
             <View style={styles.itemCodeSection}>
                 <TextInput
                     dense
-                    value={item.code}
+                    value={item.code || ''}
                     mode="outlined"
                     editable={false}
                     style={styles.codeInput}
@@ -83,25 +83,13 @@ const ReadOnlyStorageVoucherItem = ({ item }: any) => (
             </View>
         </View>
 
-        <Text style={styles.itemName}>{item.name}</Text>
-
-        <View style={styles.itemInfo}>
-            <Text style={styles.itemInfoText}>
-                Stock ID: {item.stockId}
-            </Text>
-            <Text style={styles.itemInfoText}>
-                Supplier: {item.supplier}
-            </Text>
-            <Text style={styles.itemInfoText}>
-                Lot Number: {item.lotNumber}
-            </Text>
-        </View>
+        <Text style={styles.itemName}>{item.name || item.description || ''}</Text>
 
         <View style={styles.itemRow}>
             <TextInput
                 dense
                 label="Expiry date"
-                value={formatDate(item.expiryDate)}
+                value={formatDate(item.expiryDate || item.storageDate || '')}
                 mode="outlined"
                 style={styles.itemFullInput}
                 editable={false}
@@ -112,7 +100,7 @@ const ReadOnlyStorageVoucherItem = ({ item }: any) => (
             <TextInput
                 dense
                 label="Quantity"
-                value={item.quantity.toString()}
+                value={(item.quantity || 0).toString()}
                 mode="outlined"
                 editable={false}
                 style={styles.itemHalfInput}
@@ -120,7 +108,7 @@ const ReadOnlyStorageVoucherItem = ({ item }: any) => (
             <TextInput
                 dense
                 label="Cost"
-                value={formatCurrency(item.cost)}
+                value={formatCurrency(item.cost || item.price || 0)}
                 mode="outlined"
                 editable={false}
                 style={styles.itemHalfInput}
@@ -245,14 +233,15 @@ const StorageViewScreen = observer(() => {
     // Render the form content inside the accordion
     const renderFormContent = () => {
         const storageData = storageStore.selectedStorageVoucher
+        console.log('Storage Data:', storageData)
 
         if (!storageData) return null
 
         return (
             <>
-                {/* Row 1: Code and Priority */}
+                {/* Row 1: Code */}
                 <View style={styles.row}>
-                    <View style={styles.inputHalf}>
+                    <View style={styles.inputFull}>
                         <TextInput
                             dense
                             label="Code"
@@ -261,51 +250,6 @@ const StorageViewScreen = observer(() => {
                             mode="outlined"
                             style={styles.input}
                         />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <View style={styles.priorityLabelContainer}>
-                            <Text variant="bodySmall" style={styles.priorityLabel}>
-                                Priority
-                            </Text>
-                            <View style={styles.priorityButtonsContainer}>
-                                <TouchableRipple
-                                    style={getPriorityButtonStyle(PRIORITY.High)}
-                                    disabled
-                                >
-                                    <Text
-                                        style={getPriorityTextStyle(PRIORITY.High)}
-                                    >
-                                        {getPriorityDisplayName(PRIORITY.High)}
-                                    </Text>
-                                </TouchableRipple>
-
-                                <TouchableRipple
-                                    style={getPriorityButtonStyle(PRIORITY.Medium)}
-                                    disabled
-                                >
-                                    <Text
-                                        style={getPriorityTextStyle(
-                                            PRIORITY.Medium
-                                        )}
-                                    >
-                                        {getPriorityDisplayName(
-                                            PRIORITY.Medium
-                                        )}
-                                    </Text>
-                                </TouchableRipple>
-
-                                <TouchableRipple
-                                    style={getPriorityButtonStyle(PRIORITY.Low)}
-                                    disabled
-                                >
-                                    <Text
-                                        style={getPriorityTextStyle(PRIORITY.Low)}
-                                    >
-                                        {getPriorityDisplayName(PRIORITY.Low)}
-                                    </Text>
-                                </TouchableRipple>
-                            </View>
-                        </View>
                     </View>
                 </View>
 
@@ -363,10 +307,7 @@ const StorageViewScreen = observer(() => {
                     </View>
                 </View>
 
-                {/* Row 4: Completed at (if available) */}
-                {/* Add any additional fields if needed */}
-
-                {/* Row 5: Notes */}
+                {/* Row 4: Notes and Priority */}
                 <View style={styles.noteRow}>
                     <View style={styles.inputFull}>
                         <TextInput
@@ -379,6 +320,44 @@ const StorageViewScreen = observer(() => {
                             style={[styles.input, styles.noteInput]}
                             editable={false}
                         />
+                    </View>
+                    <View style={styles.priorityContainer}>
+                        <View style={styles.priorityButtonsContainer}>
+                            <TouchableRipple
+                                style={getPriorityButtonStyle(PRIORITY.High)}
+                                disabled
+                            >
+                                <Text
+                                    style={getPriorityTextStyle(PRIORITY.High)}
+                                >
+                                    {getPriorityDisplayName(PRIORITY.High)}
+                                </Text>
+                            </TouchableRipple>
+
+                            <TouchableRipple
+                                style={getPriorityButtonStyle(PRIORITY.Medium)}
+                                disabled
+                            >
+                                <Text
+                                    style={getPriorityTextStyle(
+                                        PRIORITY.Medium
+                                    )}
+                                >
+                                    {getPriorityDisplayName(PRIORITY.Medium)}
+                                </Text>
+                            </TouchableRipple>
+
+                            <TouchableRipple
+                                style={getPriorityButtonStyle(PRIORITY.Low)}
+                                disabled
+                            >
+                                <Text
+                                    style={getPriorityTextStyle(PRIORITY.Low)}
+                                >
+                                    {getPriorityDisplayName(PRIORITY.Low)}
+                                </Text>
+                            </TouchableRipple>
+                        </View>
                     </View>
                 </View>
             </>
@@ -442,7 +421,7 @@ const StorageViewScreen = observer(() => {
                             {/* Storage Details List */}
                             <View style={styles.detailsListHeader}>
                                 <Text style={styles.detailsListTitle}>
-                                    Storage Details
+                                    Storage details
                                 </Text>
                             </View>
 
@@ -451,9 +430,9 @@ const StorageViewScreen = observer(() => {
                                     No items in this storage voucher.
                                 </Text>
                             ) : (
-                                getStorageDetails().map((item: any) => (
+                                getStorageDetails().map((item: any, index: number) => (
                                     <ReadOnlyStorageVoucherItem
-                                        key={item.id}
+                                        key={item.id || index}
                                         item={item}
                                     />
                                 ))
@@ -543,25 +522,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     // Priority styles
-    priorityLabelContainer: {
-        width: '100%',
-    },
-    priorityLabel: {
-        marginBottom: 4,
-        color: '#666',
+    priorityContainer: {
+        width: 80,
+        marginLeft: 12,
+        justifyContent: 'center',
     },
     priorityButtonsContainer: {
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'stretch',
-        height: 80,
+        height: 125,
     },
     priorityButton: {
         flex: 1,
         borderRadius: 6,
         justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 2,
+        marginVertical: 4,
         paddingHorizontal: 2,
     },
     priorityButtonText: {
@@ -570,7 +547,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     noteInput: {
-        height: 100,
+        height: 125,
     },
     detailsListHeader: {
         flexDirection: 'row',
@@ -625,17 +602,8 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     itemName: {
-        marginVertical: 6,
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    itemInfo: {
-        marginBottom: 8,
-    },
-    itemInfoText: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 2,
+        marginVertical: 4,
+        marginLeft: 4,
     },
     itemRow: {
         flexDirection: 'row',

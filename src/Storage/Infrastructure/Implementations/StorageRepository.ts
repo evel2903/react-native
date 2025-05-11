@@ -105,7 +105,7 @@ class StorageRepository implements IStorageRepository {
     ): Promise<StorageVoucherEntity> {
         try {
             const response = await this.httpClient.get<any>(
-                `${this.apiBaseUrl}/${id}`
+                `${this.apiBaseMobileUrl}/${id}`
             )
 
             // Check if the response has the expected structure
