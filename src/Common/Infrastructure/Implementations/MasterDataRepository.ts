@@ -5,6 +5,10 @@ import { CategoryEntity } from '../../Domain/Entities/CategoryEntity'
 import { UnitEntity } from '../../Domain/Entities/UnitEntity'
 import { SupplierEntity } from '../../Domain/Entities/SupplierEntity'
 import { GoodsEntity } from '../../Domain/Entities/GoodsEntity'
+import { WarehouseEntity } from '../../Domain/Entities/WarehouseEntity'
+import { AreaEntity } from '../../Domain/Entities/AreaEntity'
+import { RowEntity } from '../../Domain/Entities/RowEntity'
+import { ShelfEntity } from '../../Domain/Entities/ShelfEntity'
 import IHttpClient, {
     IHttpClientToken,
 } from '@/src/Core/Domain/Specifications/IHttpClient'
@@ -13,6 +17,10 @@ import { CategoryDto } from '../Models/CategoryDto'
 import { UnitDto } from '../Models/UnitDto'
 import { SupplierDto } from '../Models/SupplierDto'
 import { GoodsDto } from '../Models/GoodsDto'
+import { WarehouseDto } from '../Models/WarehouseDto'
+import { AreaDto } from '../Models/AreaDto'
+import { RowDto } from '../Models/RowDto'
+import { ShelfDto } from '../Models/ShelfDto'
 
 @injectable()
 class MasterDataRepository implements IMasterDataRepository {
@@ -20,6 +28,7 @@ class MasterDataRepository implements IMasterDataRepository {
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
     ) {}
 
+    // Existing methods
     public async getCategories(): Promise<CategoryEntity[]> {
         try {
             const response: any = await this.httpClient.get('/api/categories')
@@ -88,7 +97,6 @@ class MasterDataRepository implements IMasterDataRepository {
         }
     }
 
-    // Implement the new method to fetch goods by code
     public async getGoodsByCode(code: string): Promise<GoodsEntity | null> {
         try {
             const response: any = await this.httpClient.get(
@@ -103,7 +111,6 @@ class MasterDataRepository implements IMasterDataRepository {
                 return null
             }
 
-            // Return the first item from the response data array
             return plainToInstance(GoodsDto, response.data[0]).toDomain()
         } catch (error) {
             console.error(`Error fetching goods with code ${code}:`, error)
@@ -171,6 +178,137 @@ class MasterDataRepository implements IMasterDataRepository {
             return plainToInstance(GoodsDto, response.data).toDomain()
         } catch (error) {
             console.error(`Error fetching goods with ID ${id}:`, error)
+            return null
+        }
+    }
+
+    // New methods for Warehouses, Areas, Rows, and Shelfs
+    public async getWarehouses(): Promise<WarehouseEntity[]> {
+        try {
+            const response: any = await this.httpClient.get('/api/warehouses')
+
+            if (!response.data || !Array.isArray(response.data)) {
+                throw new Error('Unexpected API response format for warehouses')
+            }
+
+            return response.data.map((item: any) =>
+                plainToInstance(WarehouseDto, item).toDomain()
+            )
+        } catch (error) {
+            console.error('Error fetching warehouses:', error)
+            throw error
+        }
+    }
+
+    public async getAreas(): Promise<AreaEntity[]> {
+        try {
+            const response: any = await this.httpClient.get('/api/areas')
+
+            if (!response.data || !Array.isArray(response.data)) {
+                throw new Error('Unexpected API response format for areas')
+            }
+
+            return response.data.map((item: any) =>
+                plainToInstance(AreaDto, item).toDomain()
+            )
+        } catch (error) {
+            console.error('Error fetching areas:', error)
+            throw error
+        }
+    }
+
+    public async getRows(): Promise<RowEntity[]> {
+        try {
+            const response: any = await this.httpClient.get('/api/rows')
+
+            if (!response.data || !Array.isArray(response.data)) {
+                throw new Error('Unexpected API response format for rows')
+            }
+
+            return response.data.map((item: any) =>
+                plainToInstance(RowDto, item).toDomain()
+            )
+        } catch (error) {
+            console.error('Error fetching rows:', error)
+            throw error
+        }
+    }
+
+    public async getShelfs(): Promise<ShelfEntity[]> {
+        try {
+            const response: any = await this.httpClient.get('/api/shelfs')
+
+            if (!response.data || !Array.isArray(response.data)) {
+                throw new Error('Unexpected API response format for shelfs')
+            }
+
+            return response.data.map((item: any) =>
+                plainToInstance(ShelfDto, item).toDomain()
+            )
+        } catch (error) {
+            console.error('Error fetching shelfs:', error)
+            throw error
+        }
+    }
+
+    public async getWarehouseById(id: string): Promise<WarehouseEntity | null> {
+        try {
+            const response: any = await this.httpClient.get(
+                `/api/warehouses/${id}`
+            )
+
+            if (!response.data) {
+                return null
+            }
+
+            return plainToInstance(WarehouseDto, response.data).toDomain()
+        } catch (error) {
+            console.error(`Error fetching warehouse with ID ${id}:`, error)
+            return null
+        }
+    }
+
+    public async getAreaById(id: string): Promise<AreaEntity | null> {
+        try {
+            const response: any = await this.httpClient.get(`/api/areas/${id}`)
+
+            if (!response.data) {
+                return null
+            }
+
+            return plainToInstance(AreaDto, response.data).toDomain()
+        } catch (error) {
+            console.error(`Error fetching area with ID ${id}:`, error)
+            return null
+        }
+    }
+
+    public async getRowById(id: string): Promise<RowEntity | null> {
+        try {
+            const response: any = await this.httpClient.get(`/api/rows/${id}`)
+
+            if (!response.data) {
+                return null
+            }
+
+            return plainToInstance(RowDto, response.data).toDomain()
+        } catch (error) {
+            console.error(`Error fetching row with ID ${id}:`, error)
+            return null
+        }
+    }
+
+    public async getShelfById(id: string): Promise<ShelfEntity | null> {
+        try {
+            const response: any = await this.httpClient.get(`/api/shelfs/${id}`)
+
+            if (!response.data) {
+                return null
+            }
+
+            return plainToInstance(ShelfDto, response.data).toDomain()
+        } catch (error) {
+            console.error(`Error fetching shelf with ID ${id}:`, error)
             return null
         }
     }

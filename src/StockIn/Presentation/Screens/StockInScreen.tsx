@@ -154,10 +154,6 @@ const StockInScreen = observer(() => {
 
     // Confirm approval
     const confirmApprove = async () => {
-        console.log('confirmApprove called')
-        console.log('stockToApprove:', stockToApprove)
-        console.log('requestIdToApprove:', requestIdToApprove)
-        console.log('authStore.user.id:', authStore.user?.id)
         if (!stockToApprove || !requestIdToApprove || !authStore.user?.id)
             return
 

@@ -7,10 +7,19 @@ import { GetUnitsUseCase } from '@/src/Common/Application/UseCases/GetUnitsUseCa
 import { GetSuppliersUseCase } from '@/src/Common/Application/UseCases/GetSuppliersUseCase'
 import { GetGoodsUseCase } from '@/src/Common/Application/UseCases/GetGoodsUseCase'
 import { GetGoodsByCodeUseCase } from '@/src/Common/Application/UseCases/GetGoodsByCodeUseCase'
+import { GetWarehousesUseCase } from '@/src/Common/Application/UseCases/GetWarehousesUseCase'
+import { GetAreasUseCase } from '@/src/Common/Application/UseCases/GetAreasUseCase'
+import { GetRowsUseCase } from '@/src/Common/Application/UseCases/GetRowsUseCase'
+import { GetShelfsUseCase } from '@/src/Common/Application/UseCases/GetShelfsUseCase'
+
 import { CategoryEntity } from '@/src/Common/Domain/Entities/CategoryEntity'
 import { UnitEntity } from '@/src/Common/Domain/Entities/UnitEntity'
 import { SupplierEntity } from '@/src/Common/Domain/Entities/SupplierEntity'
 import { GoodsEntity } from '@/src/Common/Domain/Entities/GoodsEntity'
+import { WarehouseEntity } from '@/src/Common/Domain/Entities/WarehouseEntity'
+import { AreaEntity } from '@/src/Common/Domain/Entities/AreaEntity'
+import { RowEntity } from '@/src/Common/Domain/Entities/RowEntity'
+import { ShelfEntity } from '@/src/Common/Domain/Entities/ShelfEntity'
 
 @injectable()
 export class MasterDataStore implements MasterDataStoreState {
@@ -38,6 +47,30 @@ export class MasterDataStore implements MasterDataStoreState {
         error: null as string | null,
     }
 
+    warehouses = {
+        isLoading: false,
+        data: [] as WarehouseEntity[],
+        error: null as string | null,
+    }
+
+    areas = {
+        isLoading: false,
+        data: [] as AreaEntity[],
+        error: null as string | null,
+    }
+
+    rows = {
+        isLoading: false,
+        data: [] as RowEntity[],
+        error: null as string | null,
+    }
+
+    shelfs = {
+        isLoading: false,
+        data: [] as ShelfEntity[],
+        error: null as string | null,
+    }
+
     constructor(
         @inject(GetCategoriesUseCase)
         private readonly getCategoriesUseCase: GetCategoriesUseCase,
@@ -48,7 +81,15 @@ export class MasterDataStore implements MasterDataStoreState {
         @inject(GetGoodsUseCase)
         private readonly getGoodsUseCase: GetGoodsUseCase,
         @inject(GetGoodsByCodeUseCase)
-        private readonly getGoodsByCodeUseCase: GetGoodsByCodeUseCase
+        private readonly getGoodsByCodeUseCase: GetGoodsByCodeUseCase,
+        @inject(GetWarehousesUseCase)
+        private readonly getWarehousesUseCase: GetWarehousesUseCase,
+        @inject(GetAreasUseCase)
+        private readonly getAreasUseCase: GetAreasUseCase,
+        @inject(GetRowsUseCase)
+        private readonly getRowsUseCase: GetRowsUseCase,
+        @inject(GetShelfsUseCase)
+        private readonly getShelfsUseCase: GetShelfsUseCase
     ) {
         makeAutoObservable(this)
     }
@@ -169,7 +210,6 @@ export class MasterDataStore implements MasterDataStoreState {
         return this.goods.data.find(item => item.id === id)
     }
 
-    // Updated method to use the use case instead of the repository directly
     async getGoodsByCode(code: string): Promise<GoodsEntity | null> {
         try {
             return await this.getGoodsByCodeUseCase.execute(code)
@@ -179,13 +219,133 @@ export class MasterDataStore implements MasterDataStoreState {
         }
     }
 
+    // Warehouses methods
+    async loadWarehouses() {
+        if (this.warehouses.data.length > 0) return // Already loaded
+
+        this.warehouses.isLoading = true
+        this.warehouses.error = null
+
+        try {
+            const warehouses = await this.getWarehousesUseCase.execute()
+
+            runInAction(() => {
+                this.warehouses.data = warehouses
+                this.warehouses.isLoading = false
+            })
+        } catch (error) {
+            runInAction(() => {
+                this.warehouses.error =
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to load warehouses'
+                this.warehouses.isLoading = false
+            })
+        }
+    }
+
+    getWarehouseById(id: string): WarehouseEntity | undefined {
+        return this.warehouses.data.find(item => item.id === id)
+    }
+
+    // Areas methods
+    async loadAreas() {
+        if (this.areas.data.length > 0) return // Already loaded
+
+        this.areas.isLoading = true
+        this.areas.error = null
+
+        try {
+            const areas = await this.getAreasUseCase.execute()
+
+            runInAction(() => {
+                this.areas.data = areas
+                this.areas.isLoading = false
+            })
+        } catch (error) {
+            runInAction(() => {
+                this.areas.error =
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to load areas'
+                this.areas.isLoading = false
+            })
+        }
+    }
+
+    getAreaById(id: string): AreaEntity | undefined {
+        return this.areas.data.find(item => item.id === id)
+    }
+
+    // Rows methods
+    async loadRows() {
+        if (this.rows.data.length > 0) return // Already loaded
+
+        this.rows.isLoading = true
+        this.rows.error = null
+
+        try {
+            const rows = await this.getRowsUseCase.execute()
+
+            runInAction(() => {
+                this.rows.data = rows
+                this.rows.isLoading = false
+            })
+        } catch (error) {
+            runInAction(() => {
+                this.rows.error =
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to load rows'
+                this.rows.isLoading = false
+            })
+        }
+    }
+
+    getRowById(id: string): RowEntity | undefined {
+        return this.rows.data.find(item => item.id === id)
+    }
+
+    // Shelfs methods
+    async loadShelfs() {
+        if (this.shelfs.data.length > 0) return // Already loaded
+
+        this.shelfs.isLoading = true
+        this.shelfs.error = null
+
+        try {
+            const shelfs = await this.getShelfsUseCase.execute()
+
+            runInAction(() => {
+                this.shelfs.data = shelfs
+                this.shelfs.isLoading = false
+            })
+        } catch (error) {
+            runInAction(() => {
+                this.shelfs.error =
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to load shelfs'
+                this.shelfs.isLoading = false
+            })
+        }
+    }
+
+    getShelfById(id: string): ShelfEntity | undefined {
+        return this.shelfs.data.find(item => item.id === id)
+    }
+
     // Helper method to load all master data at once
     async loadAllMasterData() {
         await Promise.all([
             this.loadCategories(),
             this.loadUnits(),
             this.loadSuppliers(),
-            // Removed loadGoods() from here as we'll fetch goods as needed
+            this.loadWarehouses(),
+            // Note: We might want to load these only when needed to avoid performance issues
+            // this.loadAreas(),
+            // this.loadRows(), 
+            // this.loadShelfs(),
         ])
     }
 
@@ -195,6 +355,10 @@ export class MasterDataStore implements MasterDataStoreState {
         this.units.data = []
         this.suppliers.data = []
         this.goods.data = []
+        this.warehouses.data = []
+        this.areas.data = []
+        this.rows.data = []
+        this.shelfs.data = []
 
         await this.loadAllMasterData()
     }
