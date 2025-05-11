@@ -8,7 +8,6 @@ import {
 } from 'react-native'
 import {
     Appbar,
-    TextInput,
     Button,
     Text,
     Snackbar,
@@ -16,6 +15,7 @@ import {
     TouchableRipple,
     ActivityIndicator,
     List,
+    Chip,
 } from 'react-native-paper'
 import { formatDate, formatCurrency } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -38,6 +38,7 @@ import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/Auth
 import {
     PRIORITY,
     getPriorityDisplayName,
+    getPriorityColor,
 } from '@/src/Common/Domain/Enums/Priority'
 
 // Custom Accordion Component with centered title
@@ -72,67 +73,41 @@ const CenteredAccordion = ({
     )
 }
 
-// Read-only version of the goods item component
+// Read-only version of the goods item component with Text components
 const ReadOnlyGoodsItem = ({ item }: any) => (
     <Surface style={styles.goodsItemCard} elevation={1}>
         <View style={styles.goodsItemHeader}>
-            <View style={styles.goodsItemCodeSection}>
-                <TextInput
-                    dense
-                    value={item.goodsCode}
-                    mode="outlined"
-                    editable={false}
-                    style={styles.goodsCodeInput}
-                />
+            <Text style={styles.goodsCodeText}>{item.goodsCode || ''}</Text>
+        </View>
+
+        <Text style={styles.goodsName}>{item.goodsName || ''}</Text>
+
+        <View style={styles.infoSection}>
+            <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                    <Text style={styles.labelText}>Expiry Date</Text>
+                    <Text style={styles.valueText}>{formatDate(item.expiryDate || '')}</Text>
+                </View>
             </View>
-        </View>
 
-        <Text style={styles.goodsName}>{item.goodsName}</Text>
-
-        <View style={styles.goodsItemRow}>
-            <TextInput
-                dense
-                label="Expiry date"
-                value={formatDate(item.expiryDate)}
-                mode="outlined"
-                style={styles.goodsItemFullInput}
-                editable={false}
-            />
-        </View>
-
-        <View style={styles.goodsItemRow}>
-            <TextInput
-                dense
-                label="Quantity"
-                value={item.quantity.toString()}
-                mode="outlined"
-                editable={false}
-                style={styles.goodsItemHalfInput}
-            />
-            <TextInput
-                dense
-                label="Cost"
-                value={formatCurrency(item.price)}
-                mode="outlined"
-                editable={false}
-                style={styles.goodsItemHalfInput}
-            />
-        </View>
-
-        {item.notes && (
-            <View style={styles.goodsItemRow}>
-                <TextInput
-                    dense
-                    label="Note"
-                    value={item.notes}
-                    mode="outlined"
-                    multiline
-                    editable={false}
-                    numberOfLines={2}
-                    style={styles.goodsItemFullInput}
-                />
+            <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                    <Text style={styles.labelText}>Quantity</Text>
+                    <Text style={styles.valueText}>{(item.quantity || 0).toString()}</Text>
+                </View>
+                <View style={styles.infoItem}>
+                    <Text style={styles.labelText}>Cost</Text>
+                    <Text style={styles.valueText}>{formatCurrency(item.price || 0)}</Text>
+                </View>
             </View>
-        )}
+
+            {item.notes && (
+                <View style={styles.notesSection}>
+                    <Text style={styles.labelText}>Notes</Text>
+                    <Text style={styles.notesText}>{item.notes}</Text>
+                </View>
+            )}
+        </View>
     </Surface>
 )
 
@@ -197,51 +172,6 @@ const StockInViewScreen = observer(() => {
         setSnackbarVisible(true)
     }
 
-    // Get priority button style for display purposes
-    const getPriorityButtonStyle = (priorityValue: number) => {
-        const isSelected =
-            stockInStore.selectedStockIn &&
-            stockInStore.selectedStockIn.priority === priorityValue
-        return [
-            styles.priorityButton,
-            {
-                backgroundColor: isSelected
-                    ? priorityValue === PRIORITY.High
-                        ? '#ff5252'
-                        : priorityValue === PRIORITY.Medium
-                        ? '#fb8c00'
-                        : '#4caf50'
-                    : 'transparent',
-                borderWidth: 1,
-                borderColor:
-                    priorityValue === PRIORITY.High
-                        ? '#ff5252'
-                        : priorityValue === PRIORITY.Medium
-                        ? '#fb8c00'
-                        : '#4caf50',
-            },
-        ]
-    }
-
-    // Get text style based on selection state
-    const getPriorityTextStyle = (priorityValue: number) => {
-        const isSelected =
-            stockInStore.selectedStockIn &&
-            stockInStore.selectedStockIn.priority === priorityValue
-        return [
-            styles.priorityButtonText,
-            {
-                color: isSelected
-                    ? 'white'
-                    : priorityValue === PRIORITY.High
-                    ? '#ff5252'
-                    : priorityValue === PRIORITY.Medium
-                    ? '#fb8c00'
-                    : '#4caf50',
-            },
-        ]
-    }
-
     // Render the form content inside the accordion
     const renderFormContent = () => {
         const stockInData = stockInStore.selectedStockIn
@@ -250,172 +180,106 @@ const StockInViewScreen = observer(() => {
 
         return (
             <>
-                {/* Row 1: Code and Supplier */}
-                <View style={styles.row}>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Code"
-                            editable={false}
-                            value={stockInData?.code || ''}
-                            mode="outlined"
-                            style={styles.input}
-                        />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Supplier"
-                            value={
-                                stockInData?.supplier?.name ||
-                                masterDataStore.suppliers.data.find(
-                                    s => s.id === stockInData?.supplierId
-                                )?.name ||
-                                ''
-                            }
-                            mode="outlined"
-                            style={styles.input}
-                            editable={false}
-                        />
-                    </View>
-                </View>
-
-                {/* Row 2: Lot Number and Stock In Date */}
-                <View style={styles.row}>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Lot number"
-                            value={stockInData?.lotNumber || ''}
-                            mode="outlined"
-                            style={styles.input}
-                            editable={false}
-                        />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Stock in date"
-                            value={
-                                stockInData?.inDate
-                                    ? formatDate(stockInData.inDate)
-                                    : ''
-                            }
-                            mode="outlined"
-                            style={styles.input}
-                            editable={false}
-                        />
-                    </View>
-                </View>
-
-                {/* Row 3: Created by and Approved by */}
-                <View style={styles.row}>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Created by"
-                            value={stockInData?.createdBy || ''}
-                            editable={false}
-                            mode="outlined"
-                            style={styles.input}
-                        />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Approved by"
-                            value={stockInData?.approvedBy || ''}
-                            editable={false}
-                            mode="outlined"
-                            style={styles.input}
-                            placeholder="Pending approval"
-                        />
-                    </View>
-                </View>
-
-                {/* Row 4: Total Cost and Status */}
-                <View style={styles.row}>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Total cost"
-                            value={formatCurrency(
-                                stockInData?.totalAmount || '0'
-                            )}
-                            mode="outlined"
-                            editable={false}
-                            style={styles.input}
-                        />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Status"
-                            value={getStatusDisplayName(
-                                stockInData?.status as Status
-                            )}
-                            mode="outlined"
-                            editable={false}
-                            style={styles.input}
-                        />
-                    </View>
-                </View>
-
-                {/* Row 5: Note and Priority */}
-                <View style={styles.noteRow}>
-                    <View style={styles.inputFull}>
-                        <TextInput
-                            dense
-                            label="Note"
-                            value={stockInData?.notes || ''}
-                            mode="outlined"
-                            multiline
-                            numberOfLines={4}
-                            style={[styles.input, styles.noteInput]}
-                            editable={false}
-                        />
-                    </View>
-                    <View style={styles.priorityContainer}>
-                        <View style={styles.priorityButtonsContainer}>
-                            <TouchableRipple
-                                style={getPriorityButtonStyle(PRIORITY.High)}
-                                disabled
+                {/* Code Section with Priority Chip */}
+                <View style={styles.codeSection}>
+                    <View style={styles.codeContainer}>
+                        <View>
+                            <Text style={styles.labelText}>Code</Text>
+                            <Text style={styles.valueText}>{stockInData.code || '-'}</Text>
+                        </View>
+                        <View style={styles.priorityChipWrapper}>
+                            <Chip
+                                style={{
+                                    backgroundColor: getPriorityColor(stockInData.priority as any),
+                                }}
+                                textStyle={styles.priorityChipText}
                             >
-                                <Text
-                                    style={getPriorityTextStyle(PRIORITY.High)}
-                                >
-                                    {getPriorityDisplayName(PRIORITY.High)}
-                                </Text>
-                            </TouchableRipple>
-
-                            <TouchableRipple
-                                style={getPriorityButtonStyle(PRIORITY.Medium)}
-                                disabled
-                            >
-                                <Text
-                                    style={getPriorityTextStyle(
-                                        PRIORITY.Medium
-                                    )}
-                                >
-                                    {getPriorityDisplayName(PRIORITY.Medium)}
-                                </Text>
-                            </TouchableRipple>
-
-                            <TouchableRipple
-                                style={getPriorityButtonStyle(PRIORITY.Low)}
-                                disabled
-                            >
-                                <Text
-                                    style={getPriorityTextStyle(PRIORITY.Low)}
-                                >
-                                    {getPriorityDisplayName(PRIORITY.Low)}
-                                </Text>
-                            </TouchableRipple>
+                                {getPriorityDisplayName(stockInData.priority as any)}
+                            </Chip>
                         </View>
                     </View>
                 </View>
+
+                {/* Supplier and Lot Number Row */}
+                <View style={styles.infoRow}>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Supplier</Text>
+                        <Text style={styles.valueText}>
+                            {stockInData?.supplier?.name ||
+                                masterDataStore.suppliers.data.find(
+                                    s => s.id === stockInData?.supplierId
+                                )?.name ||
+                                '-'}
+                        </Text>
+                    </View>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Lot Number</Text>
+                        <Text style={styles.valueText}>{stockInData.lotNumber || '-'}</Text>
+                    </View>
+                </View>
+
+                {/* Stock In Date and Status Row */}
+                <View style={styles.infoRow}>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Stock In Date</Text>
+                        <Text style={styles.valueText}>
+                            {stockInData.inDate ? formatDate(stockInData.inDate) : '-'}
+                        </Text>
+                    </View>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Status</Text>
+                        <Text style={styles.valueText}>
+                            {getStatusDisplayName(stockInData.status as Status)}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Created by and Approved by Row */}
+                <View style={styles.infoRow}>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Created By</Text>
+                        <Text style={styles.valueText}>{stockInData.createdBy || '-'}</Text>
+                    </View>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Approved By</Text>
+                        <Text style={styles.valueText}>{stockInData.approvedBy || 'Pending approval'}</Text>
+                    </View>
+                </View>
+
+                {/* Total Cost Section */}
+                <View style={styles.infoSection}>
+                    <Text style={styles.labelText}>Total Cost</Text>
+                    <Text style={styles.valueText}>
+                        {formatCurrency(stockInData.totalAmount || '0')}
+                    </Text>
+                </View>
+
+                {/* Notes Section */}
+                {stockInData.notes && (
+                    <View style={styles.infoSection}>
+                        <Text style={styles.labelText}>Notes</Text>
+                        <Text style={styles.notesText}>{stockInData.notes}</Text>
+                    </View>
+                )}
             </>
         )
+    }
+
+    // Get background color based on priority
+    const getAccordionBackgroundColor = () => {
+        const stockInData = stockInStore.selectedStockIn
+        if (!stockInData) return '#e8f5e9' // Default light green
+        
+        switch (stockInData.priority) {
+            case PRIORITY.High:
+                return '#ffebee' // Light red
+            case PRIORITY.Medium:
+                return '#fff3e0' // Light orange
+            case PRIORITY.Low:
+                return '#e8f5e9' // Light green
+            default:
+                return '#e8f5e9' // Default light green
+        }
     }
 
     return (
@@ -447,7 +311,10 @@ const StockInViewScreen = observer(() => {
                         <ScrollView style={styles.scrollView}>
                             {/* Accordion for form info section */}
                             <Surface
-                                style={styles.accordionContainer}
+                                style={[
+                                    styles.accordionContainer,
+                                    { backgroundColor: getAccordionBackgroundColor() }
+                                ]}
                                 elevation={1}
                             >
                                 <CenteredAccordion
@@ -550,53 +417,55 @@ const styles = StyleSheet.create({
     },
     formContent: {
         padding: 12,
+        backgroundColor: '#ffffff', // White background for the expanded content
     },
-    // Form styles
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    noteRow: {
-        flexDirection: 'row',
+    // Code section with priority chip
+    codeSection: {
         marginBottom: 16,
     },
-    inputHalf: {
-        width: '48%',
-    },
-    inputFull: {
-        flex: 1,
-    },
-    input: {
-        backgroundColor: 'transparent',
-    },
-    // Priority styles
-    priorityContainer: {
-        width: 80,
-        marginLeft: 12,
-        justifyContent: 'center',
-    },
-    priorityButtonsContainer: {
-        flexDirection: 'column',
+    codeContainer: {
+        flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'stretch',
-        height: 125,
+        alignItems: 'flex-start',
     },
-    priorityButton: {
-        flex: 1,
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: 4,
-        paddingHorizontal: 2,
+    priorityChipWrapper: {
+        marginLeft: 12,
+        alignSelf: 'center',
     },
-    priorityButtonText: {
-        fontWeight: 'bold',
+    priorityChipText: {
+        color: 'white',
         fontSize: 11,
         textAlign: 'center',
+        lineHeight: 15,
     },
-    noteInput: {
-        height: 125,
+    // Form information styles
+    infoSection: {
+        marginBottom: 16,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 16,
+        marginBottom: 16,
+    },
+    infoColumn: {
+        flex: 1,
+    },
+    labelText: {
+        fontSize: 12,
+        color: '#757575',
+        marginBottom: 4,
+    },
+    valueText: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
+    notesText: {
+        fontSize: 14,
+        color: '#333',
+        marginTop: 4,
+        lineHeight: 20,
     },
     goodsListHeader: {
         flexDirection: 'row',
@@ -637,33 +506,28 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     goodsItemHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        marginBottom: 8,
     },
-    goodsItemCodeSection: {
-        flexDirection: 'row',
-        flex: 1,
-        alignItems: 'center',
-    },
-    goodsCodeInput: {
-        flex: 1,
-        marginRight: 8,
+    goodsCodeText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1976d2',
     },
     goodsName: {
-        marginVertical: 4,
-        marginLeft: 4,
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 12,
     },
     goodsItemRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 8,
+        gap: 16,
     },
-    goodsItemFullInput: {
+    infoItem: {
         flex: 1,
     },
-    goodsItemHalfInput: {
-        width: '48%',
+    notesSection: {
+        marginTop: 8,
     },
 })
 

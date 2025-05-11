@@ -1,6 +1,7 @@
-import { Expose } from 'class-transformer'
+import { Expose, Type } from 'class-transformer'
 import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
 import StorageVoucherEntity from '../../Domain/Entities/StorageVoucherEntity'
+import StorageVoucherDetailDto from './StorageVoucherDetailDto'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 
 export default class StorageVoucherDto extends ResponseDto<StorageVoucherEntity> {
@@ -44,6 +45,13 @@ export default class StorageVoucherDto extends ResponseDto<StorageVoucherEntity>
     @Expose()
     assignedName?: string
 
+    @Expose()
+    completedAt?: string | null
+
+    @Expose()
+    @Type(() => StorageVoucherDetailDto)
+    details!: StorageVoucherDetailDto[]
+
     // Additional fields that might be in the detailed response
     @Expose()
     processedBy?: string
@@ -67,7 +75,8 @@ export default class StorageVoucherDto extends ResponseDto<StorageVoucherEntity>
             // New fields mapping
             isValidForProcess: this.isValidForProcess || false,
             assignedName: this.assignedName || '',
-            // Additional fields will be added to the entity if needed
+            completedAt: this.completedAt || null,
+            details: this.details?.map(detail => detail.toDomain()) || [],
         }
     }
 }

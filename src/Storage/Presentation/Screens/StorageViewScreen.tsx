@@ -8,16 +8,14 @@ import {
 } from 'react-native'
 import {
     Appbar,
-    TextInput,
     Button,
     Text,
     Snackbar,
     Surface,
-    TouchableRipple,
     ActivityIndicator,
-    List,
+    Chip,
 } from 'react-native-paper'
-import { formatDate, formatCurrency } from '@/src/Core/Utils'
+import { formatDate } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
@@ -31,106 +29,14 @@ import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { StorageStoreProvider } from '../Stores/StorageStore/StorageStoreProvider'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { Status, getStatusDisplayName } from '@/src/Common/Domain/Enums/Status'
-import {
+import { 
     PRIORITY,
     getPriorityDisplayName,
+    getPriorityColor,
 } from '@/src/Common/Domain/Enums/Priority'
-
-// Custom Accordion Component with centered title
-const CenteredAccordion = ({
-    title,
-    expanded,
-    onPress,
-    children,
-}: {
-    title: string
-    expanded: boolean
-    onPress: () => void
-    children: React.ReactNode
-}) => {
-    return (
-        <List.Accordion
-            title={title}
-            expanded={expanded}
-            onPress={onPress}
-            style={styles.accordion}
-            titleStyle={styles.accordionTitle}
-            right={props => (
-                <List.Icon
-                    {...props}
-                    icon={expanded ? 'chevron-up' : 'chevron-down'}
-                    style={styles.accordionIcon}
-                />
-            )}
-        >
-            {children}
-        </List.Accordion>
-    )
-}
-
-// Read-only version of the storage voucher item component (updated to match stock in pattern)
-const ReadOnlyStorageVoucherItem = ({ item }: any) => (
-    <Surface style={styles.itemCard} elevation={1}>
-        <View style={styles.itemHeader}>
-            <View style={styles.itemCodeSection}>
-                <TextInput
-                    dense
-                    value={item.code || ''}
-                    mode="outlined"
-                    editable={false}
-                    style={styles.codeInput}
-                />
-            </View>
-        </View>
-
-        <Text style={styles.itemName}>{item.name || item.description || ''}</Text>
-
-        <View style={styles.itemRow}>
-            <TextInput
-                dense
-                label="Expiry date"
-                value={formatDate(item.expiryDate || item.storageDate || '')}
-                mode="outlined"
-                style={styles.itemFullInput}
-                editable={false}
-            />
-        </View>
-
-        <View style={styles.itemRow}>
-            <TextInput
-                dense
-                label="Quantity"
-                value={(item.quantity || 0).toString()}
-                mode="outlined"
-                editable={false}
-                style={styles.itemHalfInput}
-            />
-            <TextInput
-                dense
-                label="Cost"
-                value={formatCurrency(item.cost || item.price || 0)}
-                mode="outlined"
-                editable={false}
-                style={styles.itemHalfInput}
-            />
-        </View>
-
-        {item.notes && (
-            <View style={styles.itemRow}>
-                <TextInput
-                    dense
-                    label="Note"
-                    value={item.notes}
-                    mode="outlined"
-                    multiline
-                    editable={false}
-                    numberOfLines={2}
-                    style={styles.itemFullInput}
-                />
-            </View>
-        )}
-    </Surface>
-)
+import { StorageVoucherDetailEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
+import CenteredAccordion from '../Components/CenteredAccordion'
+import StorageVoucherDetailComponent from '../Components/StorageVoucherDetailComponent'
 
 type StorageViewScreenRouteProp = RouteProp<RootStackParamList, 'StorageView'>
 
@@ -185,192 +91,102 @@ const StorageViewScreen = observer(() => {
         setSnackbarVisible(true)
     }
 
-    // Get priority button style for display purposes
-    const getPriorityButtonStyle = (priorityValue: number) => {
-        const isSelected =
-            storageStore.selectedStorageVoucher &&
-            storageStore.selectedStorageVoucher.priority === priorityValue
-        return [
-            styles.priorityButton,
-            {
-                backgroundColor: isSelected
-                    ? priorityValue === PRIORITY.High
-                        ? '#ff5252'
-                        : priorityValue === PRIORITY.Medium
-                        ? '#fb8c00'
-                        : '#4caf50'
-                    : 'transparent',
-                borderWidth: 1,
-                borderColor:
-                    priorityValue === PRIORITY.High
-                        ? '#ff5252'
-                        : priorityValue === PRIORITY.Medium
-                        ? '#fb8c00'
-                        : '#4caf50',
-            },
-        ]
-    }
-
-    // Get text style based on selection state
-    const getPriorityTextStyle = (priorityValue: number) => {
-        const isSelected =
-            storageStore.selectedStorageVoucher &&
-            storageStore.selectedStorageVoucher.priority === priorityValue
-        return [
-            styles.priorityButtonText,
-            {
-                color: isSelected
-                    ? 'white'
-                    : priorityValue === PRIORITY.High
-                    ? '#ff5252'
-                    : priorityValue === PRIORITY.Medium
-                    ? '#fb8c00'
-                    : '#4caf50',
-            },
-        ]
-    }
-
     // Render the form content inside the accordion
     const renderFormContent = () => {
         const storageData = storageStore.selectedStorageVoucher
-        console.log('Storage Data:', storageData)
 
         if (!storageData) return null
 
         return (
             <>
-                {/* Row 1: Code */}
-                <View style={styles.row}>
-                    <View style={styles.inputFull}>
-                        <TextInput
-                            dense
-                            label="Code"
-                            editable={false}
-                            value={storageData?.code || ''}
-                            mode="outlined"
-                            style={styles.input}
-                        />
-                    </View>
-                </View>
-
-                {/* Row 2: Storage Date and Status */}
-                <View style={styles.row}>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Storage date"
-                            value={
-                                storageData?.storageDate
-                                    ? formatDate(storageData.storageDate)
-                                    : ''
-                            }
-                            mode="outlined"
-                            style={styles.input}
-                            editable={false}
-                        />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Status"
-                            value={getStatusDisplayName(
-                                storageData?.status as Status
-                            )}
-                            mode="outlined"
-                            editable={false}
-                            style={styles.input}
-                        />
-                    </View>
-                </View>
-
-                {/* Row 3: Created by and Assigned to */}
-                <View style={styles.row}>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Created by"
-                            value={storageData?.createdBy || ''}
-                            editable={false}
-                            mode="outlined"
-                            style={styles.input}
-                        />
-                    </View>
-                    <View style={styles.inputHalf}>
-                        <TextInput
-                            dense
-                            label="Assigned to"
-                            value={storageData?.assignedName || ''}
-                            editable={false}
-                            mode="outlined"
-                            style={styles.input}
-                        />
-                    </View>
-                </View>
-
-                {/* Row 4: Notes and Priority */}
-                <View style={styles.noteRow}>
-                    <View style={styles.inputFull}>
-                        <TextInput
-                            dense
-                            label="Note"
-                            value={storageData?.notes || ''}
-                            mode="outlined"
-                            multiline
-                            numberOfLines={4}
-                            style={[styles.input, styles.noteInput]}
-                            editable={false}
-                        />
-                    </View>
-                    <View style={styles.priorityContainer}>
-                        <View style={styles.priorityButtonsContainer}>
-                            <TouchableRipple
-                                style={getPriorityButtonStyle(PRIORITY.High)}
-                                disabled
+                {/* Code Section with Priority Chip */}
+                <View style={styles.codeSection}>
+                    <View style={styles.codeContainer}>
+                        <View>
+                            <Text style={styles.labelText}>Code</Text>
+                            <Text style={styles.valueText}>{storageData.code || '-'}</Text>
+                        </View>
+                        <View style={styles.priorityChipWrapper}>
+                            <Chip
+                                style={{
+                                    backgroundColor: getPriorityColor(storageData.priority as any),
+                                }}
+                                textStyle={styles.priorityChipText}
                             >
-                                <Text
-                                    style={getPriorityTextStyle(PRIORITY.High)}
-                                >
-                                    {getPriorityDisplayName(PRIORITY.High)}
-                                </Text>
-                            </TouchableRipple>
-
-                            <TouchableRipple
-                                style={getPriorityButtonStyle(PRIORITY.Medium)}
-                                disabled
-                            >
-                                <Text
-                                    style={getPriorityTextStyle(
-                                        PRIORITY.Medium
-                                    )}
-                                >
-                                    {getPriorityDisplayName(PRIORITY.Medium)}
-                                </Text>
-                            </TouchableRipple>
-
-                            <TouchableRipple
-                                style={getPriorityButtonStyle(PRIORITY.Low)}
-                                disabled
-                            >
-                                <Text
-                                    style={getPriorityTextStyle(PRIORITY.Low)}
-                                >
-                                    {getPriorityDisplayName(PRIORITY.Low)}
-                                </Text>
-                            </TouchableRipple>
+                                {getPriorityDisplayName(storageData.priority as any)}
+                            </Chip>
                         </View>
                     </View>
                 </View>
+
+                {/* Storage Date and Status Row */}
+                <View style={styles.infoRow}>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Storage Date</Text>
+                        <Text style={styles.valueText}>
+                            {storageData.storageDate ? formatDate(storageData.storageDate) : '-'}
+                        </Text>
+                    </View>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Status</Text>
+                        <Text style={styles.valueText}>
+                            {getStatusDisplayName(storageData.status as Status)}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Created by and Assigned to Row */}
+                <View style={styles.infoRow}>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Created By</Text>
+                        <Text style={styles.valueText}>{storageData.createdBy || '-'}</Text>
+                    </View>
+                    <View style={styles.infoColumn}>
+                        <Text style={styles.labelText}>Assigned To</Text>
+                        <Text style={styles.valueText}>{storageData.assignedName || '-'}</Text>
+                    </View>
+                </View>
+
+                {/* Completed At (if available) */}
+                {storageData.completedAt && (
+                    <View style={styles.infoSection}>
+                        <Text style={styles.labelText}>Completed At</Text>
+                        <Text style={styles.valueText}>{formatDate(storageData.completedAt)}</Text>
+                    </View>
+                )}
+
+                {/* Notes Section */}
+                {storageData.notes && (
+                    <View style={styles.infoSection}>
+                        <Text style={styles.labelText}>Notes</Text>
+                        <Text style={styles.notesText}>{storageData.notes}</Text>
+                    </View>
+                )}
             </>
         )
     }
 
-    // Type guard to get the details array safely
+    // Get background color based on priority
+    const getAccordionBackgroundColor = () => {
+        const storageData = storageStore.selectedStorageVoucher
+        if (!storageData) return '#e8f5e9' // Default light green
+        
+        switch (storageData.priority) {
+            case PRIORITY.High:
+                return '#ffebee' // Light red
+            case PRIORITY.Medium:
+                return '#fff3e0' // Light orange
+            case PRIORITY.Low:
+                return '#e8f5e9' // Light green
+            default:
+                return '#e8f5e9' // Default light green
+        }
+    }
+
+    // Get the details array safely
     const getStorageDetails = () => {
         if (!storageStore.selectedStorageVoucher) return []
-        
-        // Based on the API response, details might be more complex
-        const details = storageStore.selectedStorageVoucher as any
-        return details.details || []
+        return storageStore.selectedStorageVoucher.details || []
     }
 
     return (
@@ -402,7 +218,10 @@ const StorageViewScreen = observer(() => {
                         <ScrollView style={styles.scrollView}>
                             {/* Accordion for form info section */}
                             <Surface
-                                style={styles.accordionContainer}
+                                style={[
+                                    styles.accordionContainer,
+                                    { backgroundColor: getAccordionBackgroundColor() }
+                                ]}
                                 elevation={1}
                             >
                                 <CenteredAccordion
@@ -430,8 +249,8 @@ const StorageViewScreen = observer(() => {
                                     No items in this storage voucher.
                                 </Text>
                             ) : (
-                                getStorageDetails().map((item: any, index: number) => (
-                                    <ReadOnlyStorageVoucherItem
+                                getStorageDetails().map((item: StorageVoucherDetailEntity, index: number) => (
+                                    <StorageVoucherDetailComponent
                                         key={item.id || index}
                                         item={item}
                                     />
@@ -490,64 +309,57 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginBottom: 16,
     },
-    accordion: {
-        padding: 0,
-    },
-    accordionTitle: {
-        fontWeight: 'bold',
-    },
-    accordionIcon: {
-        margin: 0,
-    },
     formContent: {
         padding: 12,
+        backgroundColor: '#ffffff', // White background for the expanded content
     },
-    // Form styles
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    noteRow: {
-        flexDirection: 'row',
+    // Code section with priority chip
+    codeSection: {
         marginBottom: 16,
     },
-    inputHalf: {
-        width: '48%',
-    },
-    inputFull: {
-        flex: 1,
-    },
-    input: {
-        backgroundColor: 'transparent',
-    },
-    // Priority styles
-    priorityContainer: {
-        width: 80,
-        marginLeft: 12,
-        justifyContent: 'center',
-    },
-    priorityButtonsContainer: {
-        flexDirection: 'column',
+    codeContainer: {
+        flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'stretch',
-        height: 125,
+        alignItems: 'flex-start',
     },
-    priorityButton: {
-        flex: 1,
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: 4,
-        paddingHorizontal: 2,
+    priorityChipWrapper: {
+        marginLeft: 12,
+        alignSelf: 'center',
     },
-    priorityButtonText: {
-        fontWeight: 'bold',
+    priorityChipText: {
+        color: 'white',
         fontSize: 11,
         textAlign: 'center',
+        lineHeight: 15,
     },
-    noteInput: {
-        height: 125,
+    // Form information styles
+    infoSection: {
+        marginBottom: 16,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 16,
+        marginBottom: 16,
+    },
+    infoColumn: {
+        flex: 1,
+    },
+    labelText: {
+        fontSize: 12,
+        color: '#757575',
+        marginBottom: 4,
+    },
+    valueText: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
+    notesText: {
+        fontSize: 14,
+        color: '#333',
+        marginTop: 4,
+        lineHeight: 20,
     },
     detailsListHeader: {
         flexDirection: 'row',
@@ -580,41 +392,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginVertical: 20,
         color: '#666',
-    },
-    // Storage item styles
-    itemCard: {
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 12,
-    },
-    itemHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    itemCodeSection: {
-        flexDirection: 'row',
-        flex: 1,
-        alignItems: 'center',
-    },
-    codeInput: {
-        flex: 1,
-        marginRight: 8,
-    },
-    itemName: {
-        marginVertical: 4,
-        marginLeft: 4,
-    },
-    itemRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 8,
-    },
-    itemFullInput: {
-        flex: 1,
-    },
-    itemHalfInput: {
-        width: '48%',
     },
 })
 
