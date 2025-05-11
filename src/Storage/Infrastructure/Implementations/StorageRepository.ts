@@ -17,7 +17,8 @@ import StorageVoucherDto from '../Models/StorageVoucherDto'
 @injectable()
 class StorageRepository implements IStorageRepository {
     // Base API URLs
-    private readonly apiBaseUrl = '/api/mobile/storage-vouchers'
+    private readonly apiBaseUrl = '/api/storage-vouchers'
+    private readonly apiBaseMobileUrl = '/api/mobile/storage-vouchers'
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
@@ -69,7 +70,7 @@ class StorageRepository implements IStorageRepository {
             }
 
             // Make API request
-            const url = `${this.apiBaseUrl}?${queryParams.toString()}`
+            const url = `${this.apiBaseMobileUrl}?${queryParams.toString()}`
             const response =
                 await this.httpClient.get<StorageVoucherListResponseDto>(url)
 

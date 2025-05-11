@@ -69,8 +69,7 @@ const StorageScreen = observer(() => {
     }
 
     const handleView = (id: string) => {
-        // This would navigate to view detail, but we're not implementing that yet
-        showSnackbar('View detail coming soon')
+        navigation.navigate('StorageView', { id })
     }
 
     // Handle process action
