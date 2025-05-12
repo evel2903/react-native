@@ -5,6 +5,8 @@ import {
     Text,
     TouchableRipple,
     List,
+    ProgressBar,
+    Chip,
 } from 'react-native-paper'
 import { formatDate, formatCurrency } from '@/src/Core/Utils'
 import { StorageVoucherDetailEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
@@ -16,11 +18,52 @@ interface StorageVoucherDetailComponentProps {
 
 const StorageVoucherDetailComponent: React.FC<StorageVoucherDetailComponentProps> = ({ item }) => {
     const [expanded, setExpanded] = useState(false)
+    
+    // Calculate allocation progress
+    const totalQuantity = item.quantity || 0
+    const allocatedQuantity = (item.storageVoucherItems || []).reduce(
+        (sum, item) => sum + (item.quantity || 0), 
+        0
+    )
+    const progressPercentage = totalQuantity > 0 ? Math.min(allocatedQuantity / totalQuantity, 1) : 0
+    const isFullyAllocated = allocatedQuantity >= totalQuantity
+    
+    // Determine progress color based on allocation status
+    const getProgressColor = () => {
+        if (progressPercentage === 0) return '#f44336' // Red for not started
+        if (progressPercentage < 1) return '#ff9800' // Orange for in progress
+        return '#4caf50' // Green for complete
+    }
+    
+    // Format progress as percentage
+    const formatProgress = () => {
+        const percentage = progressPercentage * 100
+        return `${Math.round(percentage)}%`
+    }
+    
+    // Get status chip color and text
+    const getStatusInfo = () => {
+        if (progressPercentage === 0) {
+            return { color: '#f44336', text: 'Not Started' }
+        }
+        if (progressPercentage < 1) {
+            return { color: '#ff9800', text: 'In Progress' }
+        }
+        return { color: '#4caf50', text: 'Complete' }
+    }
+    
+    const statusInfo = getStatusInfo()
 
     return (
         <Surface style={styles.itemCard} elevation={1}>
             <View style={styles.itemHeader}>
                 <Text style={styles.codeText}>{item.code || ''}</Text>
+                <Chip 
+                    style={{ backgroundColor: statusInfo.color }}
+                    textStyle={styles.statusChipText}
+                >
+                    {statusInfo.text}
+                </Chip>
             </View>
 
             <Text style={styles.itemName}>{item.name || ''}</Text>
@@ -47,6 +90,22 @@ const StorageVoucherDetailComponent: React.FC<StorageVoucherDetailComponentProps
                         <Text style={styles.labelText}>Cost</Text>
                         <Text style={styles.valueText}>{formatCurrency(Number(item.cost) || 0)}</Text>
                     </View>
+                </View>
+                
+                {/* Progress section */}
+                <View style={styles.progressSection}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>Storage Status</Text>
+                        <Text style={styles.progressText}>{formatProgress()}</Text>
+                    </View>
+                    <ProgressBar
+                        progress={progressPercentage}
+                        color={getProgressColor()}
+                        style={styles.progressBar}
+                    />
+                    <Text style={styles.progressDetail}>
+                        {allocatedQuantity} of {totalQuantity} items stored
+                    </Text>
                 </View>
 
                 {item.notes && (
@@ -86,12 +145,19 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     itemHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 8,
     },
     codeText: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#1976d2',
+    },
+    statusChipText: {
+        color: 'white',
+        fontSize: 12,
     },
     itemName: {
         fontSize: 16,
@@ -123,6 +189,34 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#333',
         fontWeight: '500',
+    },
+    progressSection: {
+        marginTop: 12,
+        marginBottom: 8,
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    progressLabel: {
+        fontSize: 12,
+        color: '#757575',
+    },
+    progressText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    progressBar: {
+        height: 8,
+        borderRadius: 4,
+    },
+    progressDetail: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+        textAlign: 'right',
     },
     notesSection: {
         marginTop: 8,
