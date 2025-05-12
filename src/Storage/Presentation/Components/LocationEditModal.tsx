@@ -665,7 +665,7 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                     elevation={0}
                                 >
                                     <View style={styles.locationHeader}>
-                                        <Text style={styles.locationTitle}>Location {index + 1}</Text>
+                                        <Text style={styles.locationTitle}>Location {index + 1}{location.isNew && <Text style={styles.newLocationText}> (New)</Text>}</Text>
                                         <Text style={styles.locationQuantity}>Qty: {location.quantity}</Text>
                                     </View>
                                     
@@ -691,15 +691,6 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                             onPress={() => handleDeleteLocation(location.id)}
                                         />
                                     </View>
-                                    
-                                    {location.isNew && (
-                                        <Chip
-                                            style={styles.newLocationChip}
-                                            textStyle={styles.newLocationChipText}
-                                        >
-                                            New
-                                        </Chip>
-                                    )}
                                 </Surface>
                             ))
                         )}
@@ -928,15 +919,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-end',
     },
-    newLocationChip: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        backgroundColor: '#4caf50',
-    },
-    newLocationChipText: {
-        color: 'white',
-        fontSize: 10,
+    newLocationText: {
+        color: '#4caf50',
+        fontWeight: 'bold',
     },
 })
 export default LocationEditModal
