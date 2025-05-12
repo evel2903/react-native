@@ -12,10 +12,10 @@ import {
     Chip,
     HelperText,
     List,
-    SegmentedButtons,
     Checkbox,
     Menu,
 } from 'react-native-paper'
+import ProductScannerModal from './ProductScannerModal'
 import { WarehouseEntity } from '@/src/Common/Domain/Entities/WarehouseEntity'
 import { AreaEntity } from '@/src/Common/Domain/Entities/AreaEntity'
 import { RowEntity } from '@/src/Common/Domain/Entities/RowEntity'
@@ -60,8 +60,6 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
     const [totalQuantity, setTotalQuantity] = useState<number>(0)
     const [remainingQuantity, setRemainingQuantity] = useState<number>(0)
     const [editMode, setEditMode] = useState<boolean>(false)
-    const [isAddingSingle, setIsAddingSingle] = useState<boolean>(true)
-    const [bulkLocations, setBulkLocations] = useState<any[]>([])
     
     // Track available selections based on hierarchy
     const [filteredAreas, setFilteredAreas] = useState<AreaEntity[]>([])
@@ -73,6 +71,9 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
     const [areaMenuVisible, setAreaMenuVisible] = useState(false)
     const [rowMenuVisible, setRowMenuVisible] = useState(false)
     const [shelfMenuVisible, setShelfMenuVisible] = useState(false)
+    
+    // Scanner modal state
+    const [scannerModalVisible, setScannerModalVisible] = useState(false)
 
     // Set up initial state when the modal opens
     useEffect(() => {
@@ -284,6 +285,61 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
         const shelf = shelfs.find(s => s.id === id)
         return shelf ? shelf.name : 'Select shelf'
     }
+    
+    const handleShelfCodeScanned = (codeData: string) => {
+        try {
+            // Try to parse the scanned data as JSON
+            const parsedData = JSON.parse(codeData);
+            
+            if (parsedData && 
+                typeof parsedData === 'object' && 
+                'code' in parsedData && 
+                'name' in parsedData) {
+                
+                // Find the shelf based on the scanned code
+                const shelf = shelfs.find(s => s.code === parsedData.code);
+                
+                if (shelf) {
+                    // Set the shelf ID and its parent hierarchy
+                    setShelfId(shelf.id);
+                    setRowId(shelf.rowId);
+                    
+                    // Find the row to get its area ID
+                    const row = rows.find(r => r.id === shelf.rowId);
+                    if (row) {
+                        setAreaId(row.areaId);
+                        
+                        // Find the area to get its warehouse ID
+                        const area = areas.find(a => a.id === row.areaId);
+                        if (area) {
+                            setWarehouseId(area.warehouseId);
+                        }
+                    }
+                    
+                    // Set level and position if provided
+                    if ('level' in parsedData && parsedData.level) {
+                        setLevel(parseInt(parsedData.level) || 1);
+                    }
+                    
+                    if ('position' in parsedData && parsedData.position) {
+                        setPosition(parseInt(parsedData.position) || 1);
+                    }
+                    
+                    // Close all menus
+                    setWarehouseMenuVisible(false);
+                    setAreaMenuVisible(false);
+                    setRowMenuVisible(false);
+                    setShelfMenuVisible(false);
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing scanned code:', error);
+            // Optional: could add some UI feedback here for invalid scans
+        }
+        
+        // Close scanner modal
+        setScannerModalVisible(false);
+    };
 
     return (
         <Portal>
@@ -323,27 +379,25 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                         </View>
                     </Surface>
                     
-                    {/* Location Entry Mode */}
-                    <SegmentedButtons
-                        value={isAddingSingle ? 'single' : 'bulk'}
-                        onValueChange={(value) => setIsAddingSingle(value === 'single')}
-                        buttons={[
-                            { value: 'single', label: 'Single Location' },
-                            { value: 'bulk', label: 'Multiple Locations' }
-                        ]}
-                        style={styles.segmentedButtons}
-                    />
-                    
                     {/* Single Location Entry Form */}
-                    {isAddingSingle && (
-                        <Surface style={styles.locationForm} elevation={1}>
+                    <Surface style={styles.locationForm} elevation={1}>
+                        <View style={styles.formHeaderRow}>
                             <Text style={styles.sectionTitle}>
                                 {editMode ? 'Edit Location' : 'Add Location'}
                             </Text>
-                            
-                            {/* Warehouse Selection */}
-                            <View style={styles.formGroup}>
-                                <Text style={styles.fieldLabel}>Warehouse</Text>
+                            <Button
+                                mode="outlined"
+                                icon="qrcode-scan"
+                                onPress={() => setScannerModalVisible(true)}
+                                style={styles.scanButton}
+                            >
+                                Scan
+                            </Button>
+                        </View>
+                        
+                        {/* Warehouse and Area Selection on one row */}
+                        <View style={styles.formRow}>
+                            <View style={styles.formGroupHalf}>
                                 <View style={styles.menuContainer}>
                                     <Menu
                                         visible={warehouseMenuVisible}
@@ -355,10 +409,11 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                                 style={styles.menuButton}
                                                 icon="chevron-down"
                                                 contentStyle={styles.menuButtonContent}
+                                                labelStyle={styles.menuButtonLabel}
                                             >
                                                 {warehouseId 
                                                     ? getWarehouseName(warehouseId) 
-                                                    : "Select warehouse"}
+                                                    : "Warehouse"}
                                             </Button>
                                         }
                                         style={styles.menu}
@@ -380,9 +435,7 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                 </View>
                             </View>
                             
-                            {/* Area Selection - only enabled if warehouse is selected */}
-                            <View style={styles.formGroup}>
-                                <Text style={styles.fieldLabel}>Area</Text>
+                            <View style={styles.formGroupHalf}>
                                 <View style={styles.menuContainer}>
                                     <Menu
                                         visible={areaMenuVisible}
@@ -395,10 +448,11 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                                 icon="chevron-down"
                                                 contentStyle={styles.menuButtonContent}
                                                 disabled={!warehouseId}
+                                                labelStyle={styles.menuButtonLabel}
                                             >
                                                 {areaId 
                                                     ? getAreaName(areaId) 
-                                                    : "Select area"}
+                                                    : "Area"}
                                             </Button>
                                         }
                                         style={styles.menu}
@@ -426,10 +480,11 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                     </Menu>
                                 </View>
                             </View>
-                            
-                            {/* Row Selection - only enabled if area is selected */}
-                            <View style={styles.formGroup}>
-                                <Text style={styles.fieldLabel}>Row</Text>
+                        </View>
+                        
+                        {/* Row and Shelf Selection on one row */}
+                        <View style={styles.formRow}>
+                            <View style={styles.formGroupHalf}>
                                 <View style={styles.menuContainer}>
                                     <Menu
                                         visible={rowMenuVisible}
@@ -442,10 +497,11 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                                 icon="chevron-down"
                                                 contentStyle={styles.menuButtonContent}
                                                 disabled={!areaId}
+                                                labelStyle={styles.menuButtonLabel}
                                             >
                                                 {rowId 
                                                     ? getRowName(rowId) 
-                                                    : "Select row"}
+                                                    : "Row"}
                                             </Button>
                                         }
                                         style={styles.menu}
@@ -474,9 +530,7 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                 </View>
                             </View>
                             
-                            {/* Shelf Selection - only enabled if row is selected */}
-                            <View style={styles.formGroup}>
-                                <Text style={styles.fieldLabel}>Shelf</Text>
+                            <View style={styles.formGroupHalf}>
                                 <View style={styles.menuContainer}>
                                     <Menu
                                         visible={shelfMenuVisible}
@@ -489,10 +543,11 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                                 icon="chevron-down"
                                                 contentStyle={styles.menuButtonContent}
                                                 disabled={!rowId}
+                                                labelStyle={styles.menuButtonLabel}
                                             >
                                                 {shelfId 
                                                     ? getShelfName(shelfId) 
-                                                    : "Select shelf"}
+                                                    : "Shelf"}
                                             </Button>
                                         }
                                         style={styles.menu}
@@ -520,84 +575,78 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                                     </Menu>
                                 </View>
                             </View>
-                            
-                            {/* Level and Position */}
-                            <View style={styles.formRow}>
-                                <View style={styles.formGroupHalf}>
-                                    <Text style={styles.fieldLabel}>Level</Text>
-                                    <TextInput
-                                        mode="outlined"
-                                        value={level.toString()}
-                                        onChangeText={(text) => setLevel(parseInt(text) || 0)}
-                                        keyboardType="number-pad"
-                                        style={styles.numberInput}
-                                        disabled={!shelfId}
-                                    />
-                                </View>
-                                <View style={styles.formGroupHalf}>
-                                    <Text style={styles.fieldLabel}>Position</Text>
-                                    <TextInput
-                                        mode="outlined"
-                                        value={position.toString()}
-                                        onChangeText={(text) => setPosition(parseInt(text) || 0)}
-                                        keyboardType="number-pad"
-                                        style={styles.numberInput}
-                                        disabled={!shelfId}
-                                    />
-                                </View>
-                            </View>
-                            
-                            {/* Quantity */}
-                            <View style={styles.formGroup}>
-                                <Text style={styles.fieldLabel}>Quantity</Text>
+                        </View>
+                        
+                        {/* Level and Position */}
+                        <View style={styles.formRow}>
+                            <View style={styles.formGroupHalf}>
                                 <TextInput
                                     mode="outlined"
-                                    value={quantity.toString()}
-                                    onChangeText={(text) => setQuantity(parseInt(text) || 0)}
+                                    label="Level"
+                                    value={level.toString()}
+                                    onChangeText={(text) => setLevel(parseInt(text) || 0)}
                                     keyboardType="number-pad"
+                                    style={styles.numberInput}
                                     disabled={!shelfId}
+                                    dense
                                 />
-                                {!editMode && remainingQuantity > 0 && (
-                                    <Button 
-                                        mode="text" 
-                                        onPress={() => setQuantity(remainingQuantity)}
-                                        style={styles.useRemainingButton}
-                                    >
-                                        Use all remaining ({remainingQuantity})
-                                    </Button>
-                                )}
                             </View>
-                            
-                            {/* Add/Update Button */}
-                            <Button
-                                mode="contained"
-                                onPress={handleAddLocation}
-                                style={styles.addButton}
-                                disabled={!shelfId || quantity <= 0}
-                            >
-                                {editMode ? 'Update Location' : 'Add Location'}
-                            </Button>
-                            
-                            {editMode && (
-                                <Button
+                            <View style={styles.formGroupHalf}>
+                                <TextInput
                                     mode="outlined"
-                                    onPress={resetLocationSelection}
-                                    style={styles.cancelEditButton}
+                                    label="Position"
+                                    value={position.toString()}
+                                    onChangeText={(text) => setPosition(parseInt(text) || 0)}
+                                    keyboardType="number-pad"
+                                    style={styles.numberInput}
+                                    disabled={!shelfId}
+                                    dense
+                                />
+                            </View>
+                        </View>
+                        
+                        {/* Quantity */}
+                        <View style={styles.formGroup}>
+                            <TextInput
+                                mode="outlined"
+                                label="Quantity"
+                                value={quantity.toString()}
+                                onChangeText={(text) => setQuantity(parseInt(text) || 0)}
+                                keyboardType="number-pad"
+                                disabled={!shelfId}
+                                dense
+                            />
+                            {!editMode && remainingQuantity > 0 && (
+                                <Button 
+                                    mode="text" 
+                                    onPress={() => setQuantity(remainingQuantity)}
+                                    style={styles.useRemainingButton}
                                 >
-                                    Cancel Edit
+                                    Use all remaining ({remainingQuantity})
                                 </Button>
                             )}
-                        </Surface>
-                    )}
-                    
-                    {!isAddingSingle && (
-                        <Surface style={styles.locationForm} elevation={1}>
-                            <Text style={styles.sectionTitle}>Multiple Locations</Text>
-                            <Text style={styles.helperText}>
-                                Bulk location selection coming soon
-                            </Text>
-                        </Surface>
-                    )}
+                        </View>
+                        
+                        {/* Add/Update Button */}
+                        <Button
+                            mode="contained"
+                            onPress={handleAddLocation}
+                            style={styles.addButton}
+                            disabled={!shelfId || quantity <= 0}
+                        >
+                            {editMode ? 'Update Location' : 'Add Location'}
+                        </Button>
+                        
+                        {editMode && (
+                            <Button
+                                mode="outlined"
+                                onPress={resetLocationSelection}
+                                style={styles.cancelEditButton}
+                            >
+                                Cancel Edit
+                            </Button>
+                        )}
+                    </Surface>
                     
                     {/* Location List */}
                     <Surface style={styles.locationList} elevation={1}>
@@ -676,6 +725,13 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({
                         Save Locations
                     </Button>
                 </View>
+                
+                {/* Product Scanner Modal */}
+                <ProductScannerModal
+                    visible={scannerModalVisible}
+                    onClose={() => setScannerModalVisible(false)}
+                    onCodeScanned={handleShelfCodeScanned}
+                />
             </Modal>
         </Portal>
     )
@@ -688,6 +744,15 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         maxHeight: '90%',
         flex: 1,
+    },
+    formHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    scanButton: {
+        borderRadius: 4,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -751,9 +816,6 @@ const styles = StyleSheet.create({
     quantityError: {
         color: '#f44336', // Red
     },
-    segmentedButtons: {
-        marginBottom: 16,
-    },
     // Location form styles
     locationForm: {
         padding: 16,
@@ -763,23 +825,17 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 16,
     },
     formGroup: {
-        marginBottom: 16,
+        marginBottom: 12,
     },
     formRow: {
         flexDirection: 'row',
         gap: 12,
-        marginBottom: 16,
+        marginBottom: 12,
     },
     formGroupHalf: {
         flex: 1,
-    },
-    fieldLabel: {
-        fontSize: 14,
-        marginBottom: 6,
-        color: '#666',
     },
     numberInput: {
         textAlign: 'center',
@@ -792,10 +848,14 @@ const styles = StyleSheet.create({
         width: '100%',
         justifyContent: 'space-between',
         borderRadius: 4,
+        marginBottom: 4,
     },
     menuButtonContent: {
         flexDirection: 'row-reverse',
         justifyContent: 'space-between',
+    },
+    menuButtonLabel: {
+        fontSize: 14,
     },
     disabledMenuButton: {
         opacity: 0.6,
@@ -878,12 +938,5 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 10,
     },
-    helperText: {
-        textAlign: 'center',
-        fontStyle: 'italic',
-        color: '#666',
-        marginBottom: 12,
-    },
 })
-
 export default LocationEditModal
