@@ -32,12 +32,12 @@ import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { StorageStoreProvider } from '../Stores/StorageStore/StorageStoreProvider'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { Status, getStatusDisplayName } from '@/src/Common/Domain/Enums/Status'
-import { 
+import {
     PRIORITY,
     getPriorityDisplayName,
     getPriorityColor,
 } from '@/src/Common/Domain/Enums/Priority'
-import { StorageVoucherDetailEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
+import { StorageVoucherDetailEntity, StorageVoucherItemEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
 import CenteredAccordion from '../Components/CenteredAccordion'
 import StorageProcessDetailComponent from '../Components/StorageProcessDetailComponent'
 import LocationEditModal from '../Components/LocationEditModal'
@@ -63,11 +63,11 @@ const StorageProcessScreen = observer(() => {
     const [snackbarMessage, setSnackbarMessage] = useState('')
     const [confirmDialogVisible, setConfirmDialogVisible] = useState(false)
     const [isProcessing, setIsProcessing] = useState(false)
-    
+
     // Location edit modal state
     const [locationModalVisible, setLocationModalVisible] = useState(false)
     const [selectedDetailItem, setSelectedDetailItem] = useState<StorageVoucherDetailEntity | null>(null)
-    
+
     // Scanner modal state
     const [scannerModalVisible, setScannerModalVisible] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -89,7 +89,7 @@ const StorageProcessScreen = observer(() => {
                 } else {
                     showSnackbar('No storage voucher ID provided')
                 }
-                
+
                 // Load master data needed for processing
                 await Promise.all([
                     masterDataStore.loadWarehouses(),
@@ -151,35 +151,52 @@ const StorageProcessScreen = observer(() => {
         setSelectedDetailItem(null)
     }
 
-    const handleSaveLocations = (updatedItems: any[]) => {
-        // Here you would update the storage voucher items with the new locations
-        // This would typically call an API to update the storage voucher detail items
-        console.log('Saving locations:', updatedItems)
-        
-        // Update the local state
-        if (selectedDetailItem && storageStore.selectedStorageVoucher) {
-            const detailIndex = storageStore.selectedStorageVoucher.details.findIndex(
-                detail => detail.id === selectedDetailItem.id
-            )
-            
-            if (detailIndex !== -1) {
-                // Update the storageVoucherItems in the detail
-                storageStore.selectedStorageVoucher.details[detailIndex].storageVoucherItems = updatedItems
-                showSnackbar('Storage locations updated')
+    const handleSaveLocations = async (updatedItems: any[]) => {
+        // Show loading indicator or disable the button while saving
+        setIsLoading(true);
+
+        try {
+            // Process items through the API
+            const processedItems = await storageStore.updateStorageVoucherItems(updatedItems);
+
+            // Check if all items were processed successfully
+            const hasErrors = processedItems.some(item => item === null);
+
+            if (hasErrors) {
+                showSnackbar('Some locations could not be updated');
+            } else {
+                showSnackbar('Storage locations updated successfully');
             }
+
+            // Update the local state with the updated items
+            if (selectedDetailItem && storageStore.selectedStorageVoucher) {
+                const detailIndex = storageStore.selectedStorageVoucher.details.findIndex(
+                    detail => detail.id === selectedDetailItem.id
+                );
+
+                if (detailIndex !== -1) {
+                    // Filter out any null items and update the UI
+                    const validItems = processedItems.filter(Boolean) as StorageVoucherItemEntity[];
+                    storageStore.selectedStorageVoucher.details[detailIndex].storageVoucherItems = validItems;
+                }
+            }
+        } catch (error) {
+            console.error('Error saving locations:', error);
+            showSnackbar('Failed to update storage locations');
+        } finally {
+            setIsLoading(false);
+            handleCloseLocationModal();
         }
-        
-        handleCloseLocationModal()
-    }
+    };
 
     const handleOpenScanner = () => {
         setScannerModalVisible(true)
     }
-    
+
     const handleCloseScanner = () => {
         setScannerModalVisible(false)
     }
-    
+
     const handleCodeScanned = (code: string) => {
         // Try to parse the scanned code as JSON
         try {
@@ -204,7 +221,7 @@ const StorageProcessScreen = observer(() => {
             setSearchQuery(code);
             showSnackbar('Product code scanned');
         }
-        
+
         setScannerModalVisible(false);
     }
 
@@ -287,7 +304,7 @@ const StorageProcessScreen = observer(() => {
     const getAccordionBackgroundColor = () => {
         const storageData = storageStore.selectedStorageVoucher
         if (!storageData) return '#e8f5e9' // Default light green
-        
+
         switch (storageData.priority) {
             case PRIORITY.High:
                 return '#ffebee' // Light red
@@ -305,7 +322,7 @@ const StorageProcessScreen = observer(() => {
         if (!storageStore.selectedStorageVoucher) return []
         return storageStore.selectedStorageVoucher.details || []
     }
-    
+
     // Filter details based on search query
     useEffect(() => {
         const details = getStorageDetails()
@@ -313,13 +330,13 @@ const StorageProcessScreen = observer(() => {
             setFilteredDetails(details)
             return
         }
-        
+
         const normalizedQuery = searchQuery.toLowerCase().trim()
-        const filtered = details.filter(item => 
-            (item.code && item.code.toLowerCase().includes(normalizedQuery)) || 
+        const filtered = details.filter(item =>
+            (item.code && item.code.toLowerCase().includes(normalizedQuery)) ||
             (item.name && item.name.toLowerCase().includes(normalizedQuery))
         )
-        
+
         setFilteredDetails(filtered)
     }, [searchQuery, storageStore.selectedStorageVoucher])
 
@@ -395,8 +412,8 @@ const StorageProcessScreen = observer(() => {
                                             clearButtonMode="while-editing"
                                         />
                                     </View>
-                                    <Button 
-                                        mode="outlined" 
+                                    <Button
+                                        mode="outlined"
                                         icon="qrcode-scan"
                                         onPress={handleOpenScanner}
                                         style={styles.scanButton}
@@ -409,9 +426,9 @@ const StorageProcessScreen = observer(() => {
                                         <Text style={styles.searchResultsText}>
                                             {filteredDetails.length} {filteredDetails.length === 1 ? 'result' : 'results'} found
                                         </Text>
-                                        <Button 
-                                            mode="text" 
-                                            compact 
+                                        <Button
+                                            mode="text"
+                                            compact
                                             onPress={() => setSearchQuery('')}
                                         >
                                             Clear
@@ -429,7 +446,7 @@ const StorageProcessScreen = observer(() => {
 
                             {filteredDetails.length === 0 ? (
                                 <Text style={styles.emptyListText}>
-                                    {searchQuery.trim() !== '' 
+                                    {searchQuery.trim() !== ''
                                         ? 'No matching products found. Try a different search term.'
                                         : 'No items in this storage voucher.'}
                                 </Text>
@@ -484,8 +501,8 @@ const StorageProcessScreen = observer(() => {
                         </Dialog.Content>
                         <Dialog.Actions>
                             <Button onPress={() => setConfirmDialogVisible(false)}>Cancel</Button>
-                            <Button 
-                                onPress={handleProcessStorage} 
+                            <Button
+                                onPress={handleProcessStorage}
                                 loading={isProcessing}
                                 disabled={isProcessing}
                             >

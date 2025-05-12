@@ -60,6 +60,8 @@ export class StorageVoucherListItemDto extends ResponseDto<StorageVoucherEntity>
             // New fields mapping
             isValidForProcess: this.isValidForProcess,
             assignedName: this.assignedName,
+            completedAt: null, // Provide a default value or map it if available
+            details: [], // Provide a default value or map it if available
         }
     }
 }

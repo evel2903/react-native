@@ -5,6 +5,7 @@ import StorageRepository from './Infrastructure/Implementations/StorageRepositor
 import GetStorageVouchersUseCase from './Application/UseCases/GetStorageVouchersUseCase'
 import GetStorageVoucherByIdUseCase from './Application/UseCases/GetStorageVoucherByIdUseCase'
 import ProcessStorageVoucherUseCase from './Application/UseCases/ProcessStorageVoucherUseCase'
+import CreateOrUpdateStorageVoucherItemUseCase from './Application/UseCases/CreateOrUpdateStorageVoucherItemUseCase'
 
 @module({
     providers: [
@@ -17,6 +18,7 @@ import ProcessStorageVoucherUseCase from './Application/UseCases/ProcessStorageV
         GetStorageVouchersUseCase,
         GetStorageVoucherByIdUseCase,
         ProcessStorageVoucherUseCase,
+        CreateOrUpdateStorageVoucherItemUseCase,
         // Store
         {
             useClass: StorageStore,

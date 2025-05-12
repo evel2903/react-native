@@ -1,12 +1,13 @@
 import { injectable, inject } from 'inversiland'
 import { makeAutoObservable, runInAction } from 'mobx'
 import StorageStoreState from '../../Types/StorageStoreState'
-import StorageVoucherEntity from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
+import StorageVoucherEntity, { StorageVoucherItemEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import GetStorageVouchersUseCase from '@/src/Storage/Application/UseCases/GetStorageVouchersUseCase'
 import GetStorageVoucherByIdUseCase from '@/src/Storage/Application/UseCases/GetStorageVoucherByIdUseCase'
 import ProcessStorageVoucherUseCase from '@/src/Storage/Application/UseCases/ProcessStorageVoucherUseCase'
 import { GetStorageVouchersPayload } from '@/src/Storage/Domain/Specifications/IStorageRepository'
+import CreateOrUpdateStorageVoucherItemUseCase from '@/src/Storage/Application/UseCases/CreateOrUpdateStorageVoucherItemUseCase'
 
 @injectable()
 export class StorageStore implements StorageStoreState {
@@ -44,7 +45,9 @@ export class StorageStore implements StorageStoreState {
         @inject(GetStorageVoucherByIdUseCase)
         private readonly getStorageVoucherByIdUseCase: GetStorageVoucherByIdUseCase,
         @inject(ProcessStorageVoucherUseCase)
-        private readonly processStorageVoucherUseCase: ProcessStorageVoucherUseCase
+        private readonly processStorageVoucherUseCase: ProcessStorageVoucherUseCase,
+        @inject(CreateOrUpdateStorageVoucherItemUseCase)
+        private readonly createOrUpdateStorageVoucherItemUseCase: CreateOrUpdateStorageVoucherItemUseCase
     ) {
         makeAutoObservable(this)
         // Load storage vouchers on store initialization
@@ -227,6 +230,37 @@ export class StorageStore implements StorageStoreState {
             runInAction(() => {
                 this.setIsProcessing(false)
             })
+        }
+    }
+    // Create or update a storage voucher item
+    async createOrUpdateStorageVoucherItem(data: any): Promise<StorageVoucherItemEntity | null> {
+        try {
+            const item = await this.createOrUpdateStorageVoucherItemUseCase.execute(data)
+            return item
+        } catch (error) {
+            console.error('Error creating/updating storage voucher item:', error)
+            this.setError(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to create/update storage voucher item'
+            )
+            return null
+        }
+    }
+
+    // Update multiple storage voucher items
+    async updateStorageVoucherItems(items: any[]): Promise<(StorageVoucherItemEntity | null)[]> {
+        try {
+            const promises = items.map(item => this.createOrUpdateStorageVoucherItem(item))
+            return await Promise.all(promises)
+        } catch (error) {
+            console.error('Error updating multiple storage voucher items:', error)
+            this.setError(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to update storage voucher items'
+            )
+            return []
         }
     }
 

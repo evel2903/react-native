@@ -1,4 +1,4 @@
-import StorageVoucherEntity from '../Entities/StorageVoucherEntity'
+import StorageVoucherEntity, { StorageVoucherItemEntity } from '../Entities/StorageVoucherEntity'
 
 export const IStorageRepositoryToken = Symbol('IStorageRepository')
 
@@ -33,6 +33,8 @@ export interface IStorageRepository {
         id: string,
         data: any
     ) => Promise<StorageVoucherEntity>
+
+    createOrUpdateStorageVoucherItem: (data: any) => Promise<StorageVoucherItemEntity>
 
     // Optional methods
     deleteStorageVoucher?: (id: string) => Promise<boolean>

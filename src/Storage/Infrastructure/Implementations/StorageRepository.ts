@@ -3,7 +3,7 @@ import {
     IStorageRepository,
     GetStorageVouchersPayload,
 } from '../../Domain/Specifications/IStorageRepository'
-import StorageVoucherEntity from '../../Domain/Entities/StorageVoucherEntity'
+import StorageVoucherEntity, { StorageVoucherItemEntity } from '../../Domain/Entities/StorageVoucherEntity'
 import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
     IHttpClientToken,
@@ -249,6 +249,50 @@ class StorageRepository implements IStorageRepository {
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to process storage voucher with ID ${id}`)
+        }
+    }
+     // Method to create or update a storage voucher item
+    public async createOrUpdateStorageVoucherItem(
+        data: any
+    ): Promise<StorageVoucherItemEntity> {
+        try {
+            const response = await this.httpClient.post<any, any>(
+                `${this.apiBaseUrl}/create-or-update-item`,
+                data
+            )
+
+            if (!response || !response.data) {
+                throw new Error('Failed to create or update storage voucher item')
+            }
+
+            // Map the API response to our domain entity
+            const item: StorageVoucherItemEntity = {
+                id: response.data.Id,
+                updatedAt: response.data.UpdatedAt,
+                createdAt: response.data.CreatedAt,
+                isDeleted: response.data.IsDeleted || false,
+                storageVoucherDetailId: response.data.StorageVoucherDetailId,
+                stockId: response.data.StockId || data.stockId || '',
+                shelfId: data.shelfId,
+                rowId: data.rowId,
+                areaId: data.areaId,
+                warehouseId: data.warehouseId,
+                shelfName: data.shelfName,
+                rowName: data.rowName,
+                areaName: data.areaName,
+                warehouseName: data.warehouseName,
+                quantity: response.data.Quantity,
+                level: response.data.Level,
+                position: response.data.Position,
+                status: response.data.Status,
+            }
+
+            return item
+        } catch (error) {
+            console.error('Error creating/updating storage voucher item:', error)
+            throw error instanceof Error
+                ? error
+                : new Error('Failed to create/update storage voucher item')
         }
     }
 }
