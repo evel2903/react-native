@@ -14,6 +14,7 @@ import { withProviders } from '../Utils/WithProviders'
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
 import StorageScreen from '@/src/Storage/Presentation/Screens/StorageScreen'
 import StorageViewScreen from '@/src/Storage/Presentation/Screens/StorageViewScreen'
+import StorageProcessScreen from '@/src/Storage/Presentation/Screens/StorageProcessScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -47,6 +48,7 @@ const RootNavigator = observer(() => {
             <Stack.Screen name="StockInEdit" component={StockInEditScreen} />
             <Stack.Screen name="Storage" component={StorageScreen} />
             <Stack.Screen name="StorageView" component={StorageViewScreen} />
+            <Stack.Screen name="StorageProcess" component={StorageProcessScreen} />
             <Stack.Screen name="NotFound" component={NotFoundScreen} />
         </Stack.Navigator>
     )

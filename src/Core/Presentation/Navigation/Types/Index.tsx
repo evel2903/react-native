@@ -21,6 +21,7 @@ export type RootStackParamList = {
     StockInEdit: { id: string }
     Storage: undefined
     StorageView: { id: string }
+    StorageProcess: { id: string }
     NotFound: undefined
 }
 

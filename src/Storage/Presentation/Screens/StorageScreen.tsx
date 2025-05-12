@@ -74,7 +74,7 @@ const StorageScreen = observer(() => {
 
     // Handle process action
     const handleProcess = async (id: string) => {
-        showSnackbar('Handle process functionality coming soon')
+        navigation.navigate('StorageProcess', {id})
     }
 
     // Helper method to show snackbar message
