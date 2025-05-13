@@ -52,7 +52,10 @@ export default interface StorageVoucherEntity {
     notes: string
     createdBy: string
     assignedTo: string
-    // New fields from updated API response
+    // Progress tracking fields
+    totalItemsQty: number
+    totalItemsStored: number
+    // Other fields from API response
     isValidForProcess: boolean
     assignedName: string
     completedAt: string | null

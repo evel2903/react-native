@@ -7,6 +7,7 @@ import {
     IconButton,
     Chip,
     Button,
+    ProgressBar,
 } from 'react-native-paper'
 import {
     PRIORITY,
@@ -15,6 +16,7 @@ import {
 } from '@/src/Common/Domain/Enums/Priority'
 import { formatDate, formatDateTime } from '@/src/Core/Utils'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
+import StorageVoucherEntity, { StorageVoucherDetailEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
 
 // Define the structure based on API response
 interface StorageVoucher {
@@ -26,12 +28,15 @@ interface StorageVoucher {
     storageDate: string
     priority: number
     status: string
-    notes: string
-    createdBy: string
+    notes?: string
+    createdBy?: string
     assignedTo: string
     // New fields from updated API response
     isValidForProcess: boolean
     assignedName: string
+    // Progress tracking fields
+    totalItemsQty: number
+    totalItemsStored: number
 }
 
 interface StorageListItemProps {
@@ -66,7 +71,20 @@ const StorageListItem: React.FC<StorageListItemProps> = ({
         }
     }
 
+    // Get progress color based on completion percentage
+    const getProgressColor = (percentage: number) => {
+        if (percentage === 0) return '#f44336'; // Red for not started
+        if (percentage < 0.5) return '#ff9800'; // Orange for < 50%
+        if (percentage < 1) return '#2196f3'; // Blue for partial completion
+        return '#4caf50'; // Green for complete
+    };
+
     const statusDetails = getStatusDetails(item.status)
+    
+    // Calculate percentage directly from API values
+    const totalItems = item.totalItemsQty || 0;
+    const storedItems = item.totalItemsStored || 0;
+    const percentage = totalItems > 0 ? Math.min(storedItems / totalItems, 1) : 0;
 
     return (
         <Card style={styles.card}>
@@ -100,6 +118,24 @@ const StorageListItem: React.FC<StorageListItemProps> = ({
                 {item.notes && (
                     <Text style={styles.infoText}>Notes: {item.notes}</Text>
                 )}
+
+                {/* Progress section */}
+                <View style={styles.progressSection}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressPercentage}>
+                            {Math.round(percentage * 100)}%
+                        </Text>
+                    </View>
+                    <ProgressBar
+                        progress={percentage}
+                        color={getProgressColor(percentage)}
+                        style={styles.progressBar}
+                    />
+                    <Text style={styles.progressDetail}>
+                        {storedItems} of {totalItems} items stored
+                    </Text>
+                </View>
 
                 {/* Timestamps & status */}
                 <View style={styles.metadataContainer}>
@@ -224,14 +260,14 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     divider: {
-        // Empty style kept for future use
+        marginTop: 8,
+        marginBottom: 8,
     },
     actionsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingBottom: 0,
-        marginTop: 8,
     },
     iconButtons: {
         flexDirection: 'row',
@@ -244,6 +280,38 @@ const styles = StyleSheet.create({
     processButton: {
         borderRadius: 4,
         borderWidth: 1,
+    },
+    // Progress section styles
+    progressSection: {
+        marginTop: 12,
+        marginBottom: 4,
+        backgroundColor: 'rgba(0, 0, 0, 0.03)',
+        borderRadius: 8,
+        padding: 8,
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    progressLabel: {
+        fontSize: 12,
+        color: '#757575',
+    },
+    progressPercentage: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    progressBar: {
+        height: 8,
+        borderRadius: 4,
+    },
+    progressDetail: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+        textAlign: 'right',
     },
 })
 

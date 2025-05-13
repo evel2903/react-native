@@ -37,7 +37,14 @@ export class StorageVoucherListItemDto extends ResponseDto<StorageVoucherEntity>
     @Expose()
     assignedTo!: string
 
-    // New fields from updated API response
+    // Progress tracking fields
+    @Expose()
+    totalItemsQty!: number
+
+    @Expose()
+    totalItemsStored!: number
+
+    // Other fields from API response
     @Expose()
     isValidForProcess!: boolean
 
@@ -57,7 +64,10 @@ export class StorageVoucherListItemDto extends ResponseDto<StorageVoucherEntity>
             notes: this.notes || '',
             createdBy: this.createdBy || '',
             assignedTo: this.assignedTo,
-            // New fields mapping
+            // Map progress tracking fields
+            totalItemsQty: this.totalItemsQty || 0,
+            totalItemsStored: this.totalItemsStored || 0,
+            // Map other fields
             isValidForProcess: this.isValidForProcess,
             assignedName: this.assignedName,
             completedAt: null, // Provide a default value or map it if available
