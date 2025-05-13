@@ -6,6 +6,7 @@ import { AuthModule } from './Auth/AuthModule'
 import { StockInModule } from './StockIn/StockInModule'
 import { CommonModule } from './Common/CommonModule'
 import { StockOutModule } from './StockOut/StockOutModule'
+import { PickingModule } from './Picking/PickingModule'
 
 @module({
     imports: [
@@ -14,6 +15,7 @@ import { StockOutModule } from './StockOut/StockOutModule'
         AuthModule,
         StockInModule,
         StorageModule,
+        PickingModule,
         StockOutModule
     ],
 })

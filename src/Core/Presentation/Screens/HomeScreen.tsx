@@ -44,6 +44,12 @@ const HomeScreen = observer(() => {
             onPress: () => navigation.navigate('Storage'),
         },
         {
+            title: 'Picking',
+            icon: 'cart', // Using a suitable icon for picking
+            description: 'Manage picking operations',
+            onPress: () => navigation.navigate('Picking'),
+        },
+        {
             title: 'Stock Out',
             icon: 'arrow-expand',
             description: i18n.t('home.menuItems.stockOutDescription'),

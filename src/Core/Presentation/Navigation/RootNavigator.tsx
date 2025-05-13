@@ -18,6 +18,7 @@ import StorageViewScreen from '@/src/Storage/Presentation/Screens/StorageViewScr
 import StorageProcessScreen from '@/src/Storage/Presentation/Screens/StorageProcessScreen'
 import StockOutScreen from '@/src/StockOut/Presentation/Screens/StockOutScreen'
 import StockOutViewScreen from '@/src/StockOut/Presentation/Screens/StockOutViewScreen'
+import PickingScreen from '@/src/Picking/Presentation/Screens/PickingScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -52,6 +53,7 @@ const RootNavigator = observer(() => {
             <Stack.Screen name="Storage" component={StorageScreen} />
             <Stack.Screen name="StorageView" component={StorageViewScreen} />
             <Stack.Screen name="StorageProcess" component={StorageProcessScreen} />
+            <Stack.Screen name="Picking" component={PickingScreen} />
             <Stack.Screen name="StockOut" component={StockOutScreen} />
             <Stack.Screen name="StockOutView" component={StockOutViewScreen} />
             <Stack.Screen name="NotFound" component={NotFoundScreen} />
