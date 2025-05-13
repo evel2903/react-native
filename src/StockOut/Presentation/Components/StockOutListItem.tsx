@@ -15,7 +15,7 @@ import {
     getStatusColor,
     getStatusDisplayName,
 } from '@/src/Common/Domain/Enums/Status'
-import { formatDate, formatDateTime, formatCurrency } from '@/src/Core/Utils'
+import { formatDate, formatDateTime } from '@/src/Core/Utils'
 import {
     PRIORITY,
     getPriorityColor,
@@ -55,8 +55,23 @@ const StockOutListItem: React.FC<StockOutListItemProps> = ({
         }
     }
 
-    // Get the count of items from details array or count field
-    const itemCount = item.count || 0
+    // Safely handle priority (which can be null in the API response)
+    const renderPriorityChip = () => {
+        if (item.priority === null || item.priority === undefined) {
+            return null
+        }
+        
+        return (
+            <Chip
+                style={{
+                    backgroundColor: getPriorityColor(item.priority),
+                }}
+                textStyle={styles.priorityChip}
+            >
+                {getPriorityDisplayName(item.priority)}
+            </Chip>
+        )
+    }
 
     return (
         <Card style={styles.card}>
@@ -65,18 +80,7 @@ const StockOutListItem: React.FC<StockOutListItemProps> = ({
                 <View style={styles.headerRow}>
                     <View style={styles.codeContainer}>
                         <Text style={styles.codeText}>{item.code}</Text>
-                        {item.priority !== undefined && item.priority > 0 && (
-                            <Chip
-                                style={{
-                                    backgroundColor: getPriorityColor(
-                                        item.priority
-                                    ),
-                                }}
-                                textStyle={styles.priorityChip}
-                            >
-                                {getPriorityDisplayName(item.priority)}
-                            </Chip>
-                        )}
+                        {renderPriorityChip()}
                     </View>
                 </View>
 
@@ -84,29 +88,21 @@ const StockOutListItem: React.FC<StockOutListItemProps> = ({
                 <Text style={styles.infoText}>
                     Stock out date: {formatDate(item.outDate)}
                 </Text>
-                <Text style={styles.infoText}>
-                    Receiver: {item.receiverName || 'N/A'}
-                </Text>
 
-                {/* Details row with quantity and cost */}
+                {/* Details row with quantity */}
                 <View style={styles.detailsRow}>
-                    <Text>Items: {itemCount}</Text>
-                    <Text>Total: {formatCurrency(item.totalAmount || '0')}</Text>
+                    <Text>Items: {item.count}</Text>
                 </View>
 
                 {/* Timestamps & status */}
                 <View style={styles.metadataContainer}>
                     <View style={styles.timestampsContainer}>
-                        {item.createdAt && (
-                            <Text variant="bodySmall" style={styles.timestamp}>
-                                Created: {formatDateTime(item.createdAt)}
-                            </Text>
-                        )}
-                        {item.updatedAt && (
-                            <Text variant="bodySmall" style={styles.timestamp}>
-                                Updated: {formatDateTime(item.updatedAt)}
-                            </Text>
-                        )}
+                        <Text variant="bodySmall" style={styles.timestamp}>
+                            Created: {formatDateTime(item.createdAt)}
+                        </Text>
+                        <Text variant="bodySmall" style={styles.timestamp}>
+                            Updated: {formatDateTime(item.updatedAt)}
+                        </Text>
                     </View>
                     <Chip
                         style={[
@@ -171,53 +167,7 @@ const StockOutListItem: React.FC<StockOutListItemProps> = ({
                                 </Button>
                             )}
 
-                        {/* Reject button - only show if valid for approval */}
-                        {item.isValidForApprovalRequest === true &&
-                            authStore.hasPermission(
-                                'approval_request_decisions:create'
-                            ) && (
-                                <Button
-                                    mode="outlined"
-                                    style={[
-                                        styles.rejectButton,
-                                        {
-                                            borderColor: getStatusDetails(
-                                                Status.Rejected
-                                            ).color,
-                                        },
-                                    ]}
-                                    textColor={
-                                        getStatusDetails(Status.Rejected).color
-                                    }
-                                    onPress={() => onReject(item.id)}
-                                >
-                                    Reject
-                                </Button>
-                            )}
-
-                        {/* Approve button - only show if valid for approval */}
-                        {item.isValidForApprovalRequest === true &&
-                            authStore.hasPermission(
-                                'approval_request_decisions:create'
-                            ) && (
-                                <Button
-                                    mode="outlined"
-                                    style={[
-                                        styles.approveButton,
-                                        {
-                                            borderColor: getStatusDetails(
-                                                Status.Approved
-                                            ).color,
-                                        },
-                                    ]}
-                                    textColor={
-                                        getStatusDetails(Status.Approved).color
-                                    }
-                                    onPress={() => onApprove(item.id)}
-                                >
-                                    Approve
-                                </Button>
-                            )}
+                        {/* Approval buttons removed since isValidForApprovalRequest is no longer in the entity */}
                     </View>
                 </View>
             </Card.Content>
@@ -294,7 +244,7 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     divider: {
-        // Empty style kept for future use
+        marginVertical: 8,
     },
     actionsRow: {
         flexDirection: 'row',

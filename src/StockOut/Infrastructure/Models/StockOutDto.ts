@@ -24,40 +24,22 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
     notes?: string
 
     @Expose()
-    priority?: PriorityType
+    priority?: PriorityType | null
 
     @Expose()
-    count?: number
+    count!: number
     
     @Expose()
-    updatedAt?: string
+    updatedAt!: string
 
     @Expose()
-    createdAt?: string
+    createdAt!: string
 
     @Expose()
-    isDeleted?: boolean
+    isDeleted!: boolean
 
     @Expose()
-    isActive?: boolean
-
-    @Expose()
-    isValidForApprovalRequest?: boolean
-    
-    @Expose()
-    createdBy?: string | null
-
-    @Expose()
-    approvedBy?: string | null
-
-    @Expose()
-    totalAmount?: string
-
-    @Expose()
-    receiverId?: string
-
-    @Expose()
-    receiverName?: string
+    isActive!: boolean
 
     toDomain(): StockOutEntity {
         return {
@@ -72,13 +54,7 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
             updatedAt: this.updatedAt,
             createdAt: this.createdAt,
             isDeleted: this.isDeleted,
-            isActive: this.isActive,
-            isValidForApprovalRequest: this.isValidForApprovalRequest,
-            createdBy: this.createdBy,
-            approvedBy: this.approvedBy,
-            totalAmount: this.totalAmount,
-            receiverId: this.receiverId,
-            receiverName: this.receiverName,
+            isActive: this.isActive
         }
     }
 }

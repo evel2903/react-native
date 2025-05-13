@@ -8,20 +8,12 @@ export default interface StockOutEntity {
     description?: string
     status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
     notes?: string
-    priority?: PriorityType
-    count?: number
+    priority?: PriorityType | null
+    count: number
     
     // Fields from API response
-    updatedAt?: string
-    createdAt?: string
-    isDeleted?: boolean
-    isActive?: boolean
-    isValidForApprovalRequest?: boolean
-    
-    // Additional fields
-    createdBy?: string | null
-    approvedBy?: string | null
-    totalAmount?: string
-    receiverId?: string
-    receiverName?: string
+    updatedAt: string
+    createdAt: string
+    isDeleted: boolean
+    isActive: boolean
 }
