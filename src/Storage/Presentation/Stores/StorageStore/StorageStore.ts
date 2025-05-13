@@ -6,6 +6,7 @@ import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import GetStorageVouchersUseCase from '@/src/Storage/Application/UseCases/GetStorageVouchersUseCase'
 import GetStorageVoucherByIdUseCase from '@/src/Storage/Application/UseCases/GetStorageVoucherByIdUseCase'
 import ProcessStorageVoucherUseCase from '@/src/Storage/Application/UseCases/ProcessStorageVoucherUseCase'
+import SendProcessCompletedEmailUseCase from '@/src/Storage/Application/UseCases/SendProcessCompletedEmailUseCase'
 import { GetStorageVouchersPayload } from '@/src/Storage/Domain/Specifications/IStorageRepository'
 import CreateOrUpdateStorageVoucherItemUseCase from '@/src/Storage/Application/UseCases/CreateOrUpdateStorageVoucherItemUseCase'
 
@@ -46,6 +47,8 @@ export class StorageStore implements StorageStoreState {
         private readonly getStorageVoucherByIdUseCase: GetStorageVoucherByIdUseCase,
         @inject(ProcessStorageVoucherUseCase)
         private readonly processStorageVoucherUseCase: ProcessStorageVoucherUseCase,
+        @inject(SendProcessCompletedEmailUseCase)
+        private readonly sendProcessCompletedEmailUseCase: SendProcessCompletedEmailUseCase,
         @inject(CreateOrUpdateStorageVoucherItemUseCase)
         private readonly createOrUpdateStorageVoucherItemUseCase: CreateOrUpdateStorageVoucherItemUseCase
     ) {
@@ -232,6 +235,35 @@ export class StorageStore implements StorageStoreState {
             })
         }
     }
+    
+    // Send email notification when processing is completed
+    async sendProcessCompletedEmail(id: string) {
+        this.setIsProcessing(true)
+        this.setError(null)
+
+        try {
+            const result = await this.sendProcessCompletedEmailUseCase.execute(id)
+            
+            return result
+        } catch (error) {
+            console.error('Error sending process completed email:', error)
+
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to send process completed email'
+                )
+            })
+
+            return null
+        } finally {
+            runInAction(() => {
+                this.setIsProcessing(false)
+            })
+        }
+    }
+
     // Create or update a storage voucher item
     async createOrUpdateStorageVoucherItem(data: any): Promise<StorageVoucherItemEntity | null> {
         try {

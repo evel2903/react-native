@@ -122,9 +122,9 @@ const StorageProcessScreen = observer(() => {
         setIsProcessing(true)
         try {
             if (storageId) {
-                const success = await storageStore.processStorageVoucher(storageId)
-                if (success) {
-                    showSnackbar('Storage voucher processed successfully')
+                const result = await storageStore.sendProcessCompletedEmail(storageId)
+                if (result && result.statusCode === 200) {
+                    showSnackbar(result.message || 'Storage voucher processed successfully')
                     // Navigate back to storage list after successful processing
                     setTimeout(() => {
                         navigation.navigate('Storage')

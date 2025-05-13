@@ -36,6 +36,8 @@ export interface IStorageRepository {
 
     createOrUpdateStorageVoucherItem: (data: any) => Promise<StorageVoucherItemEntity>
 
+    sendProcessCompletedEmail: (id: string) => Promise<{ statusCode: number; message: string }>
+
     // Optional methods
     deleteStorageVoucher?: (id: string) => Promise<boolean>
 }

@@ -22,7 +22,7 @@ class StorageRepository implements IStorageRepository {
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
-    ) {}
+    ) { }
 
     public async getStorageVouchers(
         payload: GetStorageVouchersPayload
@@ -158,8 +158,8 @@ class StorageRepository implements IStorageRepository {
             throw error instanceof Error
                 ? error
                 : new Error(
-                      `Failed to update storage voucher status for ID ${id}`
-                  )
+                    `Failed to update storage voucher status for ID ${id}`
+                )
         }
     }
 
@@ -251,7 +251,7 @@ class StorageRepository implements IStorageRepository {
                 : new Error(`Failed to process storage voucher with ID ${id}`)
         }
     }
-     // Method to create or update a storage voucher item
+    // Method to create or update a storage voucher item
     public async createOrUpdateStorageVoucherItem(
         data: any
     ): Promise<StorageVoucherItemEntity> {
@@ -293,6 +293,33 @@ class StorageRepository implements IStorageRepository {
             throw error instanceof Error
                 ? error
                 : new Error('Failed to create/update storage voucher item')
+        }
+    }
+    // Method to send email notification when processing is completed
+    public async sendProcessCompletedEmail(
+        id: string
+    ): Promise<{ statusCode: number; message: string }> {
+        try {
+            const response = await this.httpClient.get<any>(
+                `${this.apiBaseMobileUrl}/send-email-process-completed/${id}`
+            )
+
+            if (!response || !response.data) {
+                throw new Error('Failed to send process completed email')
+            }
+
+            return {
+                statusCode: response.data.statusCode || 200,
+                message: response.data.message || 'Email sent successfully'
+            }
+        } catch (error) {
+            console.error(
+                `Error sending process completed email for ID ${id}:`,
+                error
+            )
+            throw error instanceof Error
+                ? error
+                : new Error(`Failed to send process completed email for ID ${id}`)
         }
     }
 }

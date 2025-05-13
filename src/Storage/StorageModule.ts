@@ -6,6 +6,7 @@ import GetStorageVouchersUseCase from './Application/UseCases/GetStorageVouchers
 import GetStorageVoucherByIdUseCase from './Application/UseCases/GetStorageVoucherByIdUseCase'
 import ProcessStorageVoucherUseCase from './Application/UseCases/ProcessStorageVoucherUseCase'
 import CreateOrUpdateStorageVoucherItemUseCase from './Application/UseCases/CreateOrUpdateStorageVoucherItemUseCase'
+import SendProcessCompletedEmailUseCase from './Application/UseCases/SendProcessCompletedEmailUseCase'
 
 @module({
     providers: [
@@ -19,6 +20,7 @@ import CreateOrUpdateStorageVoucherItemUseCase from './Application/UseCases/Crea
         GetStorageVoucherByIdUseCase,
         ProcessStorageVoucherUseCase,
         CreateOrUpdateStorageVoucherItemUseCase,
+        SendProcessCompletedEmailUseCase,
         // Store
         {
             useClass: StorageStore,
