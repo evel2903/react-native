@@ -119,24 +119,6 @@ const StorageListItem: React.FC<StorageListItemProps> = ({
                     <Text style={styles.infoText}>Notes: {item.notes}</Text>
                 )}
 
-                {/* Progress section */}
-                <View style={styles.progressSection}>
-                    <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Completion Status</Text>
-                        <Text style={styles.progressPercentage}>
-                            {Math.round(percentage * 100)}%
-                        </Text>
-                    </View>
-                    <ProgressBar
-                        progress={percentage}
-                        color={getProgressColor(percentage)}
-                        style={styles.progressBar}
-                    />
-                    <Text style={styles.progressDetail}>
-                        {storedItems} of {totalItems} items stored
-                    </Text>
-                </View>
-
                 {/* Timestamps & status */}
                 <View style={styles.metadataContainer}>
                     <View style={styles.timestampsContainer}>
@@ -162,6 +144,24 @@ const StorageListItem: React.FC<StorageListItemProps> = ({
                     >
                         {statusDetails.displayName}
                     </Chip>
+                </View>
+
+                                {/* Progress section */}
+                <View style={styles.progressSection}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressPercentage}>
+                            {Math.round(percentage * 100)}%
+                        </Text>
+                    </View>
+                    <ProgressBar
+                        progress={percentage}
+                        color={getProgressColor(percentage)}
+                        style={styles.progressBar}
+                    />
+                    <Text style={styles.progressDetail}>
+                        {storedItems} of {totalItems} items stored
+                    </Text>
                 </View>
 
                 <Divider style={styles.divider} />
@@ -283,11 +283,8 @@ const styles = StyleSheet.create({
     },
     // Progress section styles
     progressSection: {
-        marginTop: 12,
+        marginTop: 4,
         marginBottom: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.03)',
-        borderRadius: 8,
-        padding: 8,
     },
     progressHeader: {
         flexDirection: 'row',

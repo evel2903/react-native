@@ -14,6 +14,7 @@ import {
     Surface,
     ActivityIndicator,
     Chip,
+    ProgressBar,
 } from 'react-native-paper'
 import { formatDate } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -91,11 +92,57 @@ const StorageViewScreen = observer(() => {
         setSnackbarVisible(true)
     }
 
+    // Calculate storage completion stats
+    const calculateStorageStats = () => {
+        if (!storageStore.selectedStorageVoucher || !storageStore.selectedStorageVoucher.details) {
+            return { 
+                totalItems: 0, 
+                storedItems: 0, 
+                percentage: 0 
+            };
+        }
+
+        const details = storageStore.selectedStorageVoucher.details;
+        
+        // Calculate total quantity and allocated quantity across all details
+        let totalQuantity = 0;
+        let allocatedQuantity = 0;
+        
+        details.forEach(detail => {
+            totalQuantity += detail.quantity || 0;
+            const detailAllocated = (detail.storageVoucherItems || []).reduce(
+                (sum, item) => sum + (item.quantity || 0), 
+                0
+            );
+            allocatedQuantity += detailAllocated;
+        });
+        
+        // Calculate percentage
+        const percentage = totalQuantity > 0 ? Math.min(allocatedQuantity / totalQuantity, 1) : 0;
+        
+        return {
+            totalItems: totalQuantity,
+            storedItems: allocatedQuantity,
+            percentage
+        };
+    };
+
+    // Get progress color based on completion percentage
+    const getProgressColor = (percentage: number) => {
+        if (percentage === 0) return '#f44336'; // Red for not started
+        if (percentage < 0.5) return '#ff9800'; // Orange for < 50%
+        if (percentage < 1) return '#2196f3'; // Blue for partial completion
+        return '#4caf50'; // Green for complete
+    };
+
     // Render the form content inside the accordion
     const renderFormContent = () => {
         const storageData = storageStore.selectedStorageVoucher
 
         if (!storageData) return null
+
+        // Get storage stats
+        const storageStats = calculateStorageStats();
 
         return (
             <>
@@ -162,6 +209,24 @@ const StorageViewScreen = observer(() => {
                         <Text style={styles.notesText}>{storageData.notes}</Text>
                     </View>
                 )}
+
+                {/* Overall Progress Section */}
+                <View style={styles.progressSection}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressPercentage}>
+                            {Math.round(storageStats.percentage * 100)}%
+                        </Text>
+                    </View>
+                    <ProgressBar
+                        progress={storageStats.percentage}
+                        color={getProgressColor(storageStats.percentage)}
+                        style={styles.progressBar}
+                    />
+                    <Text style={styles.progressDetail}>
+                        {storageStats.storedItems} of {storageStats.totalItems} items stored
+                    </Text>
+                </View>
             </>
         )
     }
@@ -360,6 +425,38 @@ const styles = StyleSheet.create({
         color: '#333',
         marginTop: 4,
         lineHeight: 20,
+    },
+    // Progress section styles
+    progressSection: {
+        marginTop: 4,
+        marginBottom: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderRadius: 8,
+        padding: 0,
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    progressLabel: {
+        fontSize: 12,
+        color: '#757575',
+    },
+    progressPercentage: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    progressBar: {
+        height: 8,
+        borderRadius: 4,
+    },
+    progressDetail: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+        textAlign: 'right',
     },
     detailsListHeader: {
         flexDirection: 'row',
