@@ -148,10 +148,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     menuContainer: {
-        gap: 12,
+        gap: 8,
     },
     menuCard: {
-        marginBottom: 8,
+        marginBottom: 4,
     },
     menuCardContent: {
         flexDirection: 'row',
