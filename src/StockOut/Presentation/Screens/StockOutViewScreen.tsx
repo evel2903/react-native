@@ -16,7 +16,6 @@ import {
     ActivityIndicator,
     List,
     Chip,
-    Divider,
 } from 'react-native-paper'
 import { formatDate, formatDateTime } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -78,9 +77,7 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
         <View style={styles.goodsItemHeader}>
             <Text style={styles.goodsCodeText}>{item.code || ''}</Text>
         </View>
-
         <Text style={styles.goodsName}>{item.name || ''}</Text>
-
         <View style={styles.infoSection}>
             <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
@@ -88,7 +85,6 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
                     <Text style={styles.valueText}>{(item.quantity || 0).toString()}</Text>
                 </View>
             </View>
-
             {item.notes && (
                 <View style={styles.notesSection}>
                     <Text style={styles.labelText}>Notes</Text>
@@ -122,7 +118,6 @@ const StockOutViewScreen = observer(() => {
         const fetchData = async () => {
             setIsLoading(true)
             try {
-                // Load stock details
                 if (stockId) {
                     const stockOut = await stockOutStore.getStockOutById(stockId)
                     if (!stockOut) {
@@ -202,7 +197,7 @@ const StockOutViewScreen = observer(() => {
                                     styles.accordionContainer,
                                     { backgroundColor: getAccordionBackgroundColor() }
                                 ]}
-                                elevation={2}
+                                elevation={1}
                             >
                                 <CenteredAccordion
                                     title="Stock Out Information"
@@ -210,30 +205,34 @@ const StockOutViewScreen = observer(() => {
                                     onPress={() => setInfoExpanded(!infoExpanded)}
                                 >
                                     <View style={styles.infoContainer}>
-                                        {/* Code and Priority section (formerly in header) */}
-                                        <View style={styles.headerSection}>
+                                        {/* Code and Priority Section */}
+                                        <View style={styles.codeSection}>
                                             <View style={styles.codeContainer}>
                                                 <View>
                                                     <Text style={styles.labelText}>Code</Text>
-                                                    <Text style={styles.codeText}>{stockOutStore.selectedStockOut.code}</Text>
+                                                    <Text style={styles.valueText}>
+                                                        {stockOutStore.selectedStockOut.code || '-'}
+                                                    </Text>
                                                 </View>
-                                                {stockOutStore.selectedStockOut.priority !== undefined && 
+                                                {stockOutStore.selectedStockOut.priority !== undefined &&
                                                 stockOutStore.selectedStockOut.priority !== null && (
-                                                    <Chip
-                                                        style={{
-                                                            backgroundColor: getPriorityColor(
-                                                                stockOutStore.selectedStockOut.priority
-                                                            ),
-                                                        }}
-                                                        textStyle={styles.priorityChip}
-                                                    >
-                                                        {getPriorityDisplayName(stockOutStore.selectedStockOut.priority)}
-                                                    </Chip>
+                                                    <View style={styles.priorityChipWrapper}>
+                                                        <Chip
+                                                            style={{
+                                                                backgroundColor: getPriorityColor(
+                                                                    stockOutStore.selectedStockOut.priority
+                                                                ),
+                                                            }}
+                                                            textStyle={styles.priorityChipText}
+                                                        >
+                                                            {getPriorityDisplayName(stockOutStore.selectedStockOut.priority)}
+                                                        </Chip>
+                                                    </View>
                                                 )}
                                             </View>
                                         </View>
 
-                                        {/* Status and Timestamps section (formerly in header) */}
+                                        {/* Status and Timestamps */}
                                         <View style={styles.statusSection}>
                                             <View style={styles.statusContainer}>
                                                 <Text style={styles.labelText}>Status</Text>
@@ -254,22 +253,21 @@ const StockOutViewScreen = observer(() => {
                                                 <Text style={styles.valueText}>
                                                     {formatDateTime(stockOutStore.selectedStockOut.createdAt)}
                                                 </Text>
-                                                <Text style={[styles.labelText, styles.updatedLabel]}>Updated</Text>
+                                                <Text style={[styles.labelText, styles.updatedLabel]}>
+                                                    Updated
+                                                </Text>
                                                 <Text style={styles.valueText}>
                                                     {formatDateTime(stockOutStore.selectedStockOut.updatedAt)}
                                                 </Text>
                                             </View>
                                         </View>
 
-                                        <Divider style={styles.divider} />
-
-                                        <Text style={styles.sectionTitle}>General Information</Text>
-                                        
+                                        {/* General Information */}
                                         <View style={styles.infoRow}>
                                             <View style={styles.infoColumn}>
                                                 <Text style={styles.labelText}>Stock Out Date</Text>
                                                 <Text style={styles.valueText}>
-                                                    {formatDate(stockOutStore.selectedStockOut.outDate)}
+                                                    {formatDate(stockOutStore.selectedStockOut.outDate) || '-'}
                                                 </Text>
                                             </View>
                                             <View style={styles.infoColumn}>
@@ -280,8 +278,7 @@ const StockOutViewScreen = observer(() => {
                                             </View>
                                         </View>
 
-                                        <Text style={[styles.sectionTitle, styles.receiverTitle]}>Receiver Information</Text>
-                                        
+                                        {/* Receiver Information */}
                                         <View style={styles.infoRow}>
                                             <View style={styles.infoColumn}>
                                                 <Text style={styles.labelText}>Receiver Name</Text>
@@ -297,6 +294,7 @@ const StockOutViewScreen = observer(() => {
                                             </View>
                                         </View>
 
+                                        {/* Notes */}
                                         {stockOutStore.selectedStockOut.notes && (
                                             <View style={styles.notesContainer}>
                                                 <Text style={styles.labelText}>Notes</Text>
@@ -309,29 +307,24 @@ const StockOutViewScreen = observer(() => {
                                 </CenteredAccordion>
                             </Surface>
 
-                            {/* Goods Details Section */}
-                            <Surface style={styles.detailsCard} elevation={2}>
-                                <Text style={styles.detailsTitle}>
+                            {/* Goods List */}
+                            <View style={styles.goodsListHeader}>
+                                <Text style={styles.goodsListTitle}>
                                     Goods Items ({stockOutStore.selectedStockOut.details?.length || 0})
                                 </Text>
-                                
-                                <Divider style={styles.divider} />
+                            </View>
+                            {!stockOutStore.selectedStockOut.details ||
+                            stockOutStore.selectedStockOut.details.length === 0 ? (
+                                <Text style={styles.emptyListText}>
+                                    No items in this stock out record.
+                                </Text>
+                            ) : (
+                                stockOutStore.selectedStockOut.details.map((item) => (
+                                    <ReadOnlyGoodsItem key={item.id} item={item} />
+                                ))
+                            )}
 
-                                {!stockOutStore.selectedStockOut.details || 
-                                 stockOutStore.selectedStockOut.details.length === 0 ? (
-                                    <Text style={styles.emptyListText}>
-                                        No items in this stock out record.
-                                    </Text>
-                                ) : (
-                                    <View style={styles.goodsList}>
-                                        {stockOutStore.selectedStockOut.details.map((item) => (
-                                            <ReadOnlyGoodsItem key={item.id} item={item} />
-                                        ))}
-                                    </View>
-                                )}
-                            </Surface>
-
-                            {/* Action Button - Back button */}
+                            {/* Action Buttons */}
                             <View style={styles.actionButtons}>
                                 <Button
                                     mode="contained"
@@ -342,13 +335,13 @@ const StockOutViewScreen = observer(() => {
                                 </Button>
                             </View>
 
-                            {/* Bottom padding */}
+                            {/* Bottom Padding */}
                             <View style={styles.bottomPadding} />
                         </ScrollView>
                     </TouchableWithoutFeedback>
                 )}
 
-                {/* Snackbar for messages */}
+                {/* Snackbar */}
                 <Snackbar
                     visible={snackbarVisible}
                     onDismiss={() => setSnackbarVisible(false)}
@@ -377,7 +370,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
     },
-    // Accordion container
+    // Accordion styles
     accordionContainer: {
         borderRadius: 8,
         overflow: 'hidden',
@@ -393,29 +386,28 @@ const styles = StyleSheet.create({
     accordionIcon: {
         margin: 0,
     },
-    // Info container styles
     infoContainer: {
-        padding: 16,
-        backgroundColor: '#ffffff', // White background for content
+        padding: 12,
+        backgroundColor: '#ffffff',
     },
-    // Header section (moved from header card)
-    headerSection: {
+    // Code section
+    codeSection: {
         marginBottom: 16,
     },
     codeContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
-    codeText: {
-        fontWeight: 'bold',
-        fontSize: 18,
+    priorityChipWrapper: {
+        marginLeft: 12,
+        alignSelf: 'center',
     },
-    priorityChip: {
+    priorityChipText: {
         color: 'white',
-        fontSize: 12,
+        fontSize: 11,
         textAlign: 'center',
-        lineHeight: 16,
+        lineHeight: 15,
     },
     // Status section
     statusSection: {
@@ -445,26 +437,15 @@ const styles = StyleSheet.create({
     updatedLabel: {
         marginTop: 8,
     },
-    divider: {
-        marginVertical: 16,
-    },
-    // Section styles
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 12,
-    },
-    receiverTitle: {
-        marginTop: 16,
-    },
+    // Info styles
     infoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        gap: 16,
         marginBottom: 16,
     },
     infoColumn: {
         flex: 1,
-        marginRight: 8,
     },
     labelText: {
         fontSize: 12,
@@ -485,44 +466,44 @@ const styles = StyleSheet.create({
         marginTop: 4,
         lineHeight: 20,
     },
-    // Details card styles
-    detailsCard: {
-        borderRadius: 8,
-        marginBottom: 16,
-        overflow: 'hidden',
-        paddingVertical: 16,
-    },
-    detailsTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        paddingHorizontal: 16,
+    // Goods list styles
+    goodsListHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
         marginBottom: 8,
     },
-    goodsList: {
-        paddingHorizontal: 8,
+    goodsListTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    emptyListText: {
+        textAlign: 'center',
+        marginVertical: 20,
+        color: '#666',
     },
     // Goods item styles
     goodsItemCard: {
         padding: 12,
         borderRadius: 8,
         marginBottom: 12,
-        marginHorizontal: 8,
     },
     goodsItemHeader: {
         marginBottom: 8,
     },
     goodsCodeText: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#1976d2',
     },
     goodsName: {
-        fontSize: 15,
-        fontWeight: '500',
+        fontSize: 16,
+        fontWeight: 'bold',
         marginBottom: 12,
     },
     infoSection: {
-        marginTop: 4,
+        marginBottom: 16,
     },
     infoItem: {
         flex: 1,
@@ -530,13 +511,7 @@ const styles = StyleSheet.create({
     notesSection: {
         marginTop: 8,
     },
-    emptyListText: {
-        textAlign: 'center',
-        marginVertical: 20,
-        color: '#666',
-        padding: 16,
-    },
-    // Action button styles
+    // Action buttons
     actionButtons: {
         flexDirection: 'row',
         justifyContent: 'center',
