@@ -16,8 +16,9 @@ import {
     ActivityIndicator,
     List,
     Chip,
+    Divider,
 } from 'react-native-paper'
-import { formatDate } from '@/src/Core/Utils'
+import { formatDate, formatDateTime } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
@@ -27,10 +28,8 @@ import {
 } from '@/src/Core/Presentation/Navigation/Types/Index'
 import { observer } from 'mobx-react'
 import { useStockOutStore } from '../Stores/StockOutStore/UseStockOutStore'
-import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
 import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { StockOutStoreProvider } from '../Stores/StockOutStore/StockOutStoreProvider'
-import { MasterDataStoreProvider } from '@/src/Common/Presentation/Stores/MasterDataStore/MasterDataStoreProvider'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { Status, getStatusDisplayName, getStatusColor } from '@/src/Common/Domain/Enums/Status'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
@@ -100,13 +99,12 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
     </Surface>
 )
 
-type StockOutViewScreenRouteProp = RouteProp<RootStackParamList, 'StorageView'>
+type StockOutViewScreenRouteProp = RouteProp<RootStackParamList, 'StockOutView'>
 
 const StockOutViewScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'StockOut'>>()
     const route = useRoute<StockOutViewScreenRouteProp>()
     const stockOutStore = useStockOutStore()
-    const masterDataStore = useMasterDataStore()
     const authStore = useAuthStore()
     const theme = useTheme()
 
@@ -151,96 +149,6 @@ const StockOutViewScreen = observer(() => {
     const showSnackbar = (message: string) => {
         setSnackbarMessage(message)
         setSnackbarVisible(true)
-    }
-
-    // Render the form content inside the accordion
-    const renderFormContent = () => {
-        const stockOutData = stockOutStore.selectedStockOut
-
-        if (!stockOutData) return null
-
-        return (
-            <>
-                {/* Code Section with Priority Chip */}
-                <View style={styles.codeSection}>
-                    <View style={styles.codeContainer}>
-                        <View>
-                            <Text style={styles.labelText}>Code</Text>
-                            <Text style={styles.valueText}>{stockOutData.code || '-'}</Text>
-                        </View>
-                        {stockOutData.priority !== null && stockOutData.priority !== undefined && (
-                            <View style={styles.priorityChipWrapper}>
-                                <Chip
-                                    style={{
-                                        backgroundColor: getPriorityColor(stockOutData.priority as any),
-                                    }}
-                                    textStyle={styles.priorityChipText}
-                                >
-                                    {getPriorityDisplayName(stockOutData.priority as any)}
-                                </Chip>
-                            </View>
-                        )}
-                    </View>
-                </View>
-
-                {/* Date and Status Row */}
-                <View style={styles.infoRow}>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.labelText}>Out Date</Text>
-                        <Text style={styles.valueText}>
-                            {stockOutData.outDate ? formatDate(stockOutData.outDate) : '-'}
-                        </Text>
-                    </View>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.labelText}>Status</Text>
-                        <View style={styles.statusContainer}>
-                            <Chip
-                                style={{
-                                    backgroundColor: getStatusColor(stockOutData.status as Status),
-                                }}
-                                textStyle={styles.statusChipText}
-                            >
-                                {getStatusDisplayName(stockOutData.status as Status)}
-                            </Chip>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Receiver Information */}
-                <View style={styles.infoRow}>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.labelText}>Receiver Name</Text>
-                        <Text style={styles.valueText}>{stockOutData.receiverName || '-'}</Text>
-                    </View>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.labelText}>Receiver Phone</Text>
-                        <Text style={styles.valueText}>{stockOutData.receiverPhone || '-'}</Text>
-                    </View>
-                </View>
-
-                {/* Created by and Timestamps Row */}
-                <View style={styles.infoRow}>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.labelText}>Created By</Text>
-                        <Text style={styles.valueText}>{stockOutData.createdBy || '-'}</Text>
-                    </View>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.labelText}>Created At</Text>
-                        <Text style={styles.valueText}>
-                            {stockOutData.createdAt ? formatDate(stockOutData.createdAt) : '-'}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Notes Section */}
-                {stockOutData.notes && (
-                    <View style={styles.infoSection}>
-                        <Text style={styles.labelText}>Notes</Text>
-                        <Text style={styles.notesText}>{stockOutData.notes}</Text>
-                    </View>
-                )}
-            </>
-        )
     }
 
     // Get background color based on priority
@@ -288,49 +196,140 @@ const StockOutViewScreen = observer(() => {
                 ) : (
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <ScrollView style={styles.scrollView}>
-                            {/* Accordion for form info section */}
+                            {/* Information Section with Accordion */}
                             <Surface
                                 style={[
                                     styles.accordionContainer,
                                     { backgroundColor: getAccordionBackgroundColor() }
                                 ]}
-                                elevation={1}
+                                elevation={2}
                             >
                                 <CenteredAccordion
                                     title="Stock Out Information"
                                     expanded={infoExpanded}
-                                    onPress={() =>
-                                        setInfoExpanded(!infoExpanded)
-                                    }
+                                    onPress={() => setInfoExpanded(!infoExpanded)}
                                 >
-                                    <View style={styles.formContent}>
-                                        {renderFormContent()}
+                                    <View style={styles.infoContainer}>
+                                        {/* Code and Priority section (formerly in header) */}
+                                        <View style={styles.headerSection}>
+                                            <View style={styles.codeContainer}>
+                                                <View>
+                                                    <Text style={styles.labelText}>Code</Text>
+                                                    <Text style={styles.codeText}>{stockOutStore.selectedStockOut.code}</Text>
+                                                </View>
+                                                {stockOutStore.selectedStockOut.priority !== undefined && 
+                                                stockOutStore.selectedStockOut.priority !== null && (
+                                                    <Chip
+                                                        style={{
+                                                            backgroundColor: getPriorityColor(
+                                                                stockOutStore.selectedStockOut.priority
+                                                            ),
+                                                        }}
+                                                        textStyle={styles.priorityChip}
+                                                    >
+                                                        {getPriorityDisplayName(stockOutStore.selectedStockOut.priority)}
+                                                    </Chip>
+                                                )}
+                                            </View>
+                                        </View>
+
+                                        {/* Status and Timestamps section (formerly in header) */}
+                                        <View style={styles.statusSection}>
+                                            <View style={styles.statusContainer}>
+                                                <Text style={styles.labelText}>Status</Text>
+                                                <Chip
+                                                    style={[
+                                                        styles.statusChip,
+                                                        {
+                                                            backgroundColor: getStatusColor(stockOutStore.selectedStockOut.status as Status),
+                                                        },
+                                                    ]}
+                                                    textStyle={styles.statusText}
+                                                >
+                                                    {getStatusDisplayName(stockOutStore.selectedStockOut.status as Status)}
+                                                </Chip>
+                                            </View>
+                                            <View style={styles.timestampsContainer}>
+                                                <Text style={styles.labelText}>Created</Text>
+                                                <Text style={styles.valueText}>
+                                                    {formatDateTime(stockOutStore.selectedStockOut.createdAt)}
+                                                </Text>
+                                                <Text style={[styles.labelText, styles.updatedLabel]}>Updated</Text>
+                                                <Text style={styles.valueText}>
+                                                    {formatDateTime(stockOutStore.selectedStockOut.updatedAt)}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <Divider style={styles.divider} />
+
+                                        <Text style={styles.sectionTitle}>General Information</Text>
+                                        
+                                        <View style={styles.infoRow}>
+                                            <View style={styles.infoColumn}>
+                                                <Text style={styles.labelText}>Stock Out Date</Text>
+                                                <Text style={styles.valueText}>
+                                                    {formatDate(stockOutStore.selectedStockOut.outDate)}
+                                                </Text>
+                                            </View>
+                                            <View style={styles.infoColumn}>
+                                                <Text style={styles.labelText}>Created By</Text>
+                                                <Text style={styles.valueText}>
+                                                    {stockOutStore.selectedStockOut.createdBy || 'N/A'}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <Text style={[styles.sectionTitle, styles.receiverTitle]}>Receiver Information</Text>
+                                        
+                                        <View style={styles.infoRow}>
+                                            <View style={styles.infoColumn}>
+                                                <Text style={styles.labelText}>Receiver Name</Text>
+                                                <Text style={styles.valueText}>
+                                                    {stockOutStore.selectedStockOut.receiverName || 'N/A'}
+                                                </Text>
+                                            </View>
+                                            <View style={styles.infoColumn}>
+                                                <Text style={styles.labelText}>Receiver Phone</Text>
+                                                <Text style={styles.valueText}>
+                                                    {stockOutStore.selectedStockOut.receiverPhone || 'N/A'}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        {stockOutStore.selectedStockOut.notes && (
+                                            <View style={styles.notesContainer}>
+                                                <Text style={styles.labelText}>Notes</Text>
+                                                <Text style={styles.notesText}>
+                                                    {stockOutStore.selectedStockOut.notes}
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
                                 </CenteredAccordion>
                             </Surface>
 
-                            {/* Goods List */}
-                            <View style={styles.goodsListHeader}>
-                                <Text style={styles.goodsListTitle}>
-                                    Goods list
+                            {/* Goods Details Section */}
+                            <Surface style={styles.detailsCard} elevation={2}>
+                                <Text style={styles.detailsTitle}>
+                                    Goods Items ({stockOutStore.selectedStockOut.details?.length || 0})
                                 </Text>
-                            </View>
+                                
+                                <Divider style={styles.divider} />
 
-                            {!stockOutStore.selectedStockOut?.details ||
-                            stockOutStore.selectedStockOut.details.length === 0 ? (
-                                <Text style={styles.emptyListText}>
-                                    No items in this stock out record.
-                                </Text>
-                            ) : (
-                                stockOutStore.selectedStockOut.details.map(
-                                    item => (
-                                        <ReadOnlyGoodsItem
-                                            key={item.id}
-                                            item={item}
-                                        />
-                                    )
-                                )
-                            )}
+                                {!stockOutStore.selectedStockOut.details || 
+                                 stockOutStore.selectedStockOut.details.length === 0 ? (
+                                    <Text style={styles.emptyListText}>
+                                        No items in this stock out record.
+                                    </Text>
+                                ) : (
+                                    <View style={styles.goodsList}>
+                                        {stockOutStore.selectedStockOut.details.map((item) => (
+                                            <ReadOnlyGoodsItem key={item.id} item={item} />
+                                        ))}
+                                    </View>
+                                )}
+                            </Surface>
 
                             {/* Action Button - Back button */}
                             <View style={styles.actionButtons}>
@@ -378,7 +377,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
     },
-    // Accordion styles
+    // Accordion container
     accordionContainer: {
         borderRadius: 8,
         overflow: 'hidden',
@@ -389,54 +388,83 @@ const styles = StyleSheet.create({
     },
     accordionTitle: {
         fontWeight: 'bold',
+        fontSize: 16,
     },
     accordionIcon: {
         margin: 0,
     },
-    formContent: {
-        padding: 12,
-        backgroundColor: '#ffffff', // White background for the expanded content
+    // Info container styles
+    infoContainer: {
+        padding: 16,
+        backgroundColor: '#ffffff', // White background for content
     },
-    // Code section with priority chip
-    codeSection: {
+    // Header section (moved from header card)
+    headerSection: {
         marginBottom: 16,
     },
     codeContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
+        alignItems: 'center',
     },
-    priorityChipWrapper: {
-        marginLeft: 12,
-        alignSelf: 'center',
+    codeText: {
+        fontWeight: 'bold',
+        fontSize: 18,
     },
-    priorityChipText: {
+    priorityChip: {
         color: 'white',
-        fontSize: 11,
+        fontSize: 12,
         textAlign: 'center',
-        lineHeight: 15,
+        lineHeight: 16,
+    },
+    // Status section
+    statusSection: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
     },
     statusContainer: {
+        flex: 1,
+    },
+    statusChip: {
         marginTop: 4,
+        width: 80,
+        borderRadius: 4,
+        height: 28,
     },
-    statusChipText: {
+    statusText: {
         color: 'white',
-        fontSize: 11,
+        fontSize: 12,
         textAlign: 'center',
-        lineHeight: 15,
+        lineHeight: 16,
     },
-    // Form information styles
-    infoSection: {
-        marginBottom: 16,
+    timestampsContainer: {
+        flex: 1,
+        alignItems: 'flex-end',
+    },
+    updatedLabel: {
+        marginTop: 8,
+    },
+    divider: {
+        marginVertical: 16,
+    },
+    // Section styles
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    receiverTitle: {
+        marginTop: 16,
     },
     infoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        gap: 16,
         marginBottom: 16,
     },
     infoColumn: {
         flex: 1,
+        marginRight: 8,
     },
     labelText: {
         fontSize: 12,
@@ -448,22 +476,65 @@ const styles = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
     },
+    notesContainer: {
+        marginTop: 8,
+    },
     notesText: {
         fontSize: 14,
         color: '#333',
         marginTop: 4,
         lineHeight: 20,
     },
-    goodsListHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 16,
+    // Details card styles
+    detailsCard: {
+        borderRadius: 8,
+        marginBottom: 16,
+        overflow: 'hidden',
+        paddingVertical: 16,
+    },
+    detailsTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        paddingHorizontal: 16,
         marginBottom: 8,
     },
-    goodsListTitle: {
-        fontSize: 18,
+    goodsList: {
+        paddingHorizontal: 8,
+    },
+    // Goods item styles
+    goodsItemCard: {
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+        marginHorizontal: 8,
+    },
+    goodsItemHeader: {
+        marginBottom: 8,
+    },
+    goodsCodeText: {
+        fontSize: 16,
         fontWeight: 'bold',
+        color: '#1976d2',
+    },
+    goodsName: {
+        fontSize: 15,
+        fontWeight: '500',
+        marginBottom: 12,
+    },
+    infoSection: {
+        marginTop: 4,
+    },
+    infoItem: {
+        flex: 1,
+    },
+    notesSection: {
+        marginTop: 8,
+    },
+    emptyListText: {
+        textAlign: 'center',
+        marginVertical: 20,
+        color: '#666',
+        padding: 16,
     },
     // Action button styles
     actionButtons: {
@@ -481,45 +552,9 @@ const styles = StyleSheet.create({
     bottomPadding: {
         height: 40,
     },
-    emptyListText: {
-        textAlign: 'center',
-        marginVertical: 20,
-        color: '#666',
-    },
-    // Goods item styles
-    goodsItemCard: {
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 12,
-    },
-    goodsItemHeader: {
-        marginBottom: 8,
-    },
-    goodsCodeText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1976d2',
-    },
-    goodsName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 12,
-    },
-    goodsItemRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 16,
-    },
-    infoItem: {
-        flex: 1,
-    },
-    notesSection: {
-        marginTop: 8,
-    },
 })
 
 export default withProviders(
     StockOutStoreProvider,
-    MasterDataStoreProvider,
     AuthStoreProvider
 )(StockOutViewScreen)
