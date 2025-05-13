@@ -74,6 +74,44 @@ const StorageProcessScreen = observer(() => {
     const [searchQuery, setSearchQuery] = useState('')
     const [filteredDetails, setFilteredDetails] = useState<StorageVoucherDetailEntity[]>([])
 
+    // Calculate storage completion stats
+    const calculateStorageStats = () => {
+        if (!storageStore.selectedStorageVoucher || !storageStore.selectedStorageVoucher.details) {
+            return { 
+                totalItems: 0, 
+                storedItems: 0, 
+                percentage: 0 
+            };
+        }
+
+        const details = storageStore.selectedStorageVoucher.details;
+        
+        // Calculate total quantity and allocated quantity across all details
+        let totalQuantity = 0;
+        let allocatedQuantity = 0;
+        
+        details.forEach(detail => {
+            totalQuantity += detail.quantity || 0;
+            const detailAllocated = (detail.storageVoucherItems || []).reduce(
+                (sum, item) => sum + (item.quantity || 0), 
+                0
+            );
+            allocatedQuantity += detailAllocated;
+        });
+        
+        // Calculate percentage
+        const percentage = totalQuantity > 0 ? Math.min(allocatedQuantity / totalQuantity, 1) : 0;
+        
+        return {
+            totalItems: totalQuantity,
+            storedItems: allocatedQuantity,
+            percentage
+        };
+    };
+
+    // Get storage stats
+    const storageStats = calculateStorageStats();
+
     // Fetch storage data and master data when component mounts
     useEffect(() => {
         const fetchData = async () => {
@@ -231,44 +269,6 @@ const StorageProcessScreen = observer(() => {
         const storageData = storageStore.selectedStorageVoucher
 
         if (!storageData) return null
-
-        // Calculate storage completion stats
-        const calculateStorageStats = () => {
-            if (!storageStore.selectedStorageVoucher || !storageStore.selectedStorageVoucher.details) {
-                return { 
-                    totalItems: 0, 
-                    storedItems: 0, 
-                    percentage: 0 
-                };
-            }
-
-            const details = storageStore.selectedStorageVoucher.details;
-            
-            // Calculate total quantity and allocated quantity across all details
-            let totalQuantity = 0;
-            let allocatedQuantity = 0;
-            
-            details.forEach(detail => {
-                totalQuantity += detail.quantity || 0;
-                const detailAllocated = (detail.storageVoucherItems || []).reduce(
-                    (sum, item) => sum + (item.quantity || 0), 
-                    0
-                );
-                allocatedQuantity += detailAllocated;
-            });
-            
-            // Calculate percentage
-            const percentage = totalQuantity > 0 ? Math.min(allocatedQuantity / totalQuantity, 1) : 0;
-            
-            return {
-                totalItems: totalQuantity,
-                storedItems: allocatedQuantity,
-                percentage
-            };
-        };
-
-        // Get storage stats
-        const storageStats = calculateStorageStats();
 
         // Get progress color based on completion percentage
         const getProgressColor = (percentage: number) => {
@@ -539,7 +539,7 @@ const StorageProcessScreen = observer(() => {
                                     onPress={() => setConfirmDialogVisible(true)}
                                     style={styles.processButton}
                                     loading={isProcessing}
-                                    disabled={isProcessing}
+                                    disabled={isProcessing || storageStats.percentage < 1}
                                 >
                                     Complete Processing
                                 </Button>
@@ -559,17 +559,24 @@ const StorageProcessScreen = observer(() => {
                     >
                         <Dialog.Title>Confirm Process</Dialog.Title>
                         <Dialog.Content>
-                            <Text>
-                                Are you sure you want to complete processing this storage voucher?
-                                This action cannot be undone.
-                            </Text>
+                            {storageStats.percentage < 1 ? (
+                                <Text style={styles.warningText}>
+                                    All items must be fully allocated before completing the process.
+                                    Currently at {Math.round(storageStats.percentage * 100)}% completion.
+                                </Text>
+                            ) : (
+                                <Text>
+                                    Are you sure you want to complete processing this storage voucher?
+                                    This action cannot be undone.
+                                </Text>
+                            )}
                         </Dialog.Content>
                         <Dialog.Actions>
                             <Button onPress={() => setConfirmDialogVisible(false)}>Cancel</Button>
                             <Button
                                 onPress={handleProcessStorage}
                                 loading={isProcessing}
-                                disabled={isProcessing}
+                                disabled={isProcessing || storageStats.percentage < 1}
                             >
                                 Confirm
                             </Button>
@@ -785,6 +792,10 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginVertical: 20,
         color: '#666',
+    },
+    warningText: {
+        color: '#f44336',
+        marginBottom: 8,
     },
 })
 
