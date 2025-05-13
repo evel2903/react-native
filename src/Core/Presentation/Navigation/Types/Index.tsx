@@ -22,6 +22,7 @@ export type RootStackParamList = {
     Storage: undefined
     StorageView: { id: string }
     StorageProcess: { id: string }
+    StockOut: undefined
     NotFound: undefined
 }
 

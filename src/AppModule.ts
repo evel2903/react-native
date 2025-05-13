@@ -5,6 +5,7 @@ import { CoreModule } from './Core/CoreModule'
 import { AuthModule } from './Auth/AuthModule'
 import { StockInModule } from './StockIn/StockInModule'
 import { CommonModule } from './Common/CommonModule'
+import { StockOutModule } from './StockOut/StockOutModule'
 
 @module({
     imports: [
@@ -13,6 +14,7 @@ import { CommonModule } from './Common/CommonModule'
         AuthModule,
         StockInModule,
         StorageModule,
+        StockOutModule
     ],
 })
 export default class AppModule {}
