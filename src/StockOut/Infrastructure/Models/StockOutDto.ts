@@ -1,8 +1,51 @@
 // src/StockOut/Infrastructure/Models/StockOutDto.ts
-import { Expose } from 'class-transformer'
+import { Expose, Type } from 'class-transformer'
 import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
-import StockOutEntity from '../../Domain/Entities/StockOutEntity'
+import StockOutEntity, { StockOutDetailEntity } from '../../Domain/Entities/StockOutEntity'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
+
+export class StockOutDetailDto extends ResponseDto<StockOutDetailEntity> {
+    @Expose()
+    id!: string
+
+    @Expose()
+    updatedAt!: string
+
+    @Expose()
+    createdAt!: string
+
+    @Expose()
+    isDeleted!: boolean
+
+    @Expose()
+    goodsId!: string
+
+    @Expose()
+    code!: string
+
+    @Expose()
+    name!: string
+
+    @Expose()
+    quantity!: number
+
+    @Expose()
+    notes!: string
+
+    toDomain(): StockOutDetailEntity {
+        return {
+            id: this.id,
+            updatedAt: this.updatedAt,
+            createdAt: this.createdAt,
+            isDeleted: this.isDeleted,
+            goodsId: this.goodsId,
+            code: this.code,
+            name: this.name,
+            quantity: this.quantity,
+            notes: this.notes
+        }
+    }
+}
 
 export class StockOutDto extends ResponseDto<StockOutEntity> {
     @Expose()
@@ -21,13 +64,13 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
     status!: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
 
     @Expose()
-    notes?: string
+    notes!: string
 
     @Expose()
     priority?: PriorityType | null
 
     @Expose()
-    count!: number
+    count?: number
     
     @Expose()
     updatedAt!: string
@@ -40,6 +83,19 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
 
     @Expose()
     isActive!: boolean
+
+    @Expose()
+    receiverName?: string
+
+    @Expose()
+    receiverPhone?: string
+
+    @Expose()
+    createdBy?: string
+
+    @Expose()
+    @Type(() => StockOutDetailDto)
+    details?: StockOutDetailDto[]
 
     toDomain(): StockOutEntity {
         return {
@@ -54,7 +110,11 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
             updatedAt: this.updatedAt,
             createdAt: this.createdAt,
             isDeleted: this.isDeleted,
-            isActive: this.isActive
+            isActive: this.isActive,
+            receiverName: this.receiverName,
+            receiverPhone: this.receiverPhone,
+            createdBy: this.createdBy,
+            details: this.details?.map(detail => detail.toDomain())
         }
     }
 }

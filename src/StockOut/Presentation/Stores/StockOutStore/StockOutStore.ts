@@ -6,6 +6,7 @@ import GetStockOutsPayload from '@/src/StockOut/Application/Types/GetStockOutsPa
 import StockOutEntity from '@/src/StockOut/Domain/Entities/StockOutEntity'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import GetStockOutsUseCase from '@/src/StockOut/Application/UseCases/GetStockOutsUseCase'
+import GetStockOutByIdUseCase from '@/src/StockOut/Application/UseCases/GetStockOutByIdUseCase'
 
 @injectable()
 export class StockOutStore implements StockOutStoreState {
@@ -38,7 +39,9 @@ export class StockOutStore implements StockOutStoreState {
 
     constructor(
         @inject(GetStockOutsUseCase)
-        private readonly getStockOutsUseCase: GetStockOutsUseCase
+        private readonly getStockOutsUseCase: GetStockOutsUseCase,
+        @inject(GetStockOutByIdUseCase)
+        private readonly getStockOutByIdUseCase: GetStockOutByIdUseCase
     ) {
         makeAutoObservable(this)
         // Load stock outs on store initialization
@@ -131,6 +134,39 @@ export class StockOutStore implements StockOutStoreState {
                 this.setCount(0)
             })
 
+            return null
+        } finally {
+            runInAction(() => {
+                this.setIsLoading(false)
+            })
+        }
+    }
+
+    // Get stock out by ID using the use case
+    async getStockOutById(id: string): Promise<StockOutEntity | null> {
+        this.setIsLoading(true)
+        this.setError(null)
+        
+        try {
+            const stockOut = await this.getStockOutByIdUseCase.execute(id)
+            
+            runInAction(() => {
+                this.setSelectedStockOut(stockOut)
+            })
+            
+            return stockOut
+        } catch (error) {
+            console.error('Error fetching stock out details:', error)
+            
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to fetch stock out details'
+                )
+                this.setSelectedStockOut(null)
+            })
+            
             return null
         } finally {
             runInAction(() => {

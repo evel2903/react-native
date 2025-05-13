@@ -129,7 +129,7 @@ const StockOutScreen = observer(() => {
     }
 
     const handleView = (id: string) => {
-        showSnackbar('View functionality will be implemented soon')
+        navigation.navigate('StockOutView', { id })
     }
 
     const handleEdit = (id: string) => {
