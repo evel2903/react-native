@@ -6,6 +6,8 @@ import StockOutEntity from '../../Domain/Entities/StockOutEntity'
 import IHttpClient, {
     IHttpClientToken,
 } from '@/src/Core/Domain/Specifications/IHttpClient'
+import { plainToInstance } from 'class-transformer'
+import { StockOutDto } from '../Models/StockOutDto'
 
 @injectable()
 class StockOutRepository implements IStockOutRepository {
@@ -63,18 +65,20 @@ class StockOutRepository implements IStockOutRepository {
 
             // Make API request
             const url = `${this.apiBaseUrl}?${queryParams.toString()}`
-            const response = await this.httpClient.get<{ data: StockOutEntity[] }>(url)
+            const response: any = await this.httpClient.get(url)
 
             // Check if the response has the expected structure
             if (!response || !response.data || !Array.isArray(response.data)) {
                 throw new Error('Unexpected API response format')
             }
 
-            // Transform the response items to domain entities
-            const stockOutItems = response.data
+            // Transform the response items to domain entities using StockOutDto
+            const stockOutItems = response.data.map((item: any) =>
+                plainToInstance(StockOutDto, item).toDomain()
+            )
 
             // Use the count from the response or default to items length
-            const totalCount = stockOutItems.length > 0 ? stockOutItems.length : 0
+            const totalCount = response.count || stockOutItems.length
 
             return {
                 results: stockOutItems,
@@ -90,7 +94,7 @@ class StockOutRepository implements IStockOutRepository {
 
     public async getStockOutById(id: string): Promise<StockOutEntity> {
         try {
-            const response = await this.httpClient.get<any>(
+            const response: any = await this.httpClient.get(
                 `${this.apiBaseUrl}/${id}`
             )
 
@@ -99,12 +103,11 @@ class StockOutRepository implements IStockOutRepository {
                 throw new Error('Stock out record not found')
             }
 
-            // API responds with { data: { ... stockOutData } }
-            if (!response.data) {
-                throw new Error('Stock out record data is missing')
-            }
+            // API may respond with { data: { ... stockOutData } }
+            const stockOutData = response.data || response
 
-            return response.data
+            // Transform the response to domain entity using StockOutDto
+            return plainToInstance(StockOutDto, stockOutData).toDomain()
         } catch (error) {
             console.error(`Error fetching stock out with ID ${id}:`, error)
             throw error instanceof Error
@@ -119,17 +122,18 @@ class StockOutRepository implements IStockOutRepository {
         stateId: string
     ): Promise<StockOutEntity> {
         try {
-            const response = await this.httpClient.patch<
-                { status: StockOutEntity['status']; stateId: string },
-                any
-            >(`${this.apiBaseUrl}/${id}/status`, { status, stateId })
+            const response: any = await this.httpClient.patch(
+                `${this.apiBaseUrl}/${id}/status`, 
+                { status, stateId }
+            )
 
             // Check if the response has the expected structure
             if (!response) {
                 throw new Error('Failed to update stock out status')
             }
 
-            return response
+            // Transform the response to domain entity using StockOutDto
+            return plainToInstance(StockOutDto, response).toDomain()
         } catch (error) {
             console.error(`Error updating stock out status for ID ${id}:`, error)
             throw error instanceof Error
@@ -141,7 +145,7 @@ class StockOutRepository implements IStockOutRepository {
     public async deleteStockOut(id: string): Promise<boolean> {
         try {
             // Use the API endpoint for deleteStockOut
-            await this.httpClient.delete<any>(`${this.apiBaseUrl}/${id}`)
+            await this.httpClient.delete(`${this.apiBaseUrl}/${id}`)
 
             // For 204 responses, the successful deletion is indicated by the status code itself
             // We can simply return true if we reach this point without exceptions
