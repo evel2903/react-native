@@ -5,6 +5,9 @@ import PickingRepository from './Infrastructure/Implementations/PickingRepositor
 import GetPickingOrdersUseCase from './Application/UseCases/GetPickingOrdersUseCase'
 import GetPickingOrderByIdUseCase from './Application/UseCases/GetPickingOrderByIdUseCase'
 import CreateOrUpdatePickingOrderItemUseCase from './Application/UseCases/CreateOrUpdatePickingOrderItemUseCase'
+import GetPickingOrderProcessUseCase from './Application/UseCases/GetPickingOrderProcessUseCase'
+import UpdatePickingOrderProcessItemUseCase from './Application/UseCases/UpdatePickingOrderProcessItemUseCase'
+import CompletePickingOrderProcessUseCase from './Application/UseCases/CompletePickingOrderProcessUseCase'
 
 @module({
     providers: [
@@ -17,6 +20,9 @@ import CreateOrUpdatePickingOrderItemUseCase from './Application/UseCases/Create
         GetPickingOrdersUseCase,
         GetPickingOrderByIdUseCase,
         CreateOrUpdatePickingOrderItemUseCase,
+        GetPickingOrderProcessUseCase,
+        UpdatePickingOrderProcessItemUseCase,
+        CompletePickingOrderProcessUseCase,
         // Store
         {
             useClass: PickingStore,

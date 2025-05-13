@@ -36,6 +36,15 @@ export interface IPickingRepository {
 
     createOrUpdatePickingOrderItem: (data: any) => Promise<PickingOrderItemEntity>
 
+    getPickingOrderProcess: (id: string) => Promise<import('../Entities/PickingOrderProcessEntity').PickingOrderProcessEntity>
+
+    updatePickingOrderProcessItem: (
+        id: string, 
+        data: { quantityPicked: number }
+    ) => Promise<import('../Entities/PickingOrderProcessEntity').PickingOrderProcessItemEntity>
+
+    completePickingOrderProcess: (id: string) => Promise<{ success: boolean; message: string }>
+
     sendProcessCompletedEmail: (id: string) => Promise<{ statusCode: number; message: string }>
 
     // Optional methods

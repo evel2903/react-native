@@ -23,6 +23,8 @@ export type RootStackParamList = {
     StorageView: { id: string }
     StorageProcess: { id: string }
     Picking: undefined
+    PickingView: { id: string }
+    PickingProcess: { id: string }
     StockOut: undefined
     StockOutView: { id: string }  // Added StockOutView route
     NotFound: undefined

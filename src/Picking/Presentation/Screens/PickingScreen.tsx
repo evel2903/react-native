@@ -70,8 +70,7 @@ const PickingScreen = observer(() => {
 
     // Handle process action
     const handleProcess = async (id: string) => {
-        showSnackbar('Processing functionality coming soon')
-        //navigation.navigate('PickingProcess', {id})
+        navigation.navigate('PickingProcess', {id})
     }
 
     // Helper method to show snackbar message

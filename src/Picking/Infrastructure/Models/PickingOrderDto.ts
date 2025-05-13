@@ -98,7 +98,7 @@ export default class PickingOrderDto extends ResponseDto<PickingOrderEntity> {
             // Map other fields
             isValidForProcess: this.isValidForProcess || false,
             completedAt: this.completedAt || null,
-            details: this.details?.map(detail => detail.toDomain()) || [],
+            details: Array.isArray(this.details) ? this.details.map(detail => detail.toDomain()) : [],
         }
     }
 }
