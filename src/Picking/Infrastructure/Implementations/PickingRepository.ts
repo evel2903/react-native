@@ -150,38 +150,68 @@ class PickingRepository implements IPickingRepository {
         }
     }
 
-    public async updatePickingOrderProcessItem(
+     public async updatePickingOrderProcessItem(
         id: string,
         data: { quantityPicked: number }
     ): Promise<PickingOrderProcessItemEntity> {
         try {
-            const response = await this.httpClient.patch<any, any>(
-                `${this.apiProcessUrl}/items/${id}`,
-                data
-            )
+            
+            const url = `${this.apiProcessUrl}/picked-item/${id}?quantityPicked=${data.quantityPicked}`;
+            
+            const response = await this.httpClient.put<any, any>(
+                url,
+                {} // Empty body since we're using query parameters
+            );
 
             if (!response) {
-                throw new Error('Failed to update picking order process item')
+                throw new Error('Failed to update picking order process item');
             }
 
             // Transform the response to domain entity (assuming a response structure)
-            // You might need to adjust this based on the actual API response
+            // Return the updated item - handle both possible response formats
+            const responseData = response.data || response;
+            
+            // Map the API response to our domain entity
+            // If the API returns the full updated item, use it
+            if (responseData && typeof responseData === 'object') {
+                return {
+                    id: responseData.id || id,
+                    updatedAt: responseData.updatedAt || new Date().toISOString(),
+                    createdAt: responseData.createdAt || new Date().toISOString(),
+                    isDeleted: responseData.isDeleted || false,
+                    pickingOrderId: responseData.pickingOrderId || '',
+                    pickingOrderDetailId: responseData.pickingOrderDetailId || '',
+                    stockLocationId: responseData.stockLocationId || '',
+                    requestedQuantity: responseData.requestedQuantity || 0,
+                    quantityCanPicked: responseData.quantityCanPicked || 0,
+                    quantityPicked: data.quantityPicked, // Use the value we sent
+                    warehouseName: responseData.warehouseName || '',
+                    areaName: responseData.areaName || '',
+                    rowName: responseData.rowName || '',
+                    shelfName: responseData.shelfName || '',
+                    level: responseData.level || 0,
+                    position: responseData.position || 0,
+                    isActive: responseData.isActive !== undefined ? responseData.isActive : true,
+                    updatedQuantityPicked: data.quantityPicked
+                } as PickingOrderProcessItemEntity;
+            }
+            
+            // If the API doesn't return the full item, return a minimal version with the updated quantity
             return {
                 id: id,
-                ...response,
                 quantityPicked: data.quantityPicked,
                 updatedQuantityPicked: data.quantityPicked
-            } as PickingOrderProcessItemEntity
+            } as PickingOrderProcessItemEntity;
         } catch (error) {
             console.error(
                 `Error updating picking order process item for ID ${id}:`,
                 error
-            )
+            );
             throw error instanceof Error
                 ? error
                 : new Error(
                     `Failed to update picking order process item for ID ${id}`
-                )
+                );
         }
     }
 

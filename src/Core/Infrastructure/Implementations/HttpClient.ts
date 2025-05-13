@@ -99,6 +99,16 @@ class HttpClient implements IHttpClient {
             .then(response => response.data)
     }
 
+    public put<DataType, ResponseType>(
+        url: string,
+        data?: DataType,
+        config?: AxiosRequestConfig
+    ) {
+        return this.axios
+            .put<ResponseType>(url, data, config)
+            .then(response => response.data)
+    }
+
     public patch<DataType, ResponseType>(
         url: string,
         data?: DataType,

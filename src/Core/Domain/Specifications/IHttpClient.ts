@@ -13,6 +13,12 @@ export default interface IHttpClient {
         data?: DataType,
         config?: AxiosRequestConfig
     ): Promise<ResponseType>
+    
+    put<DataType, ResponseType>(
+        url: string,
+        data?: DataType,
+        config?: AxiosRequestConfig
+    ): Promise<ResponseType>
 
     patch<DataType, ResponseType>(
         url: string,
