@@ -64,8 +64,7 @@ const PickingScreen = observer(() => {
     }
 
     const handleView = (id: string) => {
-        showSnackbar('View functionality coming soon')
-        //navigation.navigate('PickingView', { id })
+        navigation.navigate('PickingView', { id })
     }
 
     // Handle process action
