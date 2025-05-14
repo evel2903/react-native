@@ -379,7 +379,7 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
                                         {location.warehouseName} - {location.shelfName}
                                     </Text>
                                     <Text style={styles.locationSubtext}>
-                                        {location.areaName}, Row {location.rowName}
+                                        Area: {location.areaName}, Row: {location.rowName}
                                     </Text>
                                     <Text style={styles.locationPosition}>
                                         Level: {location.level} Position: {location.position}
