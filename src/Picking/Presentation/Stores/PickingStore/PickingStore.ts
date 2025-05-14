@@ -314,6 +314,7 @@ export class PickingStore implements PickingStoreState {
                 })
 
             // Consider any non-null response as success
+            // The use case already throws errors for failed API calls
             if (result !== null && result !== undefined) {
                 runInAction(() => {
                     // Update the process item in the items array
@@ -350,7 +351,8 @@ export class PickingStore implements PickingStoreState {
                         : `Failed to update picked quantity for item ${itemId}`
                 )
 
-                // Remove from pending updates in case of error
+                // Important: remove from pending updates in case of error
+                // to allow the user to try again
                 this.pendingUpdates.delete(itemId)
             })
 

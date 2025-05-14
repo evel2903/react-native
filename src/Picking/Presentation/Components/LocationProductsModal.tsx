@@ -52,11 +52,21 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
         new Map()
     )
 
-    // Get current quantity to display
+    // Get current quantity to display - account for all possible states
     const getCurrentQuantity = (item: PickingOrderProcessItemEntity) => {
-        return item.updatedQuantityPicked !== undefined
-            ? item.updatedQuantityPicked
-            : item.quantityPicked
+        // First check if there's a pending update
+        const pendingQuantity = pendingUpdates.get(item.id)
+        if (pendingQuantity !== undefined) {
+            return pendingQuantity
+        }
+
+        // Then check if there's an updated quantity in the item
+        if (item.updatedQuantityPicked !== undefined) {
+            return item.updatedQuantityPicked
+        }
+
+        // Fall back to the original quantity
+        return item.quantityPicked
     }
 
     // Handle input change for a specific item
@@ -75,7 +85,6 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
             console.log(
                 `LocationProductsModal: Updating item ${itemId} to quantity ${quantity}`
             )
-            // IMPORTANT: Add await AND explicit return
             const result = await onUpdateQuantity(itemId, quantity)
             console.log(`LocationProductsModal: Result from parent: ${result}`)
 
@@ -107,15 +116,22 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                 }
             })
         }
-    }, [location?.items])
+    }, [location?.items, pendingUpdates]) // Added pendingUpdates dependency
 
     // Get input value for an item
     const getInputValue = (itemId: string) => {
-        return inputValues.has(itemId)
-            ? inputValues.get(itemId)!
-            : getCurrentQuantity(
-                  location.items.find(i => i.id === itemId) || location.items[0]
-              ).toString()
+        const foundItem = location.items.find(i => i.id === itemId)
+
+        // If the item doesn't exist, return "0"
+        if (!foundItem) return '0'
+
+        // If we have a stored input value, use it
+        if (inputValues.has(itemId)) {
+            return inputValues.get(itemId)!
+        }
+
+        // Otherwise calculate the current quantity based on all possible states
+        return getCurrentQuantity(foundItem).toString()
     }
 
     return (

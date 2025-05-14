@@ -15,7 +15,7 @@ import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/Pic
 interface ProductItemProps {
     item: PickingOrderProcessItemEntity
     index: number
-    onUpdateQuantity: (id: string, quantity: number) => Promise<boolean>
+    onUpdateQuantity: (itemId: string, quantity: number) => Promise<boolean>
     isPendingUpdate: boolean
     inputValue: string
     onInputChange: (value: string) => void
@@ -66,6 +66,17 @@ const ProductItem: React.FC<ProductItemProps> = ({
         const newQuantity = parseInt(inputValue, 10)
         if (isNaN(newQuantity)) return
 
+        // VALIDATION: Check if quantity exceeds maximum pickable
+        if (newQuantity > maxPickable) {
+            // Show error for excessive quantity
+            setUpdateError(true)
+            setSnackbarMessage(
+                `Cannot exceed maximum quantity of ${maxPickable}`
+            )
+            setSnackbarVisible(true)
+            return // Stop the update process
+        }
+
         const finalQuantity = Math.max(0, Math.min(newQuantity, maxPickable))
 
         if (finalQuantity !== currentQuantity) {
@@ -85,9 +96,11 @@ const ProductItem: React.FC<ProductItemProps> = ({
 
                 // Show correct success/error message
                 if (result === true) {
-                    // Explicitly check for true
                     setUpdateSuccess(true)
                     setSnackbarMessage('Quantity updated successfully')
+
+                    // Force re-render of the parent container
+                    onInputChange(finalQuantity.toString())
                 } else {
                     setUpdateError(true)
                     setSnackbarMessage('Failed to update quantity')

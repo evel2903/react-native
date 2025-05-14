@@ -68,10 +68,13 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
                 )
                 totalRequested += maxPickable
 
+                // First check for pending updates
                 const pendingQuantity = pendingUpdates.get(item.id)
                 const pickedQuantity =
                     pendingQuantity !== undefined
                         ? pendingQuantity
+                        : item.updatedQuantityPicked !== undefined
+                        ? item.updatedQuantityPicked
                         : item.quantityPicked
 
                 totalPicked += Math.min(pickedQuantity, maxPickable)
@@ -98,7 +101,7 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
         )
 
         setGroupedLocations(sortedLocations)
-    }, [items, pendingUpdates])
+    }, [items, pendingUpdates]) // Make sure we depend on both items and pendingUpdates
 
     // Handle quantity updates and ensure we pass through the Promise result
     const handleUpdateQuantity = async (
@@ -109,7 +112,6 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
             console.log(
                 `PickingLocationManager: Updating item ${itemId} to quantity ${quantity}`
             )
-            // IMPORTANT: Add await AND explicit return here
             const result = await onUpdateQuantity(itemId, quantity)
             console.log(`PickingLocationManager: Result from parent: ${result}`)
             return result // Make sure we explicitly return the result
