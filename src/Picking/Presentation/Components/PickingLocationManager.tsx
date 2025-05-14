@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, StyleSheet, ScrollView } from 'react-native'
 import {
     Surface,
     Text,
     Divider,
-    List,
-    Chip,
     Button,
+    Chip,
     ProgressBar,
     TextInput,
+    Portal,
+    Modal,
+    IconButton,
 } from 'react-native-paper'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 
@@ -25,26 +27,55 @@ interface GroupedPickingItems {
     progress: number     // overall picking progress for this location
 }
 
-interface PickingLocationGroupProps {
-    groupedItems: GroupedPickingItems
+interface LocationDetailsProps {
+    warehouseName: string
+    areaName: string
+    rowName: string
+    shelfName: string
+    level: number
+    position: number
+}
+
+const LocationDetails: React.FC<LocationDetailsProps> = ({
+    warehouseName,
+    areaName,
+    rowName,
+    shelfName,
+    level,
+    position
+}) => (
+    <View style={styles.locationDetails}>
+        <Text style={styles.locationText}>Warehouse: {warehouseName}</Text>
+        <Text style={styles.locationText}>Area: {areaName}</Text>
+        <Text style={styles.locationText}>Row: {rowName}</Text>
+        <Text style={styles.locationText}>Shelf: {shelfName}</Text>
+        <Text style={styles.locationText}>Level: {level} Position: {position}</Text>
+    </View>
+)
+
+// Popup modal for showing and editing products at a location
+interface LocationProductsModalProps {
+    visible: boolean
+    onClose: () => void
+    location: GroupedPickingItems
     onUpdateQuantity: (itemId: string, quantity: number) => void
     pendingUpdates: Map<string, number>
 }
 
-const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
-    groupedItems,
+const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
+    visible,
+    onClose,
+    location,
     onUpdateQuantity,
     pendingUpdates
 }) => {
-    const [expanded, setExpanded] = useState(false)
     // Track temporarily edited values before submitting
     const [inputValues, setInputValues] = useState<Map<string, string>>(new Map())
 
-    // Get color based on progress
-    const getProgressColor = (progress: number) => {
-        if (progress === 0) return '#f44336' // Red for not started
-        if (progress < 1) return '#ff9800' // Orange for in progress
-        return '#4caf50' // Green for complete
+    // Get current quantity to display
+    const getCurrentQuantity = (item: PickingOrderProcessItemEntity) => {
+        return item.updatedQuantityPicked !== undefined ? 
+            item.updatedQuantityPicked : item.quantityPicked
     }
 
     // Handle input change for a specific item
@@ -52,12 +83,6 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
         const newInputValues = new Map(inputValues)
         newInputValues.set(id, value)
         setInputValues(newInputValues)
-    }
-
-    // Get current quantity to display
-    const getCurrentQuantity = (item: PickingOrderProcessItemEntity) => {
-        return item.updatedQuantityPicked !== undefined ? 
-            item.updatedQuantityPicked : item.quantityPicked
     }
 
     // Handle update button click
@@ -73,14 +98,12 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
         const finalQuantity = Math.max(0, Math.min(newQuantity, maxPickable))
 
         // Only update if different from current value
-        const currentQuantity = item.updatedQuantityPicked !== undefined ? 
-            item.updatedQuantityPicked : item.quantityPicked
+        const currentQuantity = getCurrentQuantity(item)
             
         if (finalQuantity !== currentQuantity) {
             onUpdateQuantity(item.id, finalQuantity)
             
             // Keep the input value matching what we sent to the API
-            // This ensures the input field keeps showing the updated value
             const newInputValues = new Map(inputValues)
             newInputValues.set(item.id, finalQuantity.toString())
             setInputValues(newInputValues)
@@ -90,128 +113,157 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
     // Synchronize input values when item props change
     useEffect(() => {
         // Update input values if the item's quantity has changed externally
-        // (e.g., from a successful API update)
-        groupedItems.items.forEach(item => {
-            const currentQuantity = getCurrentQuantity(item)
-            // Only update if we don't have a pending edit
-            if (!inputValues.has(item.id)) {
-                const newInputValues = new Map(inputValues)
-                newInputValues.set(item.id, currentQuantity.toString())
-                setInputValues(newInputValues)
-            }
-        })
-    }, [groupedItems.items])
+        if (location && location.items) {
+            location.items.forEach(item => {
+                const currentQuantity = getCurrentQuantity(item)
+                // Only update if we don't have a pending edit
+                if (!inputValues.has(item.id)) {
+                    const newInputValues = new Map(inputValues)
+                    newInputValues.set(item.id, currentQuantity.toString())
+                    setInputValues(newInputValues)
+                }
+            })
+        }
+    }, [location?.items])
 
     return (
-        <Surface style={styles.locationCard} elevation={1}>
-            <List.Accordion
-                title={
-                    <View style={styles.locationHeader}>
-                        <Text style={styles.locationName}>
-                            {groupedItems.warehouseName} - {groupedItems.shelfName}
-                        </Text>
-                        <Chip 
-                            style={{ 
-                                backgroundColor: getProgressColor(groupedItems.progress),
-                                marginLeft: 8
-                            }}
-                            textStyle={styles.progressChip}
-                        >
-                            {Math.round(groupedItems.progress * 100)}%
-                        </Chip>
-                    </View>
-                }
-                expanded={expanded}
-                onPress={() => setExpanded(!expanded)}
-                style={styles.accordion}
+        <Portal>
+            <Modal 
+                visible={visible} 
+                onDismiss={onClose}
+                contentContainerStyle={styles.modalContainer}
             >
-                {/* Location Details */}
-                <View style={styles.locationDetails}>
-                    <Text style={styles.locationText}>Warehouse: {groupedItems.warehouseName}</Text>
-                    <Text style={styles.locationText}>Area: {groupedItems.areaName}</Text>
-                    <Text style={styles.locationText}>Row: {groupedItems.rowName}</Text>
-                    <Text style={styles.locationText}>Shelf: {groupedItems.shelfName}</Text>
-                    <Text style={styles.locationText}>
-                        Level: {groupedItems.level} Position: {groupedItems.position}
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>
+                        Products at {location?.warehouseName} - {location?.shelfName}
                     </Text>
+                    <IconButton icon="close" size={20} onPress={onClose} />
                 </View>
                 
-                <Divider style={styles.divider} />
+                <Divider />
                 
-                {/* Items in this location */}
-                {groupedItems.items.map((item, index) => {
-                    // Get current display quantity
-                    const currentQuantity = getCurrentQuantity(item)
+                <ScrollView style={styles.modalContent}>
+                    {/* Location Details */}
+                    <LocationDetails 
+                        warehouseName={location?.warehouseName || ''}
+                        areaName={location?.areaName || ''}
+                        rowName={location?.rowName || ''}
+                        shelfName={location?.shelfName || ''}
+                        level={location?.level || 0}
+                        position={location?.position || 0}
+                    />
                     
-                    // Calculate max pickable quantity
-                    const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
+                    <Divider style={styles.divider} />
                     
-                    // Check if item is fully picked
-                    const isFullyPicked = currentQuantity >= maxPickable
-                    
-                    return (
-                        <View key={item.id} style={styles.productItem}>
-                            <View style={styles.productHeader}>
-                                <Text style={styles.productId}>Product {index + 1}</Text>
-                                {isFullyPicked && (
-                                    <Chip 
-                                        style={{ backgroundColor: '#4caf50' }}
-                                        textStyle={styles.statusChip}
+                    {/* Items in this location */}
+                    {location && location.items.map((item, index) => {
+                        // Get current display quantity
+                        const currentQuantity = getCurrentQuantity(item)
+                        
+                        // Calculate max pickable quantity
+                        const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
+                        
+                        // Check if item is fully picked
+                        const isFullyPicked = currentQuantity >= maxPickable
+                        
+                        // Calculate progress percentage
+                        const progressPercentage = maxPickable > 0 ? 
+                            Math.min(currentQuantity / maxPickable, 1) : 0
+                        
+                        // Get color based on pick status
+                        const getProgressColor = () => {
+                            if (progressPercentage === 0) return '#f44336' // Red for not started
+                            if (progressPercentage < 1) return '#ff9800' // Orange for in progress
+                            return '#4caf50' // Green for complete
+                        }
+                        
+                        return (
+                            <Surface 
+                                key={item.id} 
+                                style={styles.productItem}
+                                elevation={1}
+                            >
+                                <View style={styles.productHeader}>
+                                    <Text style={styles.productId}>Product {index + 1}</Text>
+                                    {isFullyPicked && (
+                                        <Chip 
+                                            style={{ backgroundColor: '#4caf50' }}
+                                            textStyle={styles.statusChip}
+                                        >
+                                            Complete
+                                        </Chip>
+                                    )}
+                                </View>
+                                
+                                <View style={styles.quantityRow}>
+                                    <Text style={styles.quantityLabel}>Requested:</Text>
+                                    <Text style={styles.quantityValue}>{item.requestedQuantity}</Text>
+                                </View>
+                                <View style={styles.quantityRow}>
+                                    <Text style={styles.quantityLabel}>Available:</Text>
+                                    <Text style={styles.quantityValue}>{item.quantityCanPicked}</Text>
+                                </View>
+                                <View style={styles.quantityRow}>
+                                    <Text style={styles.quantityLabel}>Picked:</Text>
+                                    <Text style={styles.quantityValue}>{currentQuantity}</Text>
+                                </View>
+                                
+                                {/* Progress section */}
+                                <View style={styles.progressSection}>
+                                    <View style={styles.progressHeader}>
+                                        <Text style={styles.progressLabel}>Picking Progress</Text>
+                                        <Text style={styles.progressText}>
+                                            {Math.round(progressPercentage * 100)}%
+                                        </Text>
+                                    </View>
+                                    <ProgressBar
+                                        progress={progressPercentage}
+                                        color={getProgressColor()}
+                                        style={styles.progressBar}
+                                    />
+                                </View>
+                                
+                                {/* Quantity input and update controls */}
+                                <View style={styles.quantityInputContainer}>
+                                    <TextInput
+                                        mode="outlined"
+                                        label="Quantity"
+                                        value={inputValues.has(item.id) ? 
+                                            inputValues.get(item.id) : 
+                                            currentQuantity.toString()}
+                                        onChangeText={(text) => handleInputChange(item.id, text)}
+                                        keyboardType="number-pad"
+                                        style={styles.quantityInput}
+                                        disabled={pendingUpdates.has(item.id)}
+                                        dense
+                                    />
+                                    <Button
+                                        mode="contained"
+                                        onPress={() => handleUpdate(item)}
+                                        disabled={pendingUpdates.has(item.id)}
+                                        style={styles.updateButton}
                                     >
-                                        Complete
-                                    </Chip>
+                                        Update
+                                    </Button>
+                                </View>
+                                
+                                {pendingUpdates.has(item.id) && (
+                                    <Text style={styles.pendingText}>Updating...</Text>
                                 )}
-                            </View>
-                            
-                            <View style={styles.quantityRow}>
-                                <Text style={styles.quantityLabel}>Requested:</Text>
-                                <Text style={styles.quantityValue}>{item.requestedQuantity}</Text>
-                            </View>
-                            <View style={styles.quantityRow}>
-                                <Text style={styles.quantityLabel}>Available:</Text>
-                                <Text style={styles.quantityValue}>{item.quantityCanPicked}</Text>
-                            </View>
-                            <View style={styles.quantityRow}>
-                                <Text style={styles.quantityLabel}>Picked:</Text>
-                                <Text style={styles.quantityValue}>{currentQuantity}</Text>
-                            </View>
-                            
-                            {/* Quantity input and update controls */}
-                            <View style={styles.quantityInputContainer}>
-                                <TextInput
-                                    mode="outlined"
-                                    label="Quantity"
-                                    value={inputValues.has(item.id) ? 
-                                        inputValues.get(item.id) : 
-                                        currentQuantity.toString()}
-                                    onChangeText={(text) => handleInputChange(item.id, text)}
-                                    keyboardType="number-pad"
-                                    style={styles.quantityInput}
-                                    disabled={pendingUpdates.has(item.id)}
-                                    dense
-                                />
-                                <Button
-                                    mode="contained"
-                                    onPress={() => handleUpdate(item)}
-                                    disabled={pendingUpdates.has(item.id)}
-                                    style={styles.updateButton}
-                                >
-                                    Update
-                                </Button>
-                            </View>
-                            
-                            {pendingUpdates.has(item.id) && (
-                                <Text style={styles.pendingText}>Updating...</Text>
-                            )}
-                            
-                            {index < groupedItems.items.length - 1 && (
-                                <Divider style={styles.itemDivider} />
-                            )}
-                        </View>
-                    )
-                })}
-            </List.Accordion>
-        </Surface>
+                            </Surface>
+                        )
+                    })}
+                </ScrollView>
+                
+                <Divider />
+                
+                <View style={styles.modalFooter}>
+                    <Button mode="outlined" onPress={onClose}>
+                        Close
+                    </Button>
+                </View>
+            </Modal>
+        </Portal>
     )
 }
 
@@ -227,6 +279,8 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
     pendingUpdates
 }) => {
     const [groupedLocations, setGroupedLocations] = useState<GroupedPickingItems[]>([])
+    const [selectedLocation, setSelectedLocation] = useState<GroupedPickingItems | null>(null)
+    const [modalVisible, setModalVisible] = useState(false)
     
     // Group items by location
     useEffect(() => {
@@ -293,19 +347,84 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
         setGroupedLocations(sortedLocations)
     }, [items, pendingUpdates])
     
+    // Get color based on progress
+    const getProgressColor = (progress: number) => {
+        if (progress === 0) return '#f44336' // Red for not started
+        if (progress < 1) return '#ff9800' // Orange for in progress
+        return '#4caf50' // Green for complete
+    }
+    
+    const openLocationModal = (location: GroupedPickingItems) => {
+        setSelectedLocation(location)
+        setModalVisible(true)
+    }
+    
+    const closeLocationModal = () => {
+        setModalVisible(false)
+        // Keep selectedLocation for a smoother transition
+        setTimeout(() => setSelectedLocation(null), 300)
+    }
+    
     return (
         <View style={styles.container}>
             {groupedLocations.length === 0 ? (
                 <Text style={styles.emptyText}>No picking locations available</Text>
             ) : (
-                groupedLocations.map(location => (
-                    <PickingLocationGroup
-                        key={location.locationKey}
-                        groupedItems={location}
-                        onUpdateQuantity={onUpdateQuantity}
-                        pendingUpdates={pendingUpdates}
-                    />
-                ))
+                <>
+                    {groupedLocations.map((location) => (
+                        <Surface key={location.locationKey} style={styles.locationCard} elevation={1}>
+                            <View style={styles.locationCardHeader}>
+                                <View style={styles.locationInfo}>
+                                    <Text style={styles.locationName}>
+                                        {location.warehouseName} - {location.shelfName}
+                                    </Text>
+                                    <Text style={styles.locationSubtext}>
+                                        {location.areaName}, Row {location.rowName}
+                                    </Text>
+                                    <Text style={styles.locationPosition}>
+                                        Level: {location.level} Position: {location.position}
+                                    </Text>
+                                </View>
+                                <Chip 
+                                    style={{ backgroundColor: getProgressColor(location.progress) }}
+                                    textStyle={styles.progressChip}
+                                >
+                                    {Math.round(location.progress * 100)}%
+                                </Chip>
+                            </View>
+                            
+                            <View style={styles.locationSummary}>
+                                <Text style={styles.summaryText}>
+                                    {location.items.length} product{location.items.length !== 1 ? 's' : ''}
+                                </Text>
+                                <ProgressBar
+                                    progress={location.progress}
+                                    color={getProgressColor(location.progress)}
+                                    style={styles.summaryProgressBar}
+                                />
+                            </View>
+                            
+                            <Button 
+                                mode="contained" 
+                                onPress={() => openLocationModal(location)}
+                                style={styles.viewProductsButton}
+                            >
+                                View Products
+                            </Button>
+                        </Surface>
+                    ))}
+                    
+                    {/* Products Modal */}
+                    {selectedLocation && (
+                        <LocationProductsModal
+                            visible={modalVisible}
+                            onClose={closeLocationModal}
+                            location={selectedLocation}
+                            onUpdateQuantity={onUpdateQuantity}
+                            pendingUpdates={pendingUpdates}
+                        />
+                    )}
+                </>
             )}
         </View>
     )
@@ -318,41 +437,93 @@ const styles = StyleSheet.create({
     locationCard: {
         marginBottom: 12,
         borderRadius: 8,
-        overflow: 'hidden',
+        padding: 12,
     },
-    accordion: {
-        padding: 0,
-    },
-    locationHeader: {
+    locationCardHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    locationInfo: {
         flex: 1,
     },
     locationName: {
         fontSize: 16,
         fontWeight: 'bold',
-        flex: 1,
+    },
+    locationSubtext: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 2,
+    },
+    locationPosition: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 2,
     },
     progressChip: {
         color: 'white',
         fontSize: 12,
     },
+    locationSummary: {
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    summaryText: {
+        fontSize: 14,
+        marginBottom: 4,
+    },
+    summaryProgressBar: {
+        height: 6,
+        borderRadius: 3,
+    },
+    viewProductsButton: {
+        borderRadius: 4,
+    },
+    
+    // Modal styles
+    modalContainer: {
+        backgroundColor: 'white',
+        margin: 20,
+        borderRadius: 8,
+        maxHeight: '90%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    modalContent: {
+        padding: 16,
+        maxHeight: '80%',
+    },
+    modalFooter: {
+        padding: 16,
+        alignItems: 'flex-end',
+    },
+    
+    // Location details styles
     locationDetails: {
-        padding: 12,
+        padding: 8,
         backgroundColor: '#f5f5f5',
+        borderRadius: 4,
+        marginBottom: 12,
     },
     locationText: {
         fontSize: 14,
         marginBottom: 2,
     },
-    divider: {
-        marginVertical: 8,
-    },
-    itemDivider: {
-        marginTop: 12,
-    },
+    
+    // Product styles
     productItem: {
         padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
     },
     productHeader: {
         flexDirection: 'row',
@@ -379,11 +550,26 @@ const styles = StyleSheet.create({
     quantityValue: {
         fontWeight: 'bold',
     },
-    quantityControls: {
+    progressSection: {
+        marginVertical: 8,
+    },
+    progressHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 12,
+        marginBottom: 4,
+    },
+    progressLabel: {
+        fontSize: 12,
+        color: '#757575',
+    },
+    progressText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    progressBar: {
+        height: 8,
+        borderRadius: 4,
     },
     quantityInputContainer: {
         flexDirection: 'row',
@@ -398,16 +584,15 @@ const styles = StyleSheet.create({
     updateButton: {
         borderRadius: 4,
     },
-    currentQuantity: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
     pendingText: {
         color: '#2196F3',
         fontStyle: 'italic',
         fontSize: 12,
         textAlign: 'center',
         marginTop: 8,
+    },
+    divider: {
+        marginVertical: 12,
     },
     emptyText: {
         textAlign: 'center',
