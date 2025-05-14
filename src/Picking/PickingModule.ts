@@ -8,6 +8,7 @@ import CreateOrUpdatePickingOrderItemUseCase from './Application/UseCases/Create
 import GetPickingOrderProcessUseCase from './Application/UseCases/GetPickingOrderProcessUseCase'
 import UpdatePickingOrderProcessItemUseCase from './Application/UseCases/UpdatePickingOrderProcessItemUseCase'
 import CompletePickingOrderProcessUseCase from './Application/UseCases/CompletePickingOrderProcessUseCase'
+import SendProcessCompletedEmailUseCase from './Application/UseCases/SendProcessCompletedEmailUseCase'
 
 @module({
     providers: [
@@ -23,6 +24,7 @@ import CompletePickingOrderProcessUseCase from './Application/UseCases/CompleteP
         GetPickingOrderProcessUseCase,
         UpdatePickingOrderProcessItemUseCase,
         CompletePickingOrderProcessUseCase,
+        SendProcessCompletedEmailUseCase,
         // Store
         {
             useClass: PickingStore,

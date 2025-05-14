@@ -16,6 +16,7 @@ import GetPickingOrderProcessUseCase from '@/src/Picking/Application/UseCases/Ge
 import UpdatePickingOrderProcessItemUseCase from '@/src/Picking/Application/UseCases/UpdatePickingOrderProcessItemUseCase'
 import CompletePickingOrderProcessUseCase from '@/src/Picking/Application/UseCases/CompletePickingOrderProcessUseCase'
 import { GetPickingOrdersPayload } from '@/src/Picking/Domain/Specifications/IPickingRepository'
+import SendProcessCompletedEmailUseCase from '@/src/Picking/Application/UseCases/SendProcessCompletedEmailUseCase'
 
 @injectable()
 export class PickingStore implements PickingStoreState {
@@ -62,7 +63,9 @@ export class PickingStore implements PickingStoreState {
         @inject(UpdatePickingOrderProcessItemUseCase)
         private readonly updatePickingOrderProcessItemUseCase: UpdatePickingOrderProcessItemUseCase,
         @inject(CompletePickingOrderProcessUseCase)
-        private readonly completePickingOrderProcessUseCase: CompletePickingOrderProcessUseCase
+        private readonly completePickingOrderProcessUseCase: CompletePickingOrderProcessUseCase,
+        @inject(SendProcessCompletedEmailUseCase)
+        private readonly sendProcessCompletedEmailUseCase: SendProcessCompletedEmailUseCase
     ) {
         makeAutoObservable(this)
         // Load picking orders on store initialization
@@ -479,6 +482,34 @@ export class PickingStore implements PickingStoreState {
         if (page >= 1 && page <= this.pageCount) {
             this.pagination.page = page
             this.getPickingOrders()
+        }
+    }
+     async sendProcessCompletedEmail(id: string) {
+        this.setIsProcessing(true)
+        this.setError(null)
+
+        try {
+            const result = await this.sendProcessCompletedEmailUseCase.execute(
+                id
+            )
+
+            return result
+        } catch (error) {
+            console.error('Error sending process completed email:', error)
+
+            runInAction(() => {
+                this.setError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to send process completed email'
+                )
+            })
+
+            return null
+        } finally {
+            runInAction(() => {
+                this.setIsProcessing(false)
+            })
         }
     }
 }

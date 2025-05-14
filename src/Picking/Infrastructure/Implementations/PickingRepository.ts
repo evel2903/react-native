@@ -432,7 +432,7 @@ class PickingRepository implements IPickingRepository {
     ): Promise<{ statusCode: number; message: string }> {
         try {
             const response = await this.httpClient.get<any>(
-                `${this.apiBaseUrl}/send-email-process-completed/${id}`
+                `${this.apiBaseMobileUrl}/send-email-process-completed/${id}`
             )
 
             if (!response || !response.data) {
