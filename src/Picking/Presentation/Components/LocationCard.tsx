@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Surface, Text, Button, ProgressBar } from 'react-native-paper'
 import { GroupedPickingItems } from './types'
@@ -22,6 +22,28 @@ const LocationCard: React.FC<LocationCardProps> = ({
     // Get a sample product from the location for display
     const sampleProduct =
         location.items && location.items.length > 0 ? location.items[0] : null
+
+    // Calculate total quantities for this location
+    const quantityInfo = useMemo(() => {
+        let totalToPick = 0;
+        let totalPicked = 0;
+        
+        location.items.forEach(item => {
+            const maxPickable = Math.min(
+                item.requestedQuantity,
+                item.quantityCanPicked
+            );
+            totalToPick += maxPickable;
+            
+            const pickedQty = item.updatedQuantityPicked !== undefined 
+                ? item.updatedQuantityPicked 
+                : item.quantityPicked;
+                
+            totalPicked += Math.min(pickedQty, maxPickable);
+        });
+        
+        return { totalPicked, totalToPick };
+    }, [location.items]);
 
     // Ensure progress is valid - fall back to 0 if undefined or NaN
     const safeProgress = Number.isFinite(location.progress) ? location.progress : 0
@@ -62,8 +84,7 @@ const LocationCard: React.FC<LocationCardProps> = ({
             <View style={styles.locationSummary}>
                 <View style={styles.progressHeader}>
                     <Text style={styles.summaryText}>
-                        {location.items.length} product
-                        {location.items.length !== 1 ? 's' : ''}
+                        {location.items.length} product{location.items.length !== 1 ? 's' : ''}
                     </Text>
                     <Text
                         style={[
@@ -79,6 +100,9 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     color={getProgressColor(safeProgress)}
                     style={styles.summaryProgressBar}
                 />
+                <Text style={styles.quantityText}>
+                    {quantityInfo.totalPicked} of {quantityInfo.totalToPick} items picked
+                </Text>
             </View>
 
             <Button
@@ -155,6 +179,12 @@ const styles = StyleSheet.create({
     summaryProgressBar: {
         height: 6,
         borderRadius: 3,
+    },
+    quantityText: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 6,
+        textAlign: 'right',
     },
     viewProductsButton: {
         borderRadius: 4,
