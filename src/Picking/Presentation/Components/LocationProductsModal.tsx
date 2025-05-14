@@ -8,10 +8,12 @@ import {
     Modal,
     IconButton,
     ProgressBar,
+    TextInput,
 } from 'react-native-paper'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 import { GroupedPickingItems, LocationDetails } from './types'
 import ProductItem from './ProductItem'
+import ProductScannerModal from './ProductScannerModal'
 
 // Component for displaying location details
 const LocationDetailsView: React.FC<LocationDetails> = ({
@@ -52,11 +54,15 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
     const [inputValues, setInputValues] = useState<Map<string, string>>(
         new Map()
     )
-    
+
     // Track successful updates for immediate UI feedback
     const [localUpdates, setLocalUpdates] = useState<Map<string, number>>(
         new Map()
     )
+
+    // Search functionality
+    const [searchQuery, setSearchQuery] = useState('')
+    const [scannerModalVisible, setScannerModalVisible] = useState(false)
 
     // Calculate overall location progress
     const locationProgress = useMemo(() => {
@@ -76,7 +82,7 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
 
             // First check local updates from this session
             let pickedQuantity = item.quantityPicked
-            
+
             // Check if we have a local update from this session
             if (localUpdates.has(item.id)) {
                 pickedQuantity = localUpdates.get(item.id)!
@@ -96,6 +102,24 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
         return totalRequested > 0 ? totalPicked / totalRequested : 0
     }, [location, pendingUpdates, localUpdates])
 
+    // Filter items based on search query
+    const filteredItems = useMemo(() => {
+        if (!location || !location.items) return []
+
+        if (!searchQuery.trim()) return location.items
+
+        const normalizedQuery = searchQuery.toLowerCase().trim()
+        return location.items.filter(
+            item =>
+                // Search by goods name
+                (item.goodsName &&
+                    item.goodsName.toLowerCase().includes(normalizedQuery)) ||
+                // Search by goods code
+                (item.goodsCode &&
+                    item.goodsCode.toLowerCase().includes(normalizedQuery))
+        )
+    }, [location?.items, searchQuery])
+
     // Progress color determination
     const getProgressColor = (progress: number) => {
         if (progress === 0) return '#f44336' // Red for not started
@@ -109,7 +133,7 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
         if (localUpdates.has(item.id)) {
             return localUpdates.get(item.id)!
         }
-        
+
         // Then check for pending updates from store
         const pendingQuantity = pendingUpdates.get(item.id)
         if (pendingQuantity !== undefined) {
@@ -149,7 +173,7 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                 const newInputValues = new Map(inputValues)
                 newInputValues.set(itemId, quantity.toString())
                 setInputValues(newInputValues)
-                
+
                 // Store successful update for immediate UI feedback
                 const newLocalUpdates = new Map(localUpdates)
                 newLocalUpdates.set(itemId, quantity)
@@ -161,6 +185,35 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
             console.error('Error in LocationProductsModal.handleUpdate:', error)
             return false
         }
+    }
+
+    // Handle scanner button click
+    const handleOpenScanner = () => {
+        setScannerModalVisible(true)
+    }
+
+    // Handle code scanned
+    const handleCodeScanned = (code: string) => {
+        try {
+            const parsedData = JSON.parse(code)
+            if (parsedData && typeof parsedData === 'object') {
+                // If it contains a code property, use it for search
+                if ('code' in parsedData) {
+                    setSearchQuery(parsedData.code || '')
+                } else {
+                    // If no code property, use the raw string
+                    setSearchQuery(code)
+                }
+            } else {
+                // If not valid JSON object, use the raw string
+                setSearchQuery(code)
+            }
+        } catch (error) {
+            // If not valid JSON, use the raw string
+            setSearchQuery(code)
+        }
+
+        setScannerModalVisible(false)
     }
 
     // Synchronize input values when item props change
@@ -183,6 +236,7 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
     useEffect(() => {
         if (location) {
             setLocalUpdates(new Map())
+            setSearchQuery('') // Clear search when location changes
         }
     }, [location?.locationKey])
 
@@ -219,7 +273,9 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                 {/* Overall Location Progress */}
                 <View style={styles.overallProgressContainer}>
                     <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Location Progress</Text>
+                        <Text style={styles.progressLabel}>
+                            Location Progress
+                        </Text>
                         <Text style={styles.progressPercentage}>
                             {Math.round(locationProgress * 100)}%
                         </Text>
@@ -229,6 +285,48 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                         color={getProgressColor(locationProgress)}
                         style={styles.overallProgressBar}
                     />
+                </View>
+
+                {/* Search section */}
+                <View style={styles.searchSection}>
+                    <View style={styles.searchInputContainer}>
+                        <TextInput
+                            dense
+                            mode="outlined"
+                            placeholder="Search goods"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            style={styles.searchInput}
+                            clearButtonMode="while-editing"
+                            right={
+                                searchQuery ? (
+                                    <TextInput.Icon
+                                        icon="magnify"
+                                        onPress={() => setSearchQuery('')}
+                                    />
+                                ) : undefined
+                            }
+                        />
+                        <Button
+                            mode="outlined"
+                            icon="barcode-scan"
+                            onPress={handleOpenScanner}
+                            style={styles.scanButton}
+                        >
+                            Scan
+                        </Button>
+                    </View>
+                    {searchQuery.trim() !== '' && (
+                        <View style={styles.searchResultsInfo}>
+                            <Text style={styles.searchResultsText}>
+                                {filteredItems.length}{' '}
+                                {filteredItems.length === 1
+                                    ? 'product'
+                                    : 'products'}{' '}
+                                found
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
                 <ScrollView style={styles.modalContent}>
@@ -245,8 +343,14 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                     <Divider style={styles.divider} />
 
                     {/* Items in this location */}
-                    {location &&
-                        location.items.map((item, index) => (
+                    {filteredItems.length === 0 ? (
+                        <Text style={styles.emptyResultsText}>
+                            {searchQuery.trim() !== ''
+                                ? 'No products match your search criteria'
+                                : 'No products available in this location'}
+                        </Text>
+                    ) : (
+                        filteredItems.map((item, index) => (
                             <ProductItem
                                 key={item.id}
                                 item={item}
@@ -258,7 +362,8 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                                     handleInputChange(item.id, value)
                                 }
                             />
-                        ))}
+                        ))
+                    )}
                 </ScrollView>
 
                 <Divider />
@@ -268,6 +373,15 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                         Close
                     </Button>
                 </View>
+
+                {/* Show the scanner modal when needed */}
+                {scannerModalVisible && (
+                    <ProductScannerModal
+                        visible={scannerModalVisible}
+                        onClose={() => setScannerModalVisible(false)}
+                        onCodeScanned={handleCodeScanned}
+                    />
+                )}
             </Modal>
         </Portal>
     )
@@ -315,7 +429,7 @@ const styles = StyleSheet.create({
     divider: {
         marginVertical: 12,
     },
-    
+
     // Progress bar styles
     overallProgressContainer: {
         padding: 16,
@@ -340,6 +454,42 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         marginBottom: 12,
+    },
+
+    // Search section styles
+    searchSection: {
+        padding: 16,
+        paddingTop: 8,
+        paddingBottom: 0,
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    searchInput: {
+        flex: 1,
+    },
+    scanButton: {
+                paddingVertical: 6,
+        borderRadius: 4,
+    },
+    searchResultsInfo: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 4,
+        marginBottom: 0,
+    },
+    searchResultsText: {
+        fontSize: 12,
+        color: '#666',
+        fontStyle: 'italic',
+    },
+    emptyResultsText: {
+        textAlign: 'center',
+        padding: 20,
+        color: '#666',
+        fontStyle: 'italic',
     },
 })
 

@@ -34,9 +34,11 @@ const ProductItem: React.FC<ProductItemProps> = ({
     const [updateError, setUpdateError] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
-    
+
     // Track the displayed quantity locally to immediately update the progress bar
-    const [displayedQuantity, setDisplayedQuantity] = useState<number | null>(null)
+    const [displayedQuantity, setDisplayedQuantity] = useState<number | null>(
+        null
+    )
 
     // Current quantity & progress calculation logic
     const getCurrentQuantity = () => {
@@ -44,13 +46,13 @@ const ProductItem: React.FC<ProductItemProps> = ({
         if (displayedQuantity !== null) {
             return displayedQuantity
         }
-        
+
         // Otherwise, fall back to the item's quantity
         return item.updatedQuantityPicked !== undefined
             ? item.updatedQuantityPicked
             : item.quantityPicked
     }
-    
+
     const currentQuantity = getCurrentQuantity()
     const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
     const isFullyPicked = currentQuantity >= maxPickable
@@ -111,7 +113,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
                 if (result === true) {
                     // Immediately update the displayed quantity for the progress bar
                     setDisplayedQuantity(finalQuantity)
-                    
+
                     setUpdateSuccess(true)
                     setSnackbarMessage('Quantity updated successfully')
 

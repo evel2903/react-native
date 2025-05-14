@@ -41,10 +41,7 @@ import CenteredAccordion from '../Components/CenteredAccordion'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 import { GroupedPickingItems } from '../Components/types'
 
-type PickingViewScreenRouteProp = RouteProp<
-    RootStackParamList,
-    'PickingView'
->
+type PickingViewScreenRouteProp = RouteProp<RootStackParamList, 'PickingView'>
 
 // Location Accordion Component
 const LocationAccordion = ({ location }: { location: GroupedPickingItems }) => {
@@ -58,14 +55,25 @@ const LocationAccordion = ({ location }: { location: GroupedPickingItems }) => {
     }
 
     // Calculate total quantities for this location
-    const totalToPick = location.items.reduce((sum, item) => sum + Math.min(item.requestedQuantity, item.quantityCanPicked), 0)
+    const totalToPick = location.items.reduce(
+        (sum, item) =>
+            sum + Math.min(item.requestedQuantity, item.quantityCanPicked),
+        0
+    )
     const totalPicked = location.items.reduce((sum, item) => {
-        const pickedQty = item.updatedQuantityPicked !== undefined 
-            ? item.updatedQuantityPicked 
-            : item.quantityPicked
-        return sum + Math.min(pickedQty, Math.min(item.requestedQuantity, item.quantityCanPicked))
+        const pickedQty =
+            item.updatedQuantityPicked !== undefined
+                ? item.updatedQuantityPicked
+                : item.quantityPicked
+        return (
+            sum +
+            Math.min(
+                pickedQty,
+                Math.min(item.requestedQuantity, item.quantityCanPicked)
+            )
+        )
     }, 0)
-    
+
     // Calculate progress percentage for display
     const progressPercentage = Math.round(location.progress * 100)
 
@@ -92,12 +100,17 @@ const LocationAccordion = ({ location }: { location: GroupedPickingItems }) => {
                     <View style={styles.locationSummary}>
                         <View style={styles.progressHeader}>
                             <Text style={styles.summaryText}>
-                                {location.items.length} product{location.items.length !== 1 ? 's' : ''}
+                                {location.items.length} product
+                                {location.items.length !== 1 ? 's' : ''}
                             </Text>
                             <Text
                                 style={[
                                     styles.percentageText,
-                                    { color: getProgressColor(location.progress) },
+                                    {
+                                        color: getProgressColor(
+                                            location.progress
+                                        ),
+                                    },
                                 ]}
                             >
                                 {progressPercentage}%
@@ -120,58 +133,83 @@ const LocationAccordion = ({ location }: { location: GroupedPickingItems }) => {
                 <View style={styles.productList}>
                     <Divider style={styles.divider} />
                     <Text style={styles.productsHeader}>Products</Text>
-                    
+
                     {location.items.map((item, index) => (
                         <View key={item.id} style={styles.productItem}>
-                            <Text style={styles.productName}>{item.goodsName || 'Unknown Product'}</Text>
-                            <Text style={styles.productCode}>Code: {item.goodsCode || 'N/A'}</Text>
-                            
+                            <Text style={styles.productName}>
+                                {item.goodsName || 'Unknown Product'}
+                            </Text>
+                            <Text style={styles.productCode}>
+                                Code: {item.goodsCode || 'N/A'}
+                            </Text>
+
                             {/* Product quantities */}
                             <View style={styles.quantityContainer}>
                                 <View style={styles.quantityRow}>
-                                    <Text style={styles.quantityLabel}>Requested:</Text>
-                                    <Text style={styles.quantityValue}>{item.requestedQuantity}</Text>
+                                    <Text style={styles.quantityLabel}>
+                                        Requested:
+                                    </Text>
+                                    <Text style={styles.quantityValue}>
+                                        {item.requestedQuantity}
+                                    </Text>
                                 </View>
                                 <View style={styles.quantityRow}>
-                                    <Text style={styles.quantityLabel}>Available:</Text>
-                                    <Text style={styles.quantityValue}>{item.quantityCanPicked}</Text>
+                                    <Text style={styles.quantityLabel}>
+                                        Available:
+                                    </Text>
+                                    <Text style={styles.quantityValue}>
+                                        {item.quantityCanPicked}
+                                    </Text>
                                 </View>
                                 <View style={styles.quantityRow}>
-                                    <Text style={styles.quantityLabel}>Picked:</Text>
-                                    <Text style={[
-                                        styles.quantityValue,
-                                        styles.pickedQuantity
-                                    ]}>
-                                        {item.updatedQuantityPicked !== undefined 
-                                            ? item.updatedQuantityPicked 
+                                    <Text style={styles.quantityLabel}>
+                                        Picked:
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.quantityValue,
+                                            styles.pickedQuantity,
+                                        ]}
+                                    >
+                                        {item.updatedQuantityPicked !==
+                                        undefined
+                                            ? item.updatedQuantityPicked
                                             : item.quantityPicked}
                                     </Text>
                                 </View>
                             </View>
-                            
+
                             {/* Product progress bar */}
                             <View style={styles.productProgressContainer}>
                                 <ProgressBar
                                     progress={Math.min(
-                                        (item.updatedQuantityPicked !== undefined 
-                                            ? item.updatedQuantityPicked 
-                                            : item.quantityPicked) / 
-                                        Math.min(item.requestedQuantity, item.quantityCanPicked),
+                                        (item.updatedQuantityPicked !==
+                                        undefined
+                                            ? item.updatedQuantityPicked
+                                            : item.quantityPicked) /
+                                            Math.min(
+                                                item.requestedQuantity,
+                                                item.quantityCanPicked
+                                            ),
                                         1
                                     )}
                                     color={getProgressColor(
                                         Math.min(
-                                            (item.updatedQuantityPicked !== undefined 
-                                                ? item.updatedQuantityPicked 
-                                                : item.quantityPicked) / 
-                                            Math.min(item.requestedQuantity, item.quantityCanPicked),
+                                            (item.updatedQuantityPicked !==
+                                            undefined
+                                                ? item.updatedQuantityPicked
+                                                : item.quantityPicked) /
+                                                Math.min(
+                                                    item.requestedQuantity,
+                                                    item.quantityCanPicked
+                                                ),
                                             1
                                         )
                                     )}
                                     style={styles.productProgressBar}
                                 />
                             </View>
-                            
+
                             {index < location.items.length - 1 && (
                                 <Divider style={styles.productDivider} />
                             )}
@@ -197,7 +235,9 @@ const PickingViewScreen = observer(() => {
     const [isLoading, setIsLoading] = useState(true)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
-    const [groupedLocations, setGroupedLocations] = useState<GroupedPickingItems[]>([])
+    const [groupedLocations, setGroupedLocations] = useState<
+        GroupedPickingItems[]
+    >([])
 
     // Fetch picking data when component mounts
     useEffect(() => {
@@ -285,10 +325,11 @@ const PickingViewScreen = observer(() => {
                 )
                 totalRequested += maxPickable
 
-                const pickedQuantity = item.updatedQuantityPicked !== undefined
-                    ? item.updatedQuantityPicked
-                    : item.quantityPicked
-                
+                const pickedQuantity =
+                    item.updatedQuantityPicked !== undefined
+                        ? item.updatedQuantityPicked
+                        : item.quantityPicked
+
                 totalPicked += Math.min(pickedQuantity, maxPickable)
             })
 
@@ -525,7 +566,8 @@ const PickingViewScreen = observer(() => {
                             {/* Locations Section Header */}
                             <View style={styles.itemsListHeader}>
                                 <Text style={styles.itemsListTitle}>
-                                    Picking Locations ({groupedLocations.length} locations)
+                                    Picking Locations ({groupedLocations.length}{' '}
+                                    locations)
                                 </Text>
                             </View>
 
@@ -536,9 +578,9 @@ const PickingViewScreen = observer(() => {
                                 </Text>
                             ) : (
                                 groupedLocations.map(location => (
-                                    <LocationAccordion 
-                                        key={location.locationKey} 
-                                        location={location} 
+                                    <LocationAccordion
+                                        key={location.locationKey}
+                                        location={location}
                                     />
                                 ))
                             )}

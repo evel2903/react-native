@@ -71,7 +71,7 @@ const ProductScannerModal: React.FC<ProductScannerModalProps> = ({
                 dismissable={!scanned}
             >
                 <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Scan Product Code</Text>
+                    <Text style={styles.modalTitle}>Scan QR Code</Text>
                     <IconButton icon="close" size={20} onPress={onClose} />
                 </View>
 

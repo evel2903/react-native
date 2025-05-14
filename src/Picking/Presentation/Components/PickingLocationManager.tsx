@@ -22,29 +22,31 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
     const [selectedLocation, setSelectedLocation] =
         useState<GroupedPickingItems | null>(null)
     const [modalVisible, setModalVisible] = useState(false)
-    
+
     // Track successful updates locally for immediate UI feedback
     const [localUpdates, setLocalUpdates] = useState<Map<string, number>>(
         new Map()
     )
 
     // Helper function to get the most up-to-date quantity for an item
-    const getCurrentQuantity = (item: PickingOrderProcessItemEntity): number => {
+    const getCurrentQuantity = (
+        item: PickingOrderProcessItemEntity
+    ): number => {
         // First check local updates from this component
         if (localUpdates.has(item.id)) {
             return localUpdates.get(item.id)!
         }
-        
+
         // Then check pending updates from the store
         if (pendingUpdates.has(item.id)) {
             return pendingUpdates.get(item.id)!
         }
-        
+
         // Then check for updated quantity in the item itself
         if (item.updatedQuantityPicked !== undefined) {
             return item.updatedQuantityPicked
         }
-        
+
         // Finally fall back to the original quantity
         return item.quantityPicked
     }
@@ -104,22 +106,20 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
         })
 
         // Convert map to array and sort by warehouse and shelf name
-        return Array.from(locationMap.values()).sort(
-            (a, b) => {
-                if (a.warehouseName !== b.warehouseName) {
-                    return a.warehouseName.localeCompare(b.warehouseName)
-                }
-                if (a.areaName !== b.areaName) {
-                    return a.areaName.localeCompare(b.areaName)
-                }
-                if (a.rowName !== b.rowName) {
-                    return a.rowName.localeCompare(b.rowName)
-                }
-                return a.shelfName.localeCompare(b.shelfName)
+        return Array.from(locationMap.values()).sort((a, b) => {
+            if (a.warehouseName !== b.warehouseName) {
+                return a.warehouseName.localeCompare(b.warehouseName)
             }
-        )
+            if (a.areaName !== b.areaName) {
+                return a.areaName.localeCompare(b.areaName)
+            }
+            if (a.rowName !== b.rowName) {
+                return a.rowName.localeCompare(b.rowName)
+            }
+            return a.shelfName.localeCompare(b.shelfName)
+        })
     }, [items, pendingUpdates, localUpdates]) // Dependencies now include localUpdates
-    
+
     // Update the state with the computed value
     useEffect(() => {
         setGroupedLocations(computedGroupedLocations)
@@ -136,14 +136,14 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
             )
             const result = await onUpdateQuantity(itemId, quantity)
             console.log(`PickingLocationManager: Result from parent: ${result}`)
-            
+
             // Update local state immediately for UI feedback
             if (result) {
                 const newLocalUpdates = new Map(localUpdates)
                 newLocalUpdates.set(itemId, quantity)
                 setLocalUpdates(newLocalUpdates)
             }
-            
+
             return result // Make sure we explicitly return the result
         } catch (error) {
             console.error(

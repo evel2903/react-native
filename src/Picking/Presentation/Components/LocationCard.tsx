@@ -25,29 +25,32 @@ const LocationCard: React.FC<LocationCardProps> = ({
 
     // Calculate total quantities for this location
     const quantityInfo = useMemo(() => {
-        let totalToPick = 0;
-        let totalPicked = 0;
-        
+        let totalToPick = 0
+        let totalPicked = 0
+
         location.items.forEach(item => {
             const maxPickable = Math.min(
                 item.requestedQuantity,
                 item.quantityCanPicked
-            );
-            totalToPick += maxPickable;
-            
-            const pickedQty = item.updatedQuantityPicked !== undefined 
-                ? item.updatedQuantityPicked 
-                : item.quantityPicked;
-                
-            totalPicked += Math.min(pickedQty, maxPickable);
-        });
-        
-        return { totalPicked, totalToPick };
-    }, [location.items]);
+            )
+            totalToPick += maxPickable
+
+            const pickedQty =
+                item.updatedQuantityPicked !== undefined
+                    ? item.updatedQuantityPicked
+                    : item.quantityPicked
+
+            totalPicked += Math.min(pickedQty, maxPickable)
+        })
+
+        return { totalPicked, totalToPick }
+    }, [location.items])
 
     // Ensure progress is valid - fall back to 0 if undefined or NaN
-    const safeProgress = Number.isFinite(location.progress) ? location.progress : 0
-    
+    const safeProgress = Number.isFinite(location.progress)
+        ? location.progress
+        : 0
+
     // Calculate progress percentage for display
     const progressPercentage = Math.round(safeProgress * 100)
 
@@ -70,7 +73,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
             <View style={styles.locationSummary}>
                 <View style={styles.progressHeader}>
                     <Text style={styles.summaryText}>
-                        {location.items.length} product{location.items.length !== 1 ? 's' : ''}
+                        {location.items.length} product
+                        {location.items.length !== 1 ? 's' : ''}
                     </Text>
                     <Text
                         style={[
@@ -87,7 +91,8 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     style={styles.summaryProgressBar}
                 />
                 <Text style={styles.quantityText}>
-                    {quantityInfo.totalPicked} of {quantityInfo.totalToPick} items picked
+                    {quantityInfo.totalPicked} of {quantityInfo.totalToPick}{' '}
+                    items picked
                 </Text>
             </View>
 
