@@ -119,7 +119,7 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
             >
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>
-                        Products at {location?.warehouseName} - {location?.shelfName}
+                        Picking Products
                     </Text>
                     <IconButton icon="close" size={20} onPress={onClose} />
                 </View>
