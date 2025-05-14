@@ -180,7 +180,7 @@ const PickingProcessScreen = observer(() => {
             if (parsedData && typeof parsedData === 'object') {
                 // If it contains a code property, use it for search
                 if ('code' in parsedData) {
-                    setSearchQuery(parsedData.code || '')
+                    setSearchQuery(parsedData.name || '')
                     showSnackbar(
                         `Location found: ${parsedData.name || 'Unknown'}`
                     )

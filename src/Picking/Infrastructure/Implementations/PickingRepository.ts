@@ -111,7 +111,7 @@ class PickingRepository implements IPickingRepository {
     public async getPickingOrderById(id: string): Promise<PickingOrderEntity> {
         try {
             const response = await this.httpClient.get<any>(
-                `${this.apiBaseUrl}/${id}`
+                `${this.apiBaseMobileUrl}/${id}`
             )
 
             // Check if the response has the expected structure
@@ -125,6 +125,7 @@ class PickingRepository implements IPickingRepository {
                     ? response.data
                     : response
 
+            console.log('Response data:', data)
             // Transform the response to domain entity
             const pickingOrderDto = plainToInstance(PickingOrderDto, data)
             return pickingOrderDto.toDomain()
