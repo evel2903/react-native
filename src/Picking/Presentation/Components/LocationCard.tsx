@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Surface, Text, Button, ProgressBar } from 'react-native-paper'
+import { Surface, Text, Button, ProgressBar, Divider } from 'react-native-paper'
 import { GroupedPickingItems } from './types'
 
 interface LocationCardProps {
@@ -66,20 +66,6 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     </Text>
                 </View>
             </View>
-
-            {/* Display product information if available */}
-            {sampleProduct && sampleProduct.goodsName && (
-                <View style={styles.productInfoSection}>
-                    <Text style={styles.productInfoText}>
-                        {sampleProduct.goodsName}
-                    </Text>
-                    {sampleProduct.goodsCode && (
-                        <Text style={styles.productCodeText}>
-                            Code: {sampleProduct.goodsCode}
-                        </Text>
-                    )}
-                </View>
-            )}
 
             <View style={styles.locationSummary}>
                 <View style={styles.progressHeader}>

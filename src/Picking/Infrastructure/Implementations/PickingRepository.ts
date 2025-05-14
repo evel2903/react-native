@@ -141,7 +141,7 @@ class PickingRepository implements IPickingRepository {
     ): Promise<PickingOrderProcessEntity> {
         try {
             const response = await this.httpClient.get<any>(
-                `${this.apiProcessUrl}/${id}`
+                `${this.apiBaseMobileUrl}/proceses/${id}`
             )
 
             // Check if the response has the expected structure
