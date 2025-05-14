@@ -34,13 +34,24 @@ const ProductItem: React.FC<ProductItemProps> = ({
     const [updateError, setUpdateError] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState('')
+    
+    // Track the displayed quantity locally to immediately update the progress bar
+    const [displayedQuantity, setDisplayedQuantity] = useState<number | null>(null)
 
     // Current quantity & progress calculation logic
-    const currentQuantity =
-        item.updatedQuantityPicked !== undefined
+    const getCurrentQuantity = () => {
+        // If we have a local displayedQuantity from a successful update, use that first
+        if (displayedQuantity !== null) {
+            return displayedQuantity
+        }
+        
+        // Otherwise, fall back to the item's quantity
+        return item.updatedQuantityPicked !== undefined
             ? item.updatedQuantityPicked
             : item.quantityPicked
-
+    }
+    
+    const currentQuantity = getCurrentQuantity()
     const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
     const isFullyPicked = currentQuantity >= maxPickable
     const progressPercentage =
@@ -50,7 +61,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
     useEffect(() => {
         setUpdateSuccess(false)
         setUpdateError(false)
-    }, [item.id])
+        // Reset displayed quantity when item changes to ensure we use the latest from props
+        setDisplayedQuantity(null)
+    }, [item.id, item.quantityPicked, item.updatedQuantityPicked])
 
     // Progress color logic
     const getProgressColor = () => {
@@ -96,6 +109,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
 
                 // Show correct success/error message
                 if (result === true) {
+                    // Immediately update the displayed quantity for the progress bar
+                    setDisplayedQuantity(finalQuantity)
+                    
                     setUpdateSuccess(true)
                     setSnackbarMessage('Quantity updated successfully')
 
