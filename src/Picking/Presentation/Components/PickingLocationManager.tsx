@@ -8,6 +8,7 @@ import {
     Chip,
     Button,
     ProgressBar,
+    TextInput,
 } from 'react-native-paper'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 
@@ -36,6 +37,8 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
     pendingUpdates
 }) => {
     const [expanded, setExpanded] = useState(false)
+    // Track temporarily edited values before submitting
+    const [inputValues, setInputValues] = useState<Map<string, string>>(new Map())
 
     // Get color based on progress
     const getProgressColor = (progress: number) => {
@@ -43,6 +46,61 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
         if (progress < 1) return '#ff9800' // Orange for in progress
         return '#4caf50' // Green for complete
     }
+
+    // Handle input change for a specific item
+    const handleInputChange = (id: string, value: string) => {
+        const newInputValues = new Map(inputValues)
+        newInputValues.set(id, value)
+        setInputValues(newInputValues)
+    }
+
+    // Get current quantity to display
+    const getCurrentQuantity = (item: PickingOrderProcessItemEntity) => {
+        return item.updatedQuantityPicked !== undefined ? 
+            item.updatedQuantityPicked : item.quantityPicked
+    }
+
+    // Handle update button click
+    const handleUpdate = (item: PickingOrderProcessItemEntity) => {
+        const inputValue = inputValues.get(item.id)
+        if (!inputValue) return // No input value to update
+
+        const newQuantity = parseInt(inputValue, 10)
+        if (isNaN(newQuantity)) return // Not a valid number
+
+        // Validate bounds
+        const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
+        const finalQuantity = Math.max(0, Math.min(newQuantity, maxPickable))
+
+        // Only update if different from current value
+        const currentQuantity = item.updatedQuantityPicked !== undefined ? 
+            item.updatedQuantityPicked : item.quantityPicked
+            
+        if (finalQuantity !== currentQuantity) {
+            onUpdateQuantity(item.id, finalQuantity)
+            
+            // Keep the input value matching what we sent to the API
+            // This ensures the input field keeps showing the updated value
+            const newInputValues = new Map(inputValues)
+            newInputValues.set(item.id, finalQuantity.toString())
+            setInputValues(newInputValues)
+        }
+    }
+
+    // Synchronize input values when item props change
+    useEffect(() => {
+        // Update input values if the item's quantity has changed externally
+        // (e.g., from a successful API update)
+        groupedItems.items.forEach(item => {
+            const currentQuantity = getCurrentQuantity(item)
+            // Only update if we don't have a pending edit
+            if (!inputValues.has(item.id)) {
+                const newInputValues = new Map(inputValues)
+                newInputValues.set(item.id, currentQuantity.toString())
+                setInputValues(newInputValues)
+            }
+        })
+    }, [groupedItems.items])
 
     return (
         <Surface style={styles.locationCard} elevation={1}>
@@ -82,10 +140,8 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
                 
                 {/* Items in this location */}
                 {groupedItems.items.map((item, index) => {
-                    // Calculate current quantity (either from pending updates or current state)
-                    const pendingQuantity = pendingUpdates.get(item.id)
-                    const currentQuantity = pendingQuantity !== undefined ? 
-                        pendingQuantity : item.quantityPicked
+                    // Get current display quantity
+                    const currentQuantity = getCurrentQuantity(item)
                     
                     // Calculate max pickable quantity
                     const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
@@ -120,24 +176,27 @@ const PickingLocationGroup: React.FC<PickingLocationGroupProps> = ({
                                 <Text style={styles.quantityValue}>{currentQuantity}</Text>
                             </View>
                             
-                            {/* Quantity adjustment controls */}
-                            <View style={styles.quantityControls}>
-                                <Button 
-                                    mode="outlined" 
-                                    onPress={() => onUpdateQuantity(item.id, Math.max(0, currentQuantity - 1))}
-                                    disabled={currentQuantity <= 0 || pendingUpdates.has(item.id)}
-                                    style={styles.quantityButton}
+                            {/* Quantity input and update controls */}
+                            <View style={styles.quantityInputContainer}>
+                                <TextInput
+                                    mode="outlined"
+                                    label="Quantity"
+                                    value={inputValues.has(item.id) ? 
+                                        inputValues.get(item.id) : 
+                                        currentQuantity.toString()}
+                                    onChangeText={(text) => handleInputChange(item.id, text)}
+                                    keyboardType="number-pad"
+                                    style={styles.quantityInput}
+                                    disabled={pendingUpdates.has(item.id)}
+                                    dense
+                                />
+                                <Button
+                                    mode="contained"
+                                    onPress={() => handleUpdate(item)}
+                                    disabled={pendingUpdates.has(item.id)}
+                                    style={styles.updateButton}
                                 >
-                                    -
-                                </Button>
-                                <Text style={styles.currentQuantity}>{currentQuantity}</Text>
-                                <Button 
-                                    mode="outlined" 
-                                    onPress={() => onUpdateQuantity(item.id, Math.min(maxPickable, currentQuantity + 1))}
-                                    disabled={currentQuantity >= maxPickable || pendingUpdates.has(item.id)}
-                                    style={styles.quantityButton}
-                                >
-                                    +
+                                    Update
                                 </Button>
                             </View>
                             
@@ -175,7 +234,7 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
         
         items.forEach(item => {
             // Create a unique key for this location
-            const locationKey = `${item.warehouseId}-${item.areaId}-${item.rowId}-${item.shelfId}-${item.level}-${item.position}`
+            const locationKey = `${item.warehouseId || ''}-${item.areaId || ''}-${item.rowId || ''}-${item.shelfId || ''}-${item.level}-${item.position}`
             
             if (!locationMap.has(locationKey)) {
                 locationMap.set(locationKey, {
@@ -192,7 +251,10 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
             }
             
             // Add item to this location group
-            locationMap.get(locationKey)?.items.push(item)
+            const location = locationMap.get(locationKey)
+            if (location) {
+                location.items.push(item)
+            }
         })
         
         // Calculate progress for each location
@@ -323,8 +385,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 12,
     },
-    quantityButton: {
-        minWidth: 50,
+    quantityInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 12,
+        gap: 12,
+    },
+    quantityInput: {
+        flex: 1,
+    },
+    updateButton: {
+        borderRadius: 4,
     },
     currentQuantity: {
         fontSize: 18,
