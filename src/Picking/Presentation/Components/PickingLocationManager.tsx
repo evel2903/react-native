@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { View, StyleSheet, Text } from 'react-native'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 import { GroupedPickingItems } from './types'
@@ -22,9 +22,35 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
     const [selectedLocation, setSelectedLocation] =
         useState<GroupedPickingItems | null>(null)
     const [modalVisible, setModalVisible] = useState(false)
+    
+    // Track successful updates locally for immediate UI feedback
+    const [localUpdates, setLocalUpdates] = useState<Map<string, number>>(
+        new Map()
+    )
 
-    // Group items by location
-    useEffect(() => {
+    // Helper function to get the most up-to-date quantity for an item
+    const getCurrentQuantity = (item: PickingOrderProcessItemEntity): number => {
+        // First check local updates from this component
+        if (localUpdates.has(item.id)) {
+            return localUpdates.get(item.id)!
+        }
+        
+        // Then check pending updates from the store
+        if (pendingUpdates.has(item.id)) {
+            return pendingUpdates.get(item.id)!
+        }
+        
+        // Then check for updated quantity in the item itself
+        if (item.updatedQuantityPicked !== undefined) {
+            return item.updatedQuantityPicked
+        }
+        
+        // Finally fall back to the original quantity
+        return item.quantityPicked
+    }
+
+    // Group items by location - now using useMemo to optimize performance
+    const computedGroupedLocations = useMemo(() => {
         const locationMap = new Map<string, GroupedPickingItems>()
 
         items.forEach(item => {
@@ -68,15 +94,8 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
                 )
                 totalRequested += maxPickable
 
-                // First check for pending updates
-                const pendingQuantity = pendingUpdates.get(item.id)
-                const pickedQuantity =
-                    pendingQuantity !== undefined
-                        ? pendingQuantity
-                        : item.updatedQuantityPicked !== undefined
-                        ? item.updatedQuantityPicked
-                        : item.quantityPicked
-
+                // Get the most up-to-date quantity
+                const pickedQuantity = getCurrentQuantity(item)
                 totalPicked += Math.min(pickedQuantity, maxPickable)
             })
 
@@ -85,7 +104,7 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
         })
 
         // Convert map to array and sort by warehouse and shelf name
-        const sortedLocations = Array.from(locationMap.values()).sort(
+        return Array.from(locationMap.values()).sort(
             (a, b) => {
                 if (a.warehouseName !== b.warehouseName) {
                     return a.warehouseName.localeCompare(b.warehouseName)
@@ -99,9 +118,12 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
                 return a.shelfName.localeCompare(b.shelfName)
             }
         )
-
-        setGroupedLocations(sortedLocations)
-    }, [items, pendingUpdates]) // Make sure we depend on both items and pendingUpdates
+    }, [items, pendingUpdates, localUpdates]) // Dependencies now include localUpdates
+    
+    // Update the state with the computed value
+    useEffect(() => {
+        setGroupedLocations(computedGroupedLocations)
+    }, [computedGroupedLocations])
 
     // Handle quantity updates and ensure we pass through the Promise result
     const handleUpdateQuantity = async (
@@ -114,6 +136,14 @@ const PickingLocationManager: React.FC<PickingLocationManagerProps> = ({
             )
             const result = await onUpdateQuantity(itemId, quantity)
             console.log(`PickingLocationManager: Result from parent: ${result}`)
+            
+            // Update local state immediately for UI feedback
+            if (result) {
+                const newLocalUpdates = new Map(localUpdates)
+                newLocalUpdates.set(itemId, quantity)
+                setLocalUpdates(newLocalUpdates)
+            }
+            
             return result // Make sure we explicitly return the result
         } catch (error) {
             console.error(

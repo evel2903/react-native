@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { View, StyleSheet, ScrollView } from 'react-native'
 import {
     Text,
@@ -7,6 +7,7 @@ import {
     Portal,
     Modal,
     IconButton,
+    ProgressBar,
 } from 'react-native-paper'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 import { GroupedPickingItems, LocationDetails } from './types'
@@ -51,10 +52,65 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
     const [inputValues, setInputValues] = useState<Map<string, string>>(
         new Map()
     )
+    
+    // Track successful updates for immediate UI feedback
+    const [localUpdates, setLocalUpdates] = useState<Map<string, number>>(
+        new Map()
+    )
+
+    // Calculate overall location progress
+    const locationProgress = useMemo(() => {
+        if (!location || !location.items || location.items.length === 0) {
+            return 0
+        }
+
+        let totalRequested = 0
+        let totalPicked = 0
+
+        location.items.forEach(item => {
+            const maxPickable = Math.min(
+                item.requestedQuantity,
+                item.quantityCanPicked
+            )
+            totalRequested += maxPickable
+
+            // First check local updates from this session
+            let pickedQuantity = item.quantityPicked
+            
+            // Check if we have a local update from this session
+            if (localUpdates.has(item.id)) {
+                pickedQuantity = localUpdates.get(item.id)!
+            }
+            // Otherwise check for pending updates from store
+            else if (pendingUpdates.has(item.id)) {
+                pickedQuantity = pendingUpdates.get(item.id)!
+            }
+            // Then check for already updated quantity in the item
+            else if (item.updatedQuantityPicked !== undefined) {
+                pickedQuantity = item.updatedQuantityPicked
+            }
+
+            totalPicked += Math.min(pickedQuantity, maxPickable)
+        })
+
+        return totalRequested > 0 ? totalPicked / totalRequested : 0
+    }, [location, pendingUpdates, localUpdates])
+
+    // Progress color determination
+    const getProgressColor = (progress: number) => {
+        if (progress === 0) return '#f44336' // Red for not started
+        if (progress < 1) return '#ff9800' // Orange for in progress
+        return '#4caf50' // Green for complete
+    }
 
     // Get current quantity to display - account for all possible states
     const getCurrentQuantity = (item: PickingOrderProcessItemEntity) => {
-        // First check if there's a pending update
+        // First check for local updates from this session
+        if (localUpdates.has(item.id)) {
+            return localUpdates.get(item.id)!
+        }
+        
+        // Then check for pending updates from store
         const pendingQuantity = pendingUpdates.get(item.id)
         if (pendingQuantity !== undefined) {
             return pendingQuantity
@@ -93,6 +149,11 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                 const newInputValues = new Map(inputValues)
                 newInputValues.set(itemId, quantity.toString())
                 setInputValues(newInputValues)
+                
+                // Store successful update for immediate UI feedback
+                const newLocalUpdates = new Map(localUpdates)
+                newLocalUpdates.set(itemId, quantity)
+                setLocalUpdates(newLocalUpdates)
             }
 
             return result // Make sure we explicitly return the result
@@ -117,6 +178,13 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
             })
         }
     }, [location?.items, pendingUpdates]) // Added pendingUpdates dependency
+
+    // Reset local updates when location changes
+    useEffect(() => {
+        if (location) {
+            setLocalUpdates(new Map())
+        }
+    }, [location?.locationKey])
 
     // Get input value for an item
     const getInputValue = (itemId: string) => {
@@ -147,6 +215,21 @@ const LocationProductsModal: React.FC<LocationProductsModalProps> = ({
                 </View>
 
                 <Divider />
+
+                {/* Overall Location Progress */}
+                <View style={styles.overallProgressContainer}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>Location Progress</Text>
+                        <Text style={styles.progressPercentage}>
+                            {Math.round(locationProgress * 100)}%
+                        </Text>
+                    </View>
+                    <ProgressBar
+                        progress={locationProgress}
+                        color={getProgressColor(locationProgress)}
+                        style={styles.overallProgressBar}
+                    />
+                </View>
 
                 <ScrollView style={styles.modalContent}>
                     {/* Location Details */}
@@ -231,6 +314,32 @@ const styles = StyleSheet.create({
 
     divider: {
         marginVertical: 12,
+    },
+    
+    // Progress bar styles
+    overallProgressContainer: {
+        padding: 16,
+        paddingBottom: 0,
+        backgroundColor: 'white',
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    progressLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    progressPercentage: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    overallProgressBar: {
+        height: 8,
+        borderRadius: 4,
+        marginBottom: 12,
     },
 })
 

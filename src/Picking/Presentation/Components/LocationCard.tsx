@@ -23,6 +23,12 @@ const LocationCard: React.FC<LocationCardProps> = ({
     const sampleProduct =
         location.items && location.items.length > 0 ? location.items[0] : null
 
+    // Ensure progress is valid - fall back to 0 if undefined or NaN
+    const safeProgress = Number.isFinite(location.progress) ? location.progress : 0
+    
+    // Calculate progress percentage for display
+    const progressPercentage = Math.round(safeProgress * 100)
+
     return (
         <Surface style={styles.locationCard} elevation={1}>
             <View style={styles.locationCardHeader}>
@@ -62,15 +68,15 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     <Text
                         style={[
                             styles.percentageText,
-                            { color: getProgressColor(location.progress) },
+                            { color: getProgressColor(safeProgress) },
                         ]}
                     >
-                        {Math.round(location.progress * 100)}%
+                        {progressPercentage}%
                     </Text>
                 </View>
                 <ProgressBar
-                    progress={location.progress}
-                    color={getProgressColor(location.progress)}
+                    progress={safeProgress}
+                    color={getProgressColor(safeProgress)}
                     style={styles.summaryProgressBar}
                 />
             </View>
