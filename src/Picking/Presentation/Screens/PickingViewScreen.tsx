@@ -14,6 +14,9 @@ import {
     ActivityIndicator,
     Chip,
     ProgressBar,
+    List,
+    Divider,
+    TouchableRipple,
 } from 'react-native-paper'
 import { formatDate } from '@/src/Core/Utils'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -43,8 +46,10 @@ type PickingViewScreenRouteProp = RouteProp<
     'PickingView'
 >
 
-// Read-only location card component
-const ReadOnlyLocationCard = ({ location }: { location: GroupedPickingItems }) => {
+// Location Accordion Component
+const LocationAccordion = ({ location }: { location: GroupedPickingItems }) => {
+    const [expanded, setExpanded] = useState(false)
+
     // Progress color logic
     const getProgressColor = (progress: number) => {
         if (progress === 0) return '#f44336' // Red for not started
@@ -66,61 +71,114 @@ const ReadOnlyLocationCard = ({ location }: { location: GroupedPickingItems }) =
 
     return (
         <Surface style={styles.locationCard} elevation={1}>
-            <View style={styles.locationCardHeader}>
-                <View style={styles.locationInfo}>
-                    <Text style={styles.locationName}>
-                        {location.warehouseName} - {location.shelfName}
-                    </Text>
-                    <Text style={styles.locationSubtext}>
-                        {location.areaName}, Row {location.rowName}
-                    </Text>
-                    <Text style={styles.locationPosition}>
-                        Level: {location.level} Position: {location.position}
-                    </Text>
-                </View>
-            </View>
-
-            <View style={styles.locationSummary}>
-                <View style={styles.progressHeader}>
-                    <Text style={styles.summaryText}>
-                        {location.items.length} product{location.items.length !== 1 ? 's' : ''}
-                    </Text>
-                    <Text
-                        style={[
-                            styles.percentageText,
-                            { color: getProgressColor(location.progress) },
-                        ]}
-                    >
-                        {progressPercentage}%
-                    </Text>
-                </View>
-                <ProgressBar
-                    progress={location.progress}
-                    color={getProgressColor(location.progress)}
-                    style={styles.summaryProgressBar}
-                />
-                <Text style={styles.quantityText}>
-                    {totalPicked} of {totalToPick} items picked
-                </Text>
-            </View>
-
-            {/* Product list for this location */}
-            <View style={styles.productList}>
-                {location.items.map((item, index) => (
-                    <View key={item.id} style={styles.productItem}>
-                        <Text style={styles.productName}>{item.goodsName || 'Unknown Product'}</Text>
-                        <Text style={styles.productCode}>Code: {item.goodsCode || 'N/A'}</Text>
-                        <View style={styles.productQuantity}>
-                            <Text style={styles.quantityLabel}>Picked: </Text>
-                            <Text style={styles.quantityValue}>
-                                {item.updatedQuantityPicked !== undefined 
-                                    ? item.updatedQuantityPicked 
-                                    : item.quantityPicked} / {Math.min(item.requestedQuantity, item.quantityCanPicked)}
+            {/* Location Header - Always visible */}
+            <TouchableRipple onPress={() => setExpanded(!expanded)}>
+                <View>
+                    <View style={styles.locationCardHeader}>
+                        <View style={styles.locationInfo}>
+                            <Text style={styles.locationName}>
+                                {location.warehouseName} - {location.shelfName}
+                            </Text>
+                            <Text style={styles.locationSubtext}>
+                                {location.areaName}, Row {location.rowName}
                             </Text>
                         </View>
+                        <List.Icon
+                            icon={expanded ? 'chevron-up' : 'chevron-down'}
+                            style={styles.accordionIcon}
+                        />
                     </View>
-                ))}
-            </View>
+
+                    <View style={styles.locationSummary}>
+                        <View style={styles.progressHeader}>
+                            <Text style={styles.summaryText}>
+                                {location.items.length} product{location.items.length !== 1 ? 's' : ''}
+                            </Text>
+                            <Text
+                                style={[
+                                    styles.percentageText,
+                                    { color: getProgressColor(location.progress) },
+                                ]}
+                            >
+                                {progressPercentage}%
+                            </Text>
+                        </View>
+                        <ProgressBar
+                            progress={location.progress}
+                            color={getProgressColor(location.progress)}
+                            style={styles.summaryProgressBar}
+                        />
+                        <Text style={styles.quantityText}>
+                            {totalPicked} of {totalToPick} items picked
+                        </Text>
+                    </View>
+                </View>
+            </TouchableRipple>
+
+            {/* Expanded content - Products list */}
+            {expanded && (
+                <View style={styles.productList}>
+                    <Divider style={styles.divider} />
+                    <Text style={styles.productsHeader}>Products</Text>
+                    
+                    {location.items.map((item, index) => (
+                        <View key={item.id} style={styles.productItem}>
+                            <Text style={styles.productName}>{item.goodsName || 'Unknown Product'}</Text>
+                            <Text style={styles.productCode}>Code: {item.goodsCode || 'N/A'}</Text>
+                            
+                            {/* Product quantities */}
+                            <View style={styles.quantityContainer}>
+                                <View style={styles.quantityRow}>
+                                    <Text style={styles.quantityLabel}>Requested:</Text>
+                                    <Text style={styles.quantityValue}>{item.requestedQuantity}</Text>
+                                </View>
+                                <View style={styles.quantityRow}>
+                                    <Text style={styles.quantityLabel}>Available:</Text>
+                                    <Text style={styles.quantityValue}>{item.quantityCanPicked}</Text>
+                                </View>
+                                <View style={styles.quantityRow}>
+                                    <Text style={styles.quantityLabel}>Picked:</Text>
+                                    <Text style={[
+                                        styles.quantityValue,
+                                        styles.pickedQuantity
+                                    ]}>
+                                        {item.updatedQuantityPicked !== undefined 
+                                            ? item.updatedQuantityPicked 
+                                            : item.quantityPicked}
+                                    </Text>
+                                </View>
+                            </View>
+                            
+                            {/* Product progress bar */}
+                            <View style={styles.productProgressContainer}>
+                                <ProgressBar
+                                    progress={Math.min(
+                                        (item.updatedQuantityPicked !== undefined 
+                                            ? item.updatedQuantityPicked 
+                                            : item.quantityPicked) / 
+                                        Math.min(item.requestedQuantity, item.quantityCanPicked),
+                                        1
+                                    )}
+                                    color={getProgressColor(
+                                        Math.min(
+                                            (item.updatedQuantityPicked !== undefined 
+                                                ? item.updatedQuantityPicked 
+                                                : item.quantityPicked) / 
+                                            Math.min(item.requestedQuantity, item.quantityCanPicked),
+                                            1
+                                        )
+                                    )}
+                                    style={styles.productProgressBar}
+                                />
+                            </View>
+                            
+                            {index < location.items.length - 1 && (
+                                <Divider style={styles.productDivider} />
+                            )}
+                        </View>
+                    ))}
+                </View>
+            )}
         </Surface>
     )
 }
@@ -471,14 +529,14 @@ const PickingViewScreen = observer(() => {
                                 </Text>
                             </View>
 
-                            {/* Location Cards */}
+                            {/* Location Accordions */}
                             {groupedLocations.length === 0 ? (
                                 <Text style={styles.emptyListText}>
                                     No items to pick in this order.
                                 </Text>
                             ) : (
                                 groupedLocations.map(location => (
-                                    <ReadOnlyLocationCard 
+                                    <LocationAccordion 
                                         key={location.locationKey} 
                                         location={location} 
                                     />
@@ -627,12 +685,13 @@ const styles = StyleSheet.create({
     locationCard: {
         marginBottom: 12,
         borderRadius: 8,
-        padding: 12,
+        overflow: 'hidden',
     },
     locationCardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
+        padding: 12,
     },
     locationInfo: {
         flex: 1,
@@ -652,7 +711,7 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     locationSummary: {
-        marginTop: 8,
+        marginHorizontal: 12,
         marginBottom: 12,
     },
     progressHeader: {
@@ -678,15 +737,24 @@ const styles = StyleSheet.create({
         marginTop: 6,
         textAlign: 'right',
     },
+    accordionIcon: {
+        margin: 0,
+    },
     // Product list styles
     productList: {
-        marginTop: 8,
+        padding: 12,
+        paddingTop: 0,
+    },
+    divider: {
+        marginBottom: 8,
+    },
+    productsHeader: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        marginBottom: 8,
     },
     productItem: {
-        padding: 8,
-        backgroundColor: '#f5f5f5',
         marginBottom: 8,
-        borderRadius: 4,
     },
     productName: {
         fontSize: 14,
@@ -695,11 +763,18 @@ const styles = StyleSheet.create({
     productCode: {
         fontSize: 12,
         color: '#666',
+        marginBottom: 4,
     },
-    productQuantity: {
-        flexDirection: 'row',
+    quantityContainer: {
         marginTop: 4,
+        backgroundColor: '#f5f5f5',
+        padding: 8,
+        borderRadius: 4,
+    },
+    quantityRow: {
+        flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 2,
     },
     quantityLabel: {
         fontSize: 12,
@@ -708,6 +783,20 @@ const styles = StyleSheet.create({
     quantityValue: {
         fontSize: 12,
         fontWeight: 'bold',
+    },
+    pickedQuantity: {
+        color: '#2196f3',
+    },
+    productProgressContainer: {
+        marginTop: 6,
+    },
+    productProgressBar: {
+        height: 4,
+        borderRadius: 2,
+    },
+    productDivider: {
+        marginTop: 8,
+        marginBottom: 8,
     },
 })
 
