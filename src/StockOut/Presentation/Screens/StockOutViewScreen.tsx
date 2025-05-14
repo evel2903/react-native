@@ -30,7 +30,11 @@ import { useStockOutStore } from '../Stores/StockOutStore/UseStockOutStore'
 import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { StockOutStoreProvider } from '../Stores/StockOutStore/StockOutStoreProvider'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
-import { Status, getStatusDisplayName, getStatusColor } from '@/src/Common/Domain/Enums/Status'
+import {
+    Status,
+    getStatusDisplayName,
+    getStatusColor,
+} from '@/src/Common/Domain/Enums/Status'
 import { useAuthStore } from '@/src/Auth/Presentation/Stores/AuthStore/UseAuthStore'
 import { AuthStoreProvider } from '@/src/Auth/Presentation/Stores/AuthStore/AuthStoreProvider'
 import {
@@ -82,7 +86,9 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
             <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
                     <Text style={styles.labelText}>Quantity</Text>
-                    <Text style={styles.valueText}>{(item.quantity || 0).toString()}</Text>
+                    <Text style={styles.valueText}>
+                        {(item.quantity || 0).toString()}
+                    </Text>
                 </View>
             </View>
             {item.notes && (
@@ -119,7 +125,9 @@ const StockOutViewScreen = observer(() => {
             setIsLoading(true)
             try {
                 if (stockId) {
-                    const stockOut = await stockOutStore.getStockOutById(stockId)
+                    const stockOut = await stockOutStore.getStockOutById(
+                        stockId
+                    )
                     if (!stockOut) {
                         showSnackbar('Failed to load stock out details')
                     }
@@ -149,9 +157,13 @@ const StockOutViewScreen = observer(() => {
     // Get background color based on priority
     const getAccordionBackgroundColor = () => {
         const stockOutData = stockOutStore.selectedStockOut
-        if (!stockOutData || stockOutData.priority === null || stockOutData.priority === undefined) 
+        if (
+            !stockOutData ||
+            stockOutData.priority === null ||
+            stockOutData.priority === undefined
+        )
             return '#f5f5f5' // Default light gray
-        
+
         switch (stockOutData.priority) {
             case PRIORITY.High:
                 return '#ffebee' // Light red
@@ -195,69 +207,132 @@ const StockOutViewScreen = observer(() => {
                             <Surface
                                 style={[
                                     styles.accordionContainer,
-                                    { backgroundColor: getAccordionBackgroundColor() }
+                                    {
+                                        backgroundColor:
+                                            getAccordionBackgroundColor(),
+                                    },
                                 ]}
                                 elevation={1}
                             >
                                 <CenteredAccordion
                                     title="Stock Out Information"
                                     expanded={infoExpanded}
-                                    onPress={() => setInfoExpanded(!infoExpanded)}
+                                    onPress={() =>
+                                        setInfoExpanded(!infoExpanded)
+                                    }
                                 >
                                     <View style={styles.infoContainer}>
                                         {/* Code and Priority Section */}
                                         <View style={styles.codeSection}>
                                             <View style={styles.codeContainer}>
                                                 <View>
-                                                    <Text style={styles.labelText}>Code</Text>
-                                                    <Text style={styles.valueText}>
-                                                        {stockOutStore.selectedStockOut.code || '-'}
+                                                    <Text
+                                                        style={styles.labelText}
+                                                    >
+                                                        Code
+                                                    </Text>
+                                                    <Text
+                                                        style={styles.valueText}
+                                                    >
+                                                        {stockOutStore
+                                                            .selectedStockOut
+                                                            .code || '-'}
                                                     </Text>
                                                 </View>
-                                                {stockOutStore.selectedStockOut.priority !== undefined &&
-                                                stockOutStore.selectedStockOut.priority !== null && (
-                                                    <View style={styles.priorityChipWrapper}>
-                                                        <Chip
-                                                            style={{
-                                                                backgroundColor: getPriorityColor(
-                                                                    stockOutStore.selectedStockOut.priority
-                                                                ),
-                                                            }}
-                                                            textStyle={styles.priorityChipText}
+                                                {stockOutStore.selectedStockOut
+                                                    .priority !== undefined &&
+                                                    stockOutStore
+                                                        .selectedStockOut
+                                                        .priority !== null && (
+                                                        <View
+                                                            style={
+                                                                styles.priorityChipWrapper
+                                                            }
                                                         >
-                                                            {getPriorityDisplayName(stockOutStore.selectedStockOut.priority)}
-                                                        </Chip>
-                                                    </View>
-                                                )}
+                                                            <Chip
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        getPriorityColor(
+                                                                            stockOutStore
+                                                                                .selectedStockOut
+                                                                                .priority
+                                                                        ),
+                                                                }}
+                                                                textStyle={
+                                                                    styles.priorityChipText
+                                                                }
+                                                            >
+                                                                {getPriorityDisplayName(
+                                                                    stockOutStore
+                                                                        .selectedStockOut
+                                                                        .priority
+                                                                )}
+                                                            </Chip>
+                                                        </View>
+                                                    )}
                                             </View>
                                         </View>
 
                                         {/* Status and Timestamps */}
                                         <View style={styles.statusSection}>
-                                            <View style={styles.statusContainer}>
-                                                <Text style={styles.labelText}>Status</Text>
+                                            <View
+                                                style={styles.statusContainer}
+                                            >
+                                                <Text style={styles.labelText}>
+                                                    Status
+                                                </Text>
                                                 <Chip
                                                     style={[
                                                         styles.statusChip,
                                                         {
-                                                            backgroundColor: getStatusColor(stockOutStore.selectedStockOut.status as Status),
+                                                            backgroundColor:
+                                                                getStatusColor(
+                                                                    stockOutStore
+                                                                        .selectedStockOut
+                                                                        .status as Status
+                                                                ),
                                                         },
                                                     ]}
-                                                    textStyle={styles.statusText}
+                                                    textStyle={
+                                                        styles.statusText
+                                                    }
                                                 >
-                                                    {getStatusDisplayName(stockOutStore.selectedStockOut.status as Status)}
+                                                    {getStatusDisplayName(
+                                                        stockOutStore
+                                                            .selectedStockOut
+                                                            .status as Status
+                                                    )}
                                                 </Chip>
                                             </View>
-                                            <View style={styles.timestampsContainer}>
-                                                <Text style={styles.labelText}>Created</Text>
-                                                <Text style={styles.valueText}>
-                                                    {formatDateTime(stockOutStore.selectedStockOut.createdAt)}
+                                            <View
+                                                style={
+                                                    styles.timestampsContainer
+                                                }
+                                            >
+                                                <Text style={styles.labelText}>
+                                                    Created
                                                 </Text>
-                                                <Text style={[styles.labelText, styles.updatedLabel]}>
+                                                <Text style={styles.valueText}>
+                                                    {formatDateTime(
+                                                        stockOutStore
+                                                            .selectedStockOut
+                                                            .createdAt
+                                                    )}
+                                                </Text>
+                                                <Text
+                                                    style={[
+                                                        styles.labelText,
+                                                        styles.updatedLabel,
+                                                    ]}
+                                                >
                                                     Updated
                                                 </Text>
                                                 <Text style={styles.valueText}>
-                                                    {formatDateTime(stockOutStore.selectedStockOut.updatedAt)}
+                                                    {formatDateTime(
+                                                        stockOutStore
+                                                            .selectedStockOut
+                                                            .updatedAt
+                                                    )}
                                                 </Text>
                                             </View>
                                         </View>
@@ -265,15 +340,25 @@ const StockOutViewScreen = observer(() => {
                                         {/* General Information */}
                                         <View style={styles.infoRow}>
                                             <View style={styles.infoColumn}>
-                                                <Text style={styles.labelText}>Stock Out Date</Text>
+                                                <Text style={styles.labelText}>
+                                                    Stock Out Date
+                                                </Text>
                                                 <Text style={styles.valueText}>
-                                                    {formatDate(stockOutStore.selectedStockOut.outDate) || '-'}
+                                                    {formatDate(
+                                                        stockOutStore
+                                                            .selectedStockOut
+                                                            .outDate
+                                                    ) || '-'}
                                                 </Text>
                                             </View>
                                             <View style={styles.infoColumn}>
-                                                <Text style={styles.labelText}>Created By</Text>
+                                                <Text style={styles.labelText}>
+                                                    Created By
+                                                </Text>
                                                 <Text style={styles.valueText}>
-                                                    {stockOutStore.selectedStockOut.createdBy || 'N/A'}
+                                                    {stockOutStore
+                                                        .selectedStockOut
+                                                        .createdBy || 'N/A'}
                                                 </Text>
                                             </View>
                                         </View>
@@ -281,25 +366,40 @@ const StockOutViewScreen = observer(() => {
                                         {/* Receiver Information */}
                                         <View style={styles.infoRow}>
                                             <View style={styles.infoColumn}>
-                                                <Text style={styles.labelText}>Receiver Name</Text>
+                                                <Text style={styles.labelText}>
+                                                    Receiver Name
+                                                </Text>
                                                 <Text style={styles.valueText}>
-                                                    {stockOutStore.selectedStockOut.receiverName || 'N/A'}
+                                                    {stockOutStore
+                                                        .selectedStockOut
+                                                        .receiverName || 'N/A'}
                                                 </Text>
                                             </View>
                                             <View style={styles.infoColumn}>
-                                                <Text style={styles.labelText}>Receiver Phone</Text>
+                                                <Text style={styles.labelText}>
+                                                    Receiver Phone
+                                                </Text>
                                                 <Text style={styles.valueText}>
-                                                    {stockOutStore.selectedStockOut.receiverPhone || 'N/A'}
+                                                    {stockOutStore
+                                                        .selectedStockOut
+                                                        .receiverPhone || 'N/A'}
                                                 </Text>
                                             </View>
                                         </View>
 
                                         {/* Notes */}
-                                        {stockOutStore.selectedStockOut.notes && (
+                                        {stockOutStore.selectedStockOut
+                                            .notes && (
                                             <View style={styles.notesContainer}>
-                                                <Text style={styles.labelText}>Notes</Text>
+                                                <Text style={styles.labelText}>
+                                                    Notes
+                                                </Text>
                                                 <Text style={styles.notesText}>
-                                                    {stockOutStore.selectedStockOut.notes}
+                                                    {
+                                                        stockOutStore
+                                                            .selectedStockOut
+                                                            .notes
+                                                    }
                                                 </Text>
                                             </View>
                                         )}
@@ -310,18 +410,27 @@ const StockOutViewScreen = observer(() => {
                             {/* Goods List */}
                             <View style={styles.goodsListHeader}>
                                 <Text style={styles.goodsListTitle}>
-                                    Goods Items ({stockOutStore.selectedStockOut.details?.length || 0})
+                                    Goods Items (
+                                    {stockOutStore.selectedStockOut.details
+                                        ?.length || 0}
+                                    )
                                 </Text>
                             </View>
                             {!stockOutStore.selectedStockOut.details ||
-                            stockOutStore.selectedStockOut.details.length === 0 ? (
+                            stockOutStore.selectedStockOut.details.length ===
+                                0 ? (
                                 <Text style={styles.emptyListText}>
                                     No items in this stock out record.
                                 </Text>
                             ) : (
-                                stockOutStore.selectedStockOut.details.map((item) => (
-                                    <ReadOnlyGoodsItem key={item.id} item={item} />
-                                ))
+                                stockOutStore.selectedStockOut.details.map(
+                                    item => (
+                                        <ReadOnlyGoodsItem
+                                            key={item.id}
+                                            item={item}
+                                        />
+                                    )
+                                )
                             )}
 
                             {/* Action Buttons */}

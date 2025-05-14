@@ -53,6 +53,16 @@ export default class PickingOrderProcessItemDto {
     @Expose()
     isActive!: boolean
 
+    // New fields for goods information
+    @Expose()
+    goodsId!: string
+
+    @Expose()
+    goodsCode!: string
+
+    @Expose()
+    goodsName!: string
+
     toDomain(): PickingOrderProcessItemEntity {
         return {
             id: this.id,
@@ -72,7 +82,11 @@ export default class PickingOrderProcessItemDto {
             level: this.level,
             position: this.position,
             isActive: this.isActive,
-            updatedQuantityPicked: this.quantityPicked // Initialize with current picked quantity
+            // Map new fields
+            goodsId: this.goodsId,
+            goodsCode: this.goodsCode,
+            goodsName: this.goodsName,
+            updatedQuantityPicked: this.quantityPicked, // Initialize with current picked quantity
         }
     }
 }

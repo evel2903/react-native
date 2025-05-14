@@ -70,7 +70,7 @@ const PickingScreen = observer(() => {
 
     // Handle process action
     const handleProcess = async (id: string) => {
-        navigation.navigate('PickingProcess', {id})
+        navigation.navigate('PickingProcess', { id })
     }
 
     // Helper method to show snackbar message
@@ -114,9 +114,7 @@ const PickingScreen = observer(() => {
                     </View>
                 ) : pickingStore.count === 0 ? (
                     <View style={styles.emptyContainer}>
-                        <Text variant="bodyLarge">
-                            No picking orders found
-                        </Text>
+                        <Text variant="bodyLarge">No picking orders found</Text>
                         <Button
                             mode="contained"
                             onPress={() => pickingStore.resetFilters()}

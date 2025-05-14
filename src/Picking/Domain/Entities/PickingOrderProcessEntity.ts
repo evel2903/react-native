@@ -16,6 +16,10 @@ export interface PickingOrderProcessItemEntity {
     level: number
     position: number
     isActive: boolean
+    // New fields for goods information
+    goodsId: string
+    goodsCode: string
+    goodsName: string
     // Additional field to track updated quantity for UI state
     updatedQuantityPicked?: number
 }

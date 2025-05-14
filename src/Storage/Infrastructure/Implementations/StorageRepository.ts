@@ -3,7 +3,9 @@ import {
     IStorageRepository,
     GetStorageVouchersPayload,
 } from '../../Domain/Specifications/IStorageRepository'
-import StorageVoucherEntity, { StorageVoucherItemEntity } from '../../Domain/Entities/StorageVoucherEntity'
+import StorageVoucherEntity, {
+    StorageVoucherItemEntity,
+} from '../../Domain/Entities/StorageVoucherEntity'
 import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
     IHttpClientToken,
@@ -22,7 +24,7 @@ class StorageRepository implements IStorageRepository {
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
-    ) { }
+    ) {}
 
     public async getStorageVouchers(
         payload: GetStorageVouchersPayload
@@ -158,8 +160,8 @@ class StorageRepository implements IStorageRepository {
             throw error instanceof Error
                 ? error
                 : new Error(
-                    `Failed to update storage voucher status for ID ${id}`
-                )
+                      `Failed to update storage voucher status for ID ${id}`
+                  )
         }
     }
 
@@ -262,7 +264,9 @@ class StorageRepository implements IStorageRepository {
             )
 
             if (!response || !response.data) {
-                throw new Error('Failed to create or update storage voucher item')
+                throw new Error(
+                    'Failed to create or update storage voucher item'
+                )
             }
 
             // Map the API response to our domain entity
@@ -289,7 +293,10 @@ class StorageRepository implements IStorageRepository {
 
             return item
         } catch (error) {
-            console.error('Error creating/updating storage voucher item:', error)
+            console.error(
+                'Error creating/updating storage voucher item:',
+                error
+            )
             throw error instanceof Error
                 ? error
                 : new Error('Failed to create/update storage voucher item')
@@ -310,7 +317,7 @@ class StorageRepository implements IStorageRepository {
 
             return {
                 statusCode: response.data.statusCode || 200,
-                message: response.data.message || 'Email sent successfully'
+                message: response.data.message || 'Email sent successfully',
             }
         } catch (error) {
             console.error(
@@ -319,7 +326,9 @@ class StorageRepository implements IStorageRepository {
             )
             throw error instanceof Error
                 ? error
-                : new Error(`Failed to send process completed email for ID ${id}`)
+                : new Error(
+                      `Failed to send process completed email for ID ${id}`
+                  )
         }
     }
 }

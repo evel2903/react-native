@@ -1,4 +1,6 @@
-import PickingOrderEntity, { PickingOrderItemEntity } from '../Entities/PickingOrderEntity'
+import PickingOrderEntity, {
+    PickingOrderItemEntity,
+} from '../Entities/PickingOrderEntity'
 
 export const IPickingRepositoryToken = Symbol('IPickingRepository')
 
@@ -29,23 +31,32 @@ export interface IPickingRepository {
 
     createPickingOrder: (data: any) => Promise<PickingOrderEntity>
 
-    updatePickingOrder: (
-        id: string,
+    updatePickingOrder: (id: string, data: any) => Promise<PickingOrderEntity>
+
+    createOrUpdatePickingOrderItem: (
         data: any
-    ) => Promise<PickingOrderEntity>
+    ) => Promise<PickingOrderItemEntity>
 
-    createOrUpdatePickingOrderItem: (data: any) => Promise<PickingOrderItemEntity>
-
-    getPickingOrderProcess: (id: string) => Promise<import('../Entities/PickingOrderProcessEntity').PickingOrderProcessEntity>
+    getPickingOrderProcess: (
+        id: string
+    ) => Promise<
+        import('../Entities/PickingOrderProcessEntity').PickingOrderProcessEntity
+    >
 
     updatePickingOrderProcessItem: (
-        id: string, 
+        id: string,
         data: { quantityPicked: number }
-    ) => Promise<import('../Entities/PickingOrderProcessEntity').PickingOrderProcessItemEntity>
+    ) => Promise<
+        import('../Entities/PickingOrderProcessEntity').PickingOrderProcessItemEntity
+    >
 
-    completePickingOrderProcess: (id: string) => Promise<{ success: boolean; message: string }>
+    completePickingOrderProcess: (
+        id: string
+    ) => Promise<{ success: boolean; message: string }>
 
-    sendProcessCompletedEmail: (id: string) => Promise<{ statusCode: number; message: string }>
+    sendProcessCompletedEmail: (
+        id: string
+    ) => Promise<{ statusCode: number; message: string }>
 
     // Optional methods
     deletePickingOrder?: (id: string) => Promise<boolean>

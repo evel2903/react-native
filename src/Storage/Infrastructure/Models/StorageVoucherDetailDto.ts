@@ -69,7 +69,9 @@ export default class StorageVoucherDetailDto {
             quantity: this.quantity,
             notes: this.notes,
             status: this.status,
-            storageVoucherItems: this.storageVoucherItems.map(item => item.toDomain()),
+            storageVoucherItems: this.storageVoucherItems.map(item =>
+                item.toDomain()
+            ),
         }
     }
 }

@@ -89,7 +89,7 @@ const StockOutScreen = observer(() => {
 
     const handleToggleFilter = () => {
         stockOutStore.toggleFilterVisible()
-        
+
         // For now, show a message since we haven't implemented the filter component yet
         showSnackbar('Filter functionality will be implemented soon')
     }

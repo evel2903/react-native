@@ -8,9 +8,7 @@ import {
 import { RowEntity } from '../../Domain/Entities/RowEntity'
 
 @injectable()
-export class GetRowsUseCase
-    implements UseCase<void, Promise<RowEntity[]>>
-{
+export class GetRowsUseCase implements UseCase<void, Promise<RowEntity[]>> {
     constructor(
         @inject(IMasterDataRepositoryToken)
         private readonly masterDataRepository: IMasterDataRepository

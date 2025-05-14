@@ -53,10 +53,16 @@ const RootNavigator = observer(() => {
             <Stack.Screen name="StockInEdit" component={StockInEditScreen} />
             <Stack.Screen name="Storage" component={StorageScreen} />
             <Stack.Screen name="StorageView" component={StorageViewScreen} />
-            <Stack.Screen name="StorageProcess" component={StorageProcessScreen} />
+            <Stack.Screen
+                name="StorageProcess"
+                component={StorageProcessScreen}
+            />
             <Stack.Screen name="Picking" component={PickingScreen} />
             {/* <Stack.Screen name="PickingView" component={PickingViewScreen} /> */}
-            <Stack.Screen name="PickingProcess" component={PickingProcessScreen} />
+            <Stack.Screen
+                name="PickingProcess"
+                component={PickingProcessScreen}
+            />
             <Stack.Screen name="StockOut" component={StockOutScreen} />
             <Stack.Screen name="StockOutView" component={StockOutViewScreen} />
             <Stack.Screen name="NotFound" component={NotFoundScreen} />

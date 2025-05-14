@@ -69,7 +69,9 @@ export default class PickingOrderDetailDto {
             quantity: this.quantity,
             notes: this.notes,
             status: this.status,
-            pickingOrderItems: Array.isArray(this.pickingOrderItems) ? this.pickingOrderItems.map(item => item.toDomain()) : [],
+            pickingOrderItems: Array.isArray(this.pickingOrderItems)
+                ? this.pickingOrderItems.map(item => item.toDomain())
+                : [],
         }
     }
 }

@@ -42,7 +42,10 @@ import CenteredAccordion from '../Components/CenteredAccordion'
 import ProductScannerModal from '@/src/Storage/Presentation/Components/ProductScannerModal'
 import PickingLocationManager from '../Components/PickingLocationManager'
 
-type PickingProcessScreenRouteProp = RouteProp<RootStackParamList, 'PickingProcess'>
+type PickingProcessScreenRouteProp = RouteProp<
+    RootStackParamList,
+    'PickingProcess'
+>
 
 const PickingProcessScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'Picking'>>()
@@ -79,11 +82,10 @@ const PickingProcessScreen = observer(() => {
                     if (!success) {
                         showSnackbar('Failed to load picking order details')
                     }
-                    
+
                     // Load picking order process
-                    const processSuccess = await pickingStore.getPickingOrderProcess(
-                        pickingId
-                    )
+                    const processSuccess =
+                        await pickingStore.getPickingOrderProcess(pickingId)
                     if (!processSuccess) {
                         showSnackbar('Failed to load picking order process')
                     }
@@ -114,15 +116,21 @@ const PickingProcessScreen = observer(() => {
         setIsProcessing(true)
         try {
             if (pickingId) {
-                const result = await pickingStore.completePickingOrderProcess(pickingId)
+                const result = await pickingStore.completePickingOrderProcess(
+                    pickingId
+                )
                 if (result && result.success) {
-                    showSnackbar(result.message || 'Picking order processed successfully')
+                    showSnackbar(
+                        result.message || 'Picking order processed successfully'
+                    )
                     // Navigate back to picking list after successful processing
                     setTimeout(() => {
                         navigation.navigate('Picking')
                     }, 1500)
                 } else {
-                    showSnackbar(result?.message || 'Failed to process picking order')
+                    showSnackbar(
+                        result?.message || 'Failed to process picking order'
+                    )
                 }
             }
         } catch (error) {
@@ -134,8 +142,27 @@ const PickingProcessScreen = observer(() => {
         }
     }
 
-    const handleUpdateQuantity = async (itemId: string, quantity: number) => {
-        await pickingStore.updateProcessItemPickedQuantity(itemId, quantity)
+    const handleUpdateQuantity = async (
+        itemId: string,
+        quantity: number
+    ): Promise<boolean> => {
+        try {
+            console.log(
+                `PickingProcessScreen: Updating item ${itemId} to quantity ${quantity}`
+            )
+            const result = await pickingStore.updateProcessItemPickedQuantity(
+                itemId,
+                quantity
+            )
+            console.log(`PickingProcessScreen: Store result: ${result}`)
+            return result // Make sure we explicitly return the result
+        } catch (error) {
+            console.error(
+                'Error in PickingProcessScreen.handleUpdateQuantity:',
+                error
+            )
+            return false
+        }
     }
 
     const handleOpenScanner = () => {
@@ -149,29 +176,31 @@ const PickingProcessScreen = observer(() => {
     const handleCodeScanned = (code: string) => {
         // Try to parse the scanned code as JSON
         try {
-            const parsedData = JSON.parse(code);
+            const parsedData = JSON.parse(code)
             if (parsedData && typeof parsedData === 'object') {
                 // If it contains a code property, use it for search
                 if ('code' in parsedData) {
-                    setSearchQuery(parsedData.code || '');
-                    showSnackbar(`Location found: ${parsedData.name || 'Unknown'}`);
+                    setSearchQuery(parsedData.code || '')
+                    showSnackbar(
+                        `Location found: ${parsedData.name || 'Unknown'}`
+                    )
                 } else {
                     // If no code property, use the raw string
-                    setSearchQuery(code);
-                    showSnackbar('Location code scanned');
+                    setSearchQuery(code)
+                    showSnackbar('Location code scanned')
                 }
             } else {
                 // If not valid JSON object, use the raw string
-                setSearchQuery(code);
-                showSnackbar('Location code scanned');
+                setSearchQuery(code)
+                showSnackbar('Location code scanned')
             }
         } catch (error) {
             // If not valid JSON, use the raw string
-            setSearchQuery(code);
-            showSnackbar('Location code scanned');
+            setSearchQuery(code)
+            showSnackbar('Location code scanned')
         }
 
-        setScannerModalVisible(false);
+        setScannerModalVisible(false)
     }
 
     // Render the form content inside the accordion
@@ -187,16 +216,22 @@ const PickingProcessScreen = observer(() => {
                     <View style={styles.codeContainer}>
                         <View>
                             <Text style={styles.labelText}>Code</Text>
-                            <Text style={styles.valueText}>{pickingData.code || '-'}</Text>
+                            <Text style={styles.valueText}>
+                                {pickingData.code || '-'}
+                            </Text>
                         </View>
                         <View style={styles.priorityChipWrapper}>
                             <Chip
                                 style={{
-                                    backgroundColor: getPriorityColor(pickingData.priority as any),
+                                    backgroundColor: getPriorityColor(
+                                        pickingData.priority as any
+                                    ),
                                 }}
                                 textStyle={styles.priorityChipText}
                             >
-                                {getPriorityDisplayName(pickingData.priority as any)}
+                                {getPriorityDisplayName(
+                                    pickingData.priority as any
+                                )}
                             </Chip>
                         </View>
                     </View>
@@ -207,7 +242,9 @@ const PickingProcessScreen = observer(() => {
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Picking Date</Text>
                         <Text style={styles.valueText}>
-                            {pickingData.pickingDate ? formatDate(pickingData.pickingDate) : '-'}
+                            {pickingData.pickingDate
+                                ? formatDate(pickingData.pickingDate)
+                                : '-'}
                         </Text>
                     </View>
                     <View style={styles.infoColumn}>
@@ -222,11 +259,15 @@ const PickingProcessScreen = observer(() => {
                 <View style={styles.infoRow}>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Created By</Text>
-                        <Text style={styles.valueText}>{pickingData.createdByUser || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {pickingData.createdByUser || '-'}
+                        </Text>
                     </View>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Assigned To</Text>
-                        <Text style={styles.valueText}>{pickingData.assignedUser || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {pickingData.assignedUser || '-'}
+                        </Text>
                     </View>
                 </View>
 
@@ -234,11 +275,15 @@ const PickingProcessScreen = observer(() => {
                 <View style={styles.infoRow}>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Requester</Text>
-                        <Text style={styles.valueText}>{pickingData.requester || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {pickingData.requester || '-'}
+                        </Text>
                     </View>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Phone Number</Text>
-                        <Text style={styles.valueText}>{pickingData.requesterPhoneNumber || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {pickingData.requesterPhoneNumber || '-'}
+                        </Text>
                     </View>
                 </View>
 
@@ -249,11 +294,13 @@ const PickingProcessScreen = observer(() => {
                         <Text style={styles.notesText}>{pickingData.note}</Text>
                     </View>
                 )}
-                
+
                 {/* Overall Progress Section */}
                 <View style={styles.progressSection}>
                     <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressLabel}>
+                            Completion Status
+                        </Text>
                         <Text style={styles.progressPercentage}>
                             {Math.round(pickingStore.processProgress * 100)}%
                         </Text>
@@ -308,12 +355,19 @@ const PickingProcessScreen = observer(() => {
         }
 
         const normalizedQuery = searchQuery.toLowerCase().trim()
-        const filtered = items.filter(item => 
-            // Filter by warehouse, area, row, shelf names
-            (item.warehouseName && item.warehouseName.toLowerCase().includes(normalizedQuery)) ||
-            (item.areaName && item.areaName.toLowerCase().includes(normalizedQuery)) ||
-            (item.rowName && item.rowName.toLowerCase().includes(normalizedQuery)) ||
-            (item.shelfName && item.shelfName.toLowerCase().includes(normalizedQuery))
+        const filtered = items.filter(
+            item =>
+                // Filter by warehouse, area, row, shelf names
+                (item.warehouseName &&
+                    item.warehouseName
+                        .toLowerCase()
+                        .includes(normalizedQuery)) ||
+                (item.areaName &&
+                    item.areaName.toLowerCase().includes(normalizedQuery)) ||
+                (item.rowName &&
+                    item.rowName.toLowerCase().includes(normalizedQuery)) ||
+                (item.shelfName &&
+                    item.shelfName.toLowerCase().includes(normalizedQuery))
         )
 
         setFilteredItems(filtered)
@@ -350,7 +404,10 @@ const PickingProcessScreen = observer(() => {
                             <Surface
                                 style={[
                                     styles.accordionContainer,
-                                    { backgroundColor: getAccordionBackgroundColor() }
+                                    {
+                                        backgroundColor:
+                                            getAccordionBackgroundColor(),
+                                    },
                                 ]}
                                 elevation={1}
                             >
@@ -403,7 +460,11 @@ const PickingProcessScreen = observer(() => {
                                 {searchQuery.trim() !== '' && (
                                     <View style={styles.searchResultsInfo}>
                                         <Text style={styles.searchResultsText}>
-                                            {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'} found
+                                            {filteredItems.length}{' '}
+                                            {filteredItems.length === 1
+                                                ? 'result'
+                                                : 'results'}{' '}
+                                            found
                                         </Text>
                                         <Button
                                             mode="text"
@@ -419,7 +480,8 @@ const PickingProcessScreen = observer(() => {
                             {/* Process Items List */}
                             <View style={styles.itemsListHeader}>
                                 <Text style={styles.itemsListTitle}>
-                                    Picking locations ({getProcessItems().length} items)
+                                    Picking locations (
+                                    {getProcessItems().length} items)
                                 </Text>
                             </View>
 
@@ -449,10 +511,15 @@ const PickingProcessScreen = observer(() => {
                                 </Button>
                                 <Button
                                     mode="contained"
-                                    onPress={() => setConfirmDialogVisible(true)}
+                                    onPress={() =>
+                                        setConfirmDialogVisible(true)
+                                    }
                                     style={styles.processButton}
                                     loading={isProcessing}
-                                    disabled={isProcessing || !pickingStore.isProcessComplete}
+                                    disabled={
+                                        isProcessing ||
+                                        !pickingStore.isProcessComplete
+                                    }
                                 >
                                     Complete Picking
                                 </Button>
@@ -474,22 +541,34 @@ const PickingProcessScreen = observer(() => {
                         <Dialog.Content>
                             {!pickingStore.isProcessComplete ? (
                                 <Text style={styles.warningText}>
-                                    All items must be fully picked before completing the process.
-                                    Currently at {Math.round(pickingStore.processProgress * 100)}% completion.
+                                    All items must be fully picked before
+                                    completing the process. Currently at{' '}
+                                    {Math.round(
+                                        pickingStore.processProgress * 100
+                                    )}
+                                    % completion.
                                 </Text>
                             ) : (
                                 <Text>
-                                    Are you sure you want to complete processing this picking order?
-                                    This action cannot be undone.
+                                    Are you sure you want to complete processing
+                                    this picking order? This action cannot be
+                                    undone.
                                 </Text>
                             )}
                         </Dialog.Content>
                         <Dialog.Actions>
-                            <Button onPress={() => setConfirmDialogVisible(false)}>Cancel</Button>
+                            <Button
+                                onPress={() => setConfirmDialogVisible(false)}
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 onPress={handleCompleteProcess}
                                 loading={isProcessing}
-                                disabled={isProcessing || !pickingStore.isProcessComplete}
+                                disabled={
+                                    isProcessing ||
+                                    !pickingStore.isProcessComplete
+                                }
                             >
                                 Confirm
                             </Button>

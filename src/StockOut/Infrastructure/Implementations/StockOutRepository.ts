@@ -123,7 +123,7 @@ class StockOutRepository implements IStockOutRepository {
     ): Promise<StockOutEntity> {
         try {
             const response: any = await this.httpClient.patch(
-                `${this.apiBaseUrl}/${id}/status`, 
+                `${this.apiBaseUrl}/${id}/status`,
                 { status, stateId }
             )
 
@@ -135,7 +135,10 @@ class StockOutRepository implements IStockOutRepository {
             // Transform the response to domain entity using StockOutDto
             return plainToInstance(StockOutDto, response).toDomain()
         } catch (error) {
-            console.error(`Error updating stock out status for ID ${id}:`, error)
+            console.error(
+                `Error updating stock out status for ID ${id}:`,
+                error
+            )
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to update stock out status for ID ${id}`)

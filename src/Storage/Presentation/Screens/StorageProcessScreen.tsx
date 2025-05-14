@@ -38,14 +38,20 @@ import {
     getPriorityDisplayName,
     getPriorityColor,
 } from '@/src/Common/Domain/Enums/Priority'
-import { StorageVoucherDetailEntity, StorageVoucherItemEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
+import {
+    StorageVoucherDetailEntity,
+    StorageVoucherItemEntity,
+} from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
 import CenteredAccordion from '../Components/CenteredAccordion'
 import StorageProcessDetailComponent from '../Components/StorageProcessDetailComponent'
 import LocationEditModal from '../Components/LocationEditModal'
 import ProductScannerModal from '../Components/ProductScannerModal'
 import { useMasterDataStore } from '@/src/Common/Presentation/Stores/MasterDataStore/UseMasterDataStore'
 
-type StorageProcessScreenRouteProp = RouteProp<RootStackParamList, 'StorageProcess'>
+type StorageProcessScreenRouteProp = RouteProp<
+    RootStackParamList,
+    'StorageProcess'
+>
 
 const StorageProcessScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'Storage'>>()
@@ -67,50 +73,59 @@ const StorageProcessScreen = observer(() => {
 
     // Location edit modal state
     const [locationModalVisible, setLocationModalVisible] = useState(false)
-    const [selectedDetailItem, setSelectedDetailItem] = useState<StorageVoucherDetailEntity | null>(null)
+    const [selectedDetailItem, setSelectedDetailItem] =
+        useState<StorageVoucherDetailEntity | null>(null)
 
     // Scanner modal state
     const [scannerModalVisible, setScannerModalVisible] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
-    const [filteredDetails, setFilteredDetails] = useState<StorageVoucherDetailEntity[]>([])
+    const [filteredDetails, setFilteredDetails] = useState<
+        StorageVoucherDetailEntity[]
+    >([])
 
     // Calculate storage completion stats
     const calculateStorageStats = () => {
-        if (!storageStore.selectedStorageVoucher || !storageStore.selectedStorageVoucher.details) {
-            return { 
-                totalItems: 0, 
-                storedItems: 0, 
-                percentage: 0 
-            };
+        if (
+            !storageStore.selectedStorageVoucher ||
+            !storageStore.selectedStorageVoucher.details
+        ) {
+            return {
+                totalItems: 0,
+                storedItems: 0,
+                percentage: 0,
+            }
         }
 
-        const details = storageStore.selectedStorageVoucher.details;
-        
+        const details = storageStore.selectedStorageVoucher.details
+
         // Calculate total quantity and allocated quantity across all details
-        let totalQuantity = 0;
-        let allocatedQuantity = 0;
-        
+        let totalQuantity = 0
+        let allocatedQuantity = 0
+
         details.forEach(detail => {
-            totalQuantity += detail.quantity || 0;
+            totalQuantity += detail.quantity || 0
             const detailAllocated = (detail.storageVoucherItems || []).reduce(
-                (sum, item) => sum + (item.quantity || 0), 
+                (sum, item) => sum + (item.quantity || 0),
                 0
-            );
-            allocatedQuantity += detailAllocated;
-        });
-        
+            )
+            allocatedQuantity += detailAllocated
+        })
+
         // Calculate percentage
-        const percentage = totalQuantity > 0 ? Math.min(allocatedQuantity / totalQuantity, 1) : 0;
-        
+        const percentage =
+            totalQuantity > 0
+                ? Math.min(allocatedQuantity / totalQuantity, 1)
+                : 0
+
         return {
             totalItems: totalQuantity,
             storedItems: allocatedQuantity,
-            percentage
-        };
-    };
+            percentage,
+        }
+    }
 
     // Get storage stats
-    const storageStats = calculateStorageStats();
+    const storageStats = calculateStorageStats()
 
     // Fetch storage data and master data when component mounts
     useEffect(() => {
@@ -160,9 +175,14 @@ const StorageProcessScreen = observer(() => {
         setIsProcessing(true)
         try {
             if (storageId) {
-                const result = await storageStore.sendProcessCompletedEmail(storageId)
+                const result = await storageStore.sendProcessCompletedEmail(
+                    storageId
+                )
                 if (result && result.statusCode === 200) {
-                    showSnackbar(result.message || 'Storage voucher processed successfully')
+                    showSnackbar(
+                        result.message ||
+                            'Storage voucher processed successfully'
+                    )
                     // Navigate back to storage list after successful processing
                     setTimeout(() => {
                         navigation.navigate('Storage')
@@ -180,7 +200,9 @@ const StorageProcessScreen = observer(() => {
         }
     }
 
-    const handleOpenLocationModal = (detailItem: StorageVoucherDetailEntity) => {
+    const handleOpenLocationModal = (
+        detailItem: StorageVoucherDetailEntity
+    ) => {
         setSelectedDetailItem(detailItem)
         setLocationModalVisible(true)
     }
@@ -192,41 +214,48 @@ const StorageProcessScreen = observer(() => {
 
     const handleSaveLocations = async (updatedItems: any[]) => {
         // Show loading indicator or disable the button while saving
-        setIsLoading(true);
+        setIsLoading(true)
 
         try {
             // Process items through the API
-            const processedItems = await storageStore.updateStorageVoucherItems(updatedItems);
+            const processedItems = await storageStore.updateStorageVoucherItems(
+                updatedItems
+            )
 
             // Check if all items were processed successfully
-            const hasErrors = processedItems.some(item => item === null);
+            const hasErrors = processedItems.some(item => item === null)
 
             if (hasErrors) {
-                showSnackbar('Some locations could not be updated');
+                showSnackbar('Some locations could not be updated')
             } else {
-                showSnackbar('Storage locations updated successfully');
+                showSnackbar('Storage locations updated successfully')
             }
 
             // Update the local state with the updated items
             if (selectedDetailItem && storageStore.selectedStorageVoucher) {
-                const detailIndex = storageStore.selectedStorageVoucher.details.findIndex(
-                    detail => detail.id === selectedDetailItem.id
-                );
+                const detailIndex =
+                    storageStore.selectedStorageVoucher.details.findIndex(
+                        detail => detail.id === selectedDetailItem.id
+                    )
 
                 if (detailIndex !== -1) {
                     // Filter out any null items and update the UI
-                    const validItems = processedItems.filter(Boolean) as StorageVoucherItemEntity[];
-                    storageStore.selectedStorageVoucher.details[detailIndex].storageVoucherItems = validItems;
+                    const validItems = processedItems.filter(
+                        Boolean
+                    ) as StorageVoucherItemEntity[]
+                    storageStore.selectedStorageVoucher.details[
+                        detailIndex
+                    ].storageVoucherItems = validItems
                 }
             }
         } catch (error) {
-            console.error('Error saving locations:', error);
-            showSnackbar('Failed to update storage locations');
+            console.error('Error saving locations:', error)
+            showSnackbar('Failed to update storage locations')
         } finally {
-            setIsLoading(false);
-            handleCloseLocationModal();
+            setIsLoading(false)
+            handleCloseLocationModal()
         }
-    };
+    }
 
     const handleOpenScanner = () => {
         setScannerModalVisible(true)
@@ -239,29 +268,31 @@ const StorageProcessScreen = observer(() => {
     const handleCodeScanned = (code: string) => {
         // Try to parse the scanned code as JSON
         try {
-            const parsedData = JSON.parse(code);
+            const parsedData = JSON.parse(code)
             if (parsedData && typeof parsedData === 'object') {
                 // If it contains a code property, use it for search
                 if ('code' in parsedData) {
-                    setSearchQuery(parsedData.code || '');
-                    showSnackbar(`Product found: ${parsedData.name || 'Unknown'}`);
+                    setSearchQuery(parsedData.code || '')
+                    showSnackbar(
+                        `Product found: ${parsedData.name || 'Unknown'}`
+                    )
                 } else {
                     // If no code property, use the raw string
-                    setSearchQuery(code);
-                    showSnackbar('Product code scanned');
+                    setSearchQuery(code)
+                    showSnackbar('Product code scanned')
                 }
             } else {
                 // If not valid JSON object, use the raw string
-                setSearchQuery(code);
-                showSnackbar('Product code scanned');
+                setSearchQuery(code)
+                showSnackbar('Product code scanned')
             }
         } catch (error) {
             // If not valid JSON, use the raw string
-            setSearchQuery(code);
-            showSnackbar('Product code scanned');
+            setSearchQuery(code)
+            showSnackbar('Product code scanned')
         }
 
-        setScannerModalVisible(false);
+        setScannerModalVisible(false)
     }
 
     // Render the form content inside the accordion
@@ -272,11 +303,11 @@ const StorageProcessScreen = observer(() => {
 
         // Get progress color based on completion percentage
         const getProgressColor = (percentage: number) => {
-            if (percentage === 0) return '#f44336'; // Red for not started
-            if (percentage < 0.5) return '#ff9800'; // Orange for < 50%
-            if (percentage < 1) return '#2196f3'; // Blue for partial completion
-            return '#4caf50'; // Green for complete
-        };
+            if (percentage === 0) return '#f44336' // Red for not started
+            if (percentage < 0.5) return '#ff9800' // Orange for < 50%
+            if (percentage < 1) return '#2196f3' // Blue for partial completion
+            return '#4caf50' // Green for complete
+        }
 
         return (
             <>
@@ -285,16 +316,22 @@ const StorageProcessScreen = observer(() => {
                     <View style={styles.codeContainer}>
                         <View>
                             <Text style={styles.labelText}>Code</Text>
-                            <Text style={styles.valueText}>{storageData.code || '-'}</Text>
+                            <Text style={styles.valueText}>
+                                {storageData.code || '-'}
+                            </Text>
                         </View>
                         <View style={styles.priorityChipWrapper}>
                             <Chip
                                 style={{
-                                    backgroundColor: getPriorityColor(storageData.priority as any),
+                                    backgroundColor: getPriorityColor(
+                                        storageData.priority as any
+                                    ),
                                 }}
                                 textStyle={styles.priorityChipText}
                             >
-                                {getPriorityDisplayName(storageData.priority as any)}
+                                {getPriorityDisplayName(
+                                    storageData.priority as any
+                                )}
                             </Chip>
                         </View>
                     </View>
@@ -305,7 +342,9 @@ const StorageProcessScreen = observer(() => {
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Storage Date</Text>
                         <Text style={styles.valueText}>
-                            {storageData.storageDate ? formatDate(storageData.storageDate) : '-'}
+                            {storageData.storageDate
+                                ? formatDate(storageData.storageDate)
+                                : '-'}
                         </Text>
                     </View>
                     <View style={styles.infoColumn}>
@@ -320,11 +359,15 @@ const StorageProcessScreen = observer(() => {
                 <View style={styles.infoRow}>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Created By</Text>
-                        <Text style={styles.valueText}>{storageData.createdBy || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {storageData.createdBy || '-'}
+                        </Text>
                     </View>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Assigned To</Text>
-                        <Text style={styles.valueText}>{storageData.assignedName || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {storageData.assignedName || '-'}
+                        </Text>
                     </View>
                 </View>
 
@@ -332,7 +375,9 @@ const StorageProcessScreen = observer(() => {
                 {storageData.completedAt && (
                     <View style={styles.infoSection}>
                         <Text style={styles.labelText}>Completed At</Text>
-                        <Text style={styles.valueText}>{formatDate(storageData.completedAt)}</Text>
+                        <Text style={styles.valueText}>
+                            {formatDate(storageData.completedAt)}
+                        </Text>
                     </View>
                 )}
 
@@ -340,14 +385,18 @@ const StorageProcessScreen = observer(() => {
                 {storageData.notes && (
                     <View style={styles.infoSection}>
                         <Text style={styles.labelText}>Notes</Text>
-                        <Text style={styles.notesText}>{storageData.notes}</Text>
+                        <Text style={styles.notesText}>
+                            {storageData.notes}
+                        </Text>
                     </View>
                 )}
-                
+
                 {/* Overall Progress Section */}
                 <View style={styles.progressSection}>
                     <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressLabel}>
+                            Completion Status
+                        </Text>
                         <Text style={styles.progressPercentage}>
                             {Math.round(storageStats.percentage * 100)}%
                         </Text>
@@ -358,7 +407,8 @@ const StorageProcessScreen = observer(() => {
                         style={styles.progressBar}
                     />
                     <Text style={styles.progressDetail}>
-                        {storageStats.storedItems} of {storageStats.totalItems} items allocated
+                        {storageStats.storedItems} of {storageStats.totalItems}{' '}
+                        items allocated
                     </Text>
                 </View>
             </>
@@ -397,9 +447,11 @@ const StorageProcessScreen = observer(() => {
         }
 
         const normalizedQuery = searchQuery.toLowerCase().trim()
-        const filtered = details.filter(item =>
-            (item.code && item.code.toLowerCase().includes(normalizedQuery)) ||
-            (item.name && item.name.toLowerCase().includes(normalizedQuery))
+        const filtered = details.filter(
+            item =>
+                (item.code &&
+                    item.code.toLowerCase().includes(normalizedQuery)) ||
+                (item.name && item.name.toLowerCase().includes(normalizedQuery))
         )
 
         setFilteredDetails(filtered)
@@ -436,7 +488,10 @@ const StorageProcessScreen = observer(() => {
                             <Surface
                                 style={[
                                     styles.accordionContainer,
-                                    { backgroundColor: getAccordionBackgroundColor() }
+                                    {
+                                        backgroundColor:
+                                            getAccordionBackgroundColor(),
+                                    },
                                 ]}
                                 elevation={1}
                             >
@@ -489,7 +544,11 @@ const StorageProcessScreen = observer(() => {
                                 {searchQuery.trim() !== '' && (
                                     <View style={styles.searchResultsInfo}>
                                         <Text style={styles.searchResultsText}>
-                                            {filteredDetails.length} {filteredDetails.length === 1 ? 'result' : 'results'} found
+                                            {filteredDetails.length}{' '}
+                                            {filteredDetails.length === 1
+                                                ? 'result'
+                                                : 'results'}{' '}
+                                            found
                                         </Text>
                                         <Button
                                             mode="text"
@@ -516,13 +575,20 @@ const StorageProcessScreen = observer(() => {
                                         : 'No items in this storage voucher.'}
                                 </Text>
                             ) : (
-                                filteredDetails.map((item: StorageVoucherDetailEntity, index: number) => (
-                                    <StorageProcessDetailComponent
-                                        key={item.id || index}
-                                        item={item}
-                                        onProcess={() => handleOpenLocationModal(item)}
-                                    />
-                                ))
+                                filteredDetails.map(
+                                    (
+                                        item: StorageVoucherDetailEntity,
+                                        index: number
+                                    ) => (
+                                        <StorageProcessDetailComponent
+                                            key={item.id || index}
+                                            item={item}
+                                            onProcess={() =>
+                                                handleOpenLocationModal(item)
+                                            }
+                                        />
+                                    )
+                                )
                             )}
 
                             {/* Action Buttons */}
@@ -536,10 +602,15 @@ const StorageProcessScreen = observer(() => {
                                 </Button>
                                 <Button
                                     mode="contained"
-                                    onPress={() => setConfirmDialogVisible(true)}
+                                    onPress={() =>
+                                        setConfirmDialogVisible(true)
+                                    }
                                     style={styles.processButton}
                                     loading={isProcessing}
-                                    disabled={isProcessing || storageStats.percentage < 1}
+                                    disabled={
+                                        isProcessing ||
+                                        storageStats.percentage < 1
+                                    }
                                 >
                                     Complete Processing
                                 </Button>
@@ -561,22 +632,31 @@ const StorageProcessScreen = observer(() => {
                         <Dialog.Content>
                             {storageStats.percentage < 1 ? (
                                 <Text style={styles.warningText}>
-                                    All items must be fully allocated before completing the process.
-                                    Currently at {Math.round(storageStats.percentage * 100)}% completion.
+                                    All items must be fully allocated before
+                                    completing the process. Currently at{' '}
+                                    {Math.round(storageStats.percentage * 100)}%
+                                    completion.
                                 </Text>
                             ) : (
                                 <Text>
-                                    Are you sure you want to complete processing this storage voucher?
-                                    This action cannot be undone.
+                                    Are you sure you want to complete processing
+                                    this storage voucher? This action cannot be
+                                    undone.
                                 </Text>
                             )}
                         </Dialog.Content>
                         <Dialog.Actions>
-                            <Button onPress={() => setConfirmDialogVisible(false)}>Cancel</Button>
+                            <Button
+                                onPress={() => setConfirmDialogVisible(false)}
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 onPress={handleProcessStorage}
                                 loading={isProcessing}
-                                disabled={isProcessing || storageStats.percentage < 1}
+                                disabled={
+                                    isProcessing || storageStats.percentage < 1
+                                }
                             >
                                 Confirm
                             </Button>

@@ -3,7 +3,9 @@ import {
     IPickingRepository,
     GetPickingOrdersPayload,
 } from '../../Domain/Specifications/IPickingRepository'
-import PickingOrderEntity, { PickingOrderItemEntity } from '../../Domain/Entities/PickingOrderEntity'
+import PickingOrderEntity, {
+    PickingOrderItemEntity,
+} from '../../Domain/Entities/PickingOrderEntity'
 import { plainToInstance } from 'class-transformer'
 import IHttpClient, {
     IHttpClientToken,
@@ -14,7 +16,10 @@ import {
 } from '../Models/PickingOrderListItemDto'
 import PickingOrderDto from '../Models/PickingOrderDto'
 import PickingOrderProcessDto from '../Models/PickingOrderProcessDto'
-import { PickingOrderProcessEntity, PickingOrderProcessItemEntity } from '../../Domain/Entities/PickingOrderProcessEntity'
+import {
+    PickingOrderProcessEntity,
+    PickingOrderProcessItemEntity,
+} from '../../Domain/Entities/PickingOrderProcessEntity'
 
 @injectable()
 class PickingRepository implements IPickingRepository {
@@ -25,7 +30,7 @@ class PickingRepository implements IPickingRepository {
 
     constructor(
         @inject(IHttpClientToken) private readonly httpClient: IHttpClient
-    ) { }
+    ) {}
 
     public async getPickingOrders(
         payload: GetPickingOrdersPayload
@@ -105,82 +110,104 @@ class PickingRepository implements IPickingRepository {
 
     public async getPickingOrderById(id: string): Promise<PickingOrderEntity> {
         try {
-            const response = await this.httpClient.get<any>(`${this.apiBaseUrl}/${id}`);
+            const response = await this.httpClient.get<any>(
+                `${this.apiBaseUrl}/${id}`
+            )
 
             // Check if the response has the expected structure
             if (!response) {
-                throw new Error('Picking order not found');
+                throw new Error('Picking order not found')
             }
 
             // The API might return { data: { ... orderData } }
-            const data = response.data && typeof response.data === 'object' ? response.data : response;
+            const data =
+                response.data && typeof response.data === 'object'
+                    ? response.data
+                    : response
 
             // Transform the response to domain entity
-            const pickingOrderDto = plainToInstance(PickingOrderDto, data);
-            return pickingOrderDto.toDomain();
+            const pickingOrderDto = plainToInstance(PickingOrderDto, data)
+            return pickingOrderDto.toDomain()
         } catch (error) {
-            console.error(`Error fetching picking order with ID ${id}:`, error);
+            console.error(`Error fetching picking order with ID ${id}:`, error)
             throw error instanceof Error
                 ? error
-                : new Error(`Failed to fetch picking order with ID ${id}`);
+                : new Error(`Failed to fetch picking order with ID ${id}`)
         }
     }
 
-    public async getPickingOrderProcess(id: string): Promise<PickingOrderProcessEntity> {
+    public async getPickingOrderProcess(
+        id: string
+    ): Promise<PickingOrderProcessEntity> {
         try {
-            const response = await this.httpClient.get<any>(`${this.apiProcessUrl}/${id}`);
+            const response = await this.httpClient.get<any>(
+                `${this.apiProcessUrl}/${id}`
+            )
 
             // Check if the response has the expected structure
             if (!response) {
-                throw new Error('Picking order process not found');
+                throw new Error('Picking order process not found')
             }
 
             // The API might return { data: { ... processData } }
             // Ensure we're accessing the correct data structure
-            const data = response.data && typeof response.data === 'object' ? response.data : response;
+            const data =
+                response.data && typeof response.data === 'object'
+                    ? response.data
+                    : response
 
             // Transform the response to domain entity
-            const pickingOrderProcessDto = plainToInstance(PickingOrderProcessDto, data);
-            return pickingOrderProcessDto.toDomain();
+            const pickingOrderProcessDto = plainToInstance(
+                PickingOrderProcessDto,
+                data
+            )
+            return pickingOrderProcessDto.toDomain()
         } catch (error) {
-            console.error(`Error fetching picking order process with ID ${id}:`, error);
+            console.error(
+                `Error fetching picking order process with ID ${id}:`,
+                error
+            )
             throw error instanceof Error
                 ? error
-                : new Error(`Failed to fetch picking order process with ID ${id}`);
+                : new Error(
+                      `Failed to fetch picking order process with ID ${id}`
+                  )
         }
     }
 
-     public async updatePickingOrderProcessItem(
+    public async updatePickingOrderProcessItem(
         id: string,
         data: { quantityPicked: number }
     ): Promise<PickingOrderProcessItemEntity> {
         try {
-            
-            const url = `${this.apiProcessUrl}/picked-item/${id}?quantityPicked=${data.quantityPicked}`;
-            
+            const url = `${this.apiProcessUrl}/picked-item/${id}?quantityPicked=${data.quantityPicked}`
+
             const response = await this.httpClient.put<any, any>(
                 url,
                 {} // Empty body since we're using query parameters
-            );
+            )
 
             if (!response) {
-                throw new Error('Failed to update picking order process item');
+                throw new Error('Failed to update picking order process item')
             }
 
             // Transform the response to domain entity (assuming a response structure)
             // Return the updated item - handle both possible response formats
-            const responseData = response.data || response;
-            
+            const responseData = response.data || response
+
             // Map the API response to our domain entity
             // If the API returns the full updated item, use it
             if (responseData && typeof responseData === 'object') {
                 return {
                     id: responseData.id || id,
-                    updatedAt: responseData.updatedAt || new Date().toISOString(),
-                    createdAt: responseData.createdAt || new Date().toISOString(),
+                    updatedAt:
+                        responseData.updatedAt || new Date().toISOString(),
+                    createdAt:
+                        responseData.createdAt || new Date().toISOString(),
                     isDeleted: responseData.isDeleted || false,
                     pickingOrderId: responseData.pickingOrderId || '',
-                    pickingOrderDetailId: responseData.pickingOrderDetailId || '',
+                    pickingOrderDetailId:
+                        responseData.pickingOrderDetailId || '',
                     stockLocationId: responseData.stockLocationId || '',
                     requestedQuantity: responseData.requestedQuantity || 0,
                     quantityCanPicked: responseData.quantityCanPicked || 0,
@@ -191,27 +218,30 @@ class PickingRepository implements IPickingRepository {
                     shelfName: responseData.shelfName || '',
                     level: responseData.level || 0,
                     position: responseData.position || 0,
-                    isActive: responseData.isActive !== undefined ? responseData.isActive : true,
-                    updatedQuantityPicked: data.quantityPicked
-                } as PickingOrderProcessItemEntity;
+                    isActive:
+                        responseData.isActive !== undefined
+                            ? responseData.isActive
+                            : true,
+                    updatedQuantityPicked: data.quantityPicked,
+                } as PickingOrderProcessItemEntity
             }
-            
+
             // If the API doesn't return the full item, return a minimal version with the updated quantity
             return {
                 id: id,
                 quantityPicked: data.quantityPicked,
-                updatedQuantityPicked: data.quantityPicked
-            } as PickingOrderProcessItemEntity;
+                updatedQuantityPicked: data.quantityPicked,
+            } as PickingOrderProcessItemEntity
         } catch (error) {
             console.error(
                 `Error updating picking order process item for ID ${id}:`,
                 error
-            );
+            )
             throw error instanceof Error
                 ? error
                 : new Error(
-                    `Failed to update picking order process item for ID ${id}`
-                );
+                      `Failed to update picking order process item for ID ${id}`
+                  )
         }
     }
 
@@ -230,7 +260,7 @@ class PickingRepository implements IPickingRepository {
 
             return {
                 success: true,
-                message: 'Picking order process completed successfully'
+                message: 'Picking order process completed successfully',
             }
         } catch (error) {
             console.error(
@@ -239,9 +269,10 @@ class PickingRepository implements IPickingRepository {
             )
             return {
                 success: false,
-                message: error instanceof Error
-                    ? error.message
-                    : `Failed to complete picking order process with ID ${id}`
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : `Failed to complete picking order process with ID ${id}`,
             }
         }
     }
@@ -261,10 +292,7 @@ class PickingRepository implements IPickingRepository {
             }
 
             // Transform the response to domain entity
-            const pickingOrderDto = plainToInstance(
-                PickingOrderDto,
-                response
-            )
+            const pickingOrderDto = plainToInstance(PickingOrderDto, response)
             return pickingOrderDto.toDomain()
         } catch (error) {
             console.error(
@@ -274,14 +302,12 @@ class PickingRepository implements IPickingRepository {
             throw error instanceof Error
                 ? error
                 : new Error(
-                    `Failed to update picking order status for ID ${id}`
-                )
+                      `Failed to update picking order status for ID ${id}`
+                  )
         }
     }
 
-    public async createPickingOrder(
-        data: any
-    ): Promise<PickingOrderEntity> {
+    public async createPickingOrder(data: any): Promise<PickingOrderEntity> {
         try {
             const response = await this.httpClient.post<any, any>(
                 this.apiBaseUrl,
@@ -293,10 +319,7 @@ class PickingRepository implements IPickingRepository {
             }
 
             // Transform the response to domain entity
-            const pickingOrderDto = plainToInstance(
-                PickingOrderDto,
-                response
-            )
+            const pickingOrderDto = plainToInstance(PickingOrderDto, response)
             return pickingOrderDto.toDomain()
         } catch (error) {
             console.error('Error creating picking order:', error)
@@ -321,16 +344,10 @@ class PickingRepository implements IPickingRepository {
             }
 
             // Transform the response to domain entity
-            const pickingOrderDto = plainToInstance(
-                PickingOrderDto,
-                response
-            )
+            const pickingOrderDto = plainToInstance(PickingOrderDto, response)
             return pickingOrderDto.toDomain()
         } catch (error) {
-            console.error(
-                `Error updating picking order with ID ${id}:`,
-                error
-            )
+            console.error(`Error updating picking order with ID ${id}:`, error)
             throw error instanceof Error
                 ? error
                 : new Error(`Failed to update picking order with ID ${id}`)
@@ -338,9 +355,7 @@ class PickingRepository implements IPickingRepository {
     }
 
     // Method to process a picking order
-    public async processPickingOrder(
-        id: string
-    ): Promise<PickingOrderEntity> {
+    public async processPickingOrder(id: string): Promise<PickingOrderEntity> {
         try {
             const response = await this.httpClient.post<any, any>(
                 `${this.apiBaseUrl}/${id}/process`,
@@ -352,10 +367,7 @@ class PickingRepository implements IPickingRepository {
             }
 
             // Transform the response to domain entity
-            const pickingOrderDto = plainToInstance(
-                PickingOrderDto,
-                response
-            )
+            const pickingOrderDto = plainToInstance(PickingOrderDto, response)
             return pickingOrderDto.toDomain()
         } catch (error) {
             console.error(
@@ -428,7 +440,7 @@ class PickingRepository implements IPickingRepository {
 
             return {
                 statusCode: response.data.statusCode || 200,
-                message: response.data.message || 'Email sent successfully'
+                message: response.data.message || 'Email sent successfully',
             }
         } catch (error) {
             console.error(
@@ -437,7 +449,9 @@ class PickingRepository implements IPickingRepository {
             )
             throw error instanceof Error
                 ? error
-                : new Error(`Failed to send process completed email for ID ${id}`)
+                : new Error(
+                      `Failed to send process completed email for ID ${id}`
+                  )
         }
     }
 }

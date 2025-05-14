@@ -30,7 +30,7 @@ import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { StorageStoreProvider } from '../Stores/StorageStore/StorageStoreProvider'
 import { useTheme } from '@/src/Core/Presentation/Theme/ThemeProvider'
 import { Status, getStatusDisplayName } from '@/src/Common/Domain/Enums/Status'
-import { 
+import {
     PRIORITY,
     getPriorityDisplayName,
     getPriorityColor,
@@ -94,46 +94,52 @@ const StorageViewScreen = observer(() => {
 
     // Calculate storage completion stats
     const calculateStorageStats = () => {
-        if (!storageStore.selectedStorageVoucher || !storageStore.selectedStorageVoucher.details) {
-            return { 
-                totalItems: 0, 
-                storedItems: 0, 
-                percentage: 0 
-            };
+        if (
+            !storageStore.selectedStorageVoucher ||
+            !storageStore.selectedStorageVoucher.details
+        ) {
+            return {
+                totalItems: 0,
+                storedItems: 0,
+                percentage: 0,
+            }
         }
 
-        const details = storageStore.selectedStorageVoucher.details;
-        
+        const details = storageStore.selectedStorageVoucher.details
+
         // Calculate total quantity and allocated quantity across all details
-        let totalQuantity = 0;
-        let allocatedQuantity = 0;
-        
+        let totalQuantity = 0
+        let allocatedQuantity = 0
+
         details.forEach(detail => {
-            totalQuantity += detail.quantity || 0;
+            totalQuantity += detail.quantity || 0
             const detailAllocated = (detail.storageVoucherItems || []).reduce(
-                (sum, item) => sum + (item.quantity || 0), 
+                (sum, item) => sum + (item.quantity || 0),
                 0
-            );
-            allocatedQuantity += detailAllocated;
-        });
-        
+            )
+            allocatedQuantity += detailAllocated
+        })
+
         // Calculate percentage
-        const percentage = totalQuantity > 0 ? Math.min(allocatedQuantity / totalQuantity, 1) : 0;
-        
+        const percentage =
+            totalQuantity > 0
+                ? Math.min(allocatedQuantity / totalQuantity, 1)
+                : 0
+
         return {
             totalItems: totalQuantity,
             storedItems: allocatedQuantity,
-            percentage
-        };
-    };
+            percentage,
+        }
+    }
 
     // Get progress color based on completion percentage
     const getProgressColor = (percentage: number) => {
-        if (percentage === 0) return '#f44336'; // Red for not started
-        if (percentage < 0.5) return '#ff9800'; // Orange for < 50%
-        if (percentage < 1) return '#2196f3'; // Blue for partial completion
-        return '#4caf50'; // Green for complete
-    };
+        if (percentage === 0) return '#f44336' // Red for not started
+        if (percentage < 0.5) return '#ff9800' // Orange for < 50%
+        if (percentage < 1) return '#2196f3' // Blue for partial completion
+        return '#4caf50' // Green for complete
+    }
 
     // Render the form content inside the accordion
     const renderFormContent = () => {
@@ -142,7 +148,7 @@ const StorageViewScreen = observer(() => {
         if (!storageData) return null
 
         // Get storage stats
-        const storageStats = calculateStorageStats();
+        const storageStats = calculateStorageStats()
 
         return (
             <>
@@ -151,16 +157,22 @@ const StorageViewScreen = observer(() => {
                     <View style={styles.codeContainer}>
                         <View>
                             <Text style={styles.labelText}>Code</Text>
-                            <Text style={styles.valueText}>{storageData.code || '-'}</Text>
+                            <Text style={styles.valueText}>
+                                {storageData.code || '-'}
+                            </Text>
                         </View>
                         <View style={styles.priorityChipWrapper}>
                             <Chip
                                 style={{
-                                    backgroundColor: getPriorityColor(storageData.priority as any),
+                                    backgroundColor: getPriorityColor(
+                                        storageData.priority as any
+                                    ),
                                 }}
                                 textStyle={styles.priorityChipText}
                             >
-                                {getPriorityDisplayName(storageData.priority as any)}
+                                {getPriorityDisplayName(
+                                    storageData.priority as any
+                                )}
                             </Chip>
                         </View>
                     </View>
@@ -171,7 +183,9 @@ const StorageViewScreen = observer(() => {
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Storage Date</Text>
                         <Text style={styles.valueText}>
-                            {storageData.storageDate ? formatDate(storageData.storageDate) : '-'}
+                            {storageData.storageDate
+                                ? formatDate(storageData.storageDate)
+                                : '-'}
                         </Text>
                     </View>
                     <View style={styles.infoColumn}>
@@ -186,11 +200,15 @@ const StorageViewScreen = observer(() => {
                 <View style={styles.infoRow}>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Created By</Text>
-                        <Text style={styles.valueText}>{storageData.createdBy || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {storageData.createdBy || '-'}
+                        </Text>
                     </View>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Assigned To</Text>
-                        <Text style={styles.valueText}>{storageData.assignedName || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {storageData.assignedName || '-'}
+                        </Text>
                     </View>
                 </View>
 
@@ -198,7 +216,9 @@ const StorageViewScreen = observer(() => {
                 {storageData.completedAt && (
                     <View style={styles.infoSection}>
                         <Text style={styles.labelText}>Completed At</Text>
-                        <Text style={styles.valueText}>{formatDate(storageData.completedAt)}</Text>
+                        <Text style={styles.valueText}>
+                            {formatDate(storageData.completedAt)}
+                        </Text>
                     </View>
                 )}
 
@@ -206,14 +226,18 @@ const StorageViewScreen = observer(() => {
                 {storageData.notes && (
                     <View style={styles.infoSection}>
                         <Text style={styles.labelText}>Notes</Text>
-                        <Text style={styles.notesText}>{storageData.notes}</Text>
+                        <Text style={styles.notesText}>
+                            {storageData.notes}
+                        </Text>
                     </View>
                 )}
 
                 {/* Overall Progress Section */}
                 <View style={styles.progressSection}>
                     <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressLabel}>
+                            Completion Status
+                        </Text>
                         <Text style={styles.progressPercentage}>
                             {Math.round(storageStats.percentage * 100)}%
                         </Text>
@@ -224,7 +248,8 @@ const StorageViewScreen = observer(() => {
                         style={styles.progressBar}
                     />
                     <Text style={styles.progressDetail}>
-                        {storageStats.storedItems} of {storageStats.totalItems} items stored
+                        {storageStats.storedItems} of {storageStats.totalItems}{' '}
+                        items stored
                     </Text>
                 </View>
             </>
@@ -235,7 +260,7 @@ const StorageViewScreen = observer(() => {
     const getAccordionBackgroundColor = () => {
         const storageData = storageStore.selectedStorageVoucher
         if (!storageData) return '#e8f5e9' // Default light green
-        
+
         switch (storageData.priority) {
             case PRIORITY.High:
                 return '#ffebee' // Light red
@@ -285,7 +310,10 @@ const StorageViewScreen = observer(() => {
                             <Surface
                                 style={[
                                     styles.accordionContainer,
-                                    { backgroundColor: getAccordionBackgroundColor() }
+                                    {
+                                        backgroundColor:
+                                            getAccordionBackgroundColor(),
+                                    },
                                 ]}
                                 elevation={1}
                             >
@@ -314,12 +342,17 @@ const StorageViewScreen = observer(() => {
                                     No items in this storage voucher.
                                 </Text>
                             ) : (
-                                getStorageDetails().map((item: StorageVoucherDetailEntity, index: number) => (
-                                    <StorageVoucherDetailComponent
-                                        key={item.id || index}
-                                        item={item}
-                                    />
-                                ))
+                                getStorageDetails().map(
+                                    (
+                                        item: StorageVoucherDetailEntity,
+                                        index: number
+                                    ) => (
+                                        <StorageVoucherDetailComponent
+                                            key={item.id || index}
+                                            item={item}
+                                        />
+                                    )
+                                )
                             )}
 
                             {/* Action Button - Back button */}

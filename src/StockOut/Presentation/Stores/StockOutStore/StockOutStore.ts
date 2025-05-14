@@ -146,18 +146,18 @@ export class StockOutStore implements StockOutStoreState {
     async getStockOutById(id: string): Promise<StockOutEntity | null> {
         this.setIsLoading(true)
         this.setError(null)
-        
+
         try {
             const stockOut = await this.getStockOutByIdUseCase.execute(id)
-            
+
             runInAction(() => {
                 this.setSelectedStockOut(stockOut)
             })
-            
+
             return stockOut
         } catch (error) {
             console.error('Error fetching stock out details:', error)
-            
+
             runInAction(() => {
                 this.setError(
                     error instanceof Error
@@ -166,7 +166,7 @@ export class StockOutStore implements StockOutStoreState {
                 )
                 this.setSelectedStockOut(null)
             })
-            
+
             return null
         } finally {
             runInAction(() => {

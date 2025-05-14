@@ -344,7 +344,7 @@ export class MasterDataStore implements MasterDataStoreState {
             this.loadWarehouses(),
             // Note: We might want to load these only when needed to avoid performance issues
             // this.loadAreas(),
-            // this.loadRows(), 
+            // this.loadRows(),
             // this.loadShelfs(),
         ])
     }

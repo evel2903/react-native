@@ -22,20 +22,20 @@ export default interface StockOutEntity {
     notes?: string
     priority?: PriorityType | null
     count?: number
-    
+
     // Fields from API response
     updatedAt: string
     createdAt: string
     isDeleted: boolean
     isActive: boolean
-    
+
     // Receiver information
     receiverName?: string
     receiverPhone?: string
-    
+
     // Additional information
     createdBy?: string
-    
+
     // Stock out details
     details?: StockOutDetailEntity[]
 }

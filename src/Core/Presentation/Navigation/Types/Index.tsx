@@ -26,7 +26,7 @@ export type RootStackParamList = {
     PickingView: { id: string }
     PickingProcess: { id: string }
     StockOut: undefined
-    StockOutView: { id: string }  // Added StockOutView route
+    StockOutView: { id: string } // Added StockOutView route
     NotFound: undefined
 }
 
@@ -35,4 +35,3 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> =
 
 export type RootScreenNavigationProp<Screen extends keyof RootStackParamList> =
     NativeStackNavigationProp<RootStackParamList, Screen>
-    

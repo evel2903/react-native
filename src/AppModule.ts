@@ -16,7 +16,7 @@ import { PickingModule } from './Picking/PickingModule'
         StockInModule,
         StorageModule,
         PickingModule,
-        StockOutModule
+        StockOutModule,
     ],
 })
 export default class AppModule {}

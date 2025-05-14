@@ -1,4 +1,6 @@
-import StorageVoucherEntity, { StorageVoucherItemEntity } from '../Entities/StorageVoucherEntity'
+import StorageVoucherEntity, {
+    StorageVoucherItemEntity,
+} from '../Entities/StorageVoucherEntity'
 
 export const IStorageRepositoryToken = Symbol('IStorageRepository')
 
@@ -34,9 +36,13 @@ export interface IStorageRepository {
         data: any
     ) => Promise<StorageVoucherEntity>
 
-    createOrUpdateStorageVoucherItem: (data: any) => Promise<StorageVoucherItemEntity>
+    createOrUpdateStorageVoucherItem: (
+        data: any
+    ) => Promise<StorageVoucherItemEntity>
 
-    sendProcessCompletedEmail: (id: string) => Promise<{ statusCode: number; message: string }>
+    sendProcessCompletedEmail: (
+        id: string
+    ) => Promise<{ statusCode: number; message: string }>
 
     // Optional methods
     deleteStorageVoucher?: (id: string) => Promise<boolean>

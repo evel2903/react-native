@@ -1,7 +1,9 @@
 // src/StockOut/Infrastructure/Models/StockOutDto.ts
 import { Expose, Type } from 'class-transformer'
 import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
-import StockOutEntity, { StockOutDetailEntity } from '../../Domain/Entities/StockOutEntity'
+import StockOutEntity, {
+    StockOutDetailEntity,
+} from '../../Domain/Entities/StockOutEntity'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 
 export class StockOutDetailDto extends ResponseDto<StockOutDetailEntity> {
@@ -42,7 +44,7 @@ export class StockOutDetailDto extends ResponseDto<StockOutDetailEntity> {
             code: this.code,
             name: this.name,
             quantity: this.quantity,
-            notes: this.notes
+            notes: this.notes,
         }
     }
 }
@@ -71,7 +73,7 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
 
     @Expose()
     count?: number
-    
+
     @Expose()
     updatedAt!: string
 
@@ -114,7 +116,7 @@ export class StockOutDto extends ResponseDto<StockOutEntity> {
             receiverName: this.receiverName,
             receiverPhone: this.receiverPhone,
             createdBy: this.createdBy,
-            details: this.details?.map(detail => detail.toDomain())
+            details: this.details?.map(detail => detail.toDomain()),
         }
     }
 }

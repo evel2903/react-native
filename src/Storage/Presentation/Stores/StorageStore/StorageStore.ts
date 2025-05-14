@@ -1,7 +1,9 @@
 import { injectable, inject } from 'inversiland'
 import { makeAutoObservable, runInAction } from 'mobx'
 import StorageStoreState from '../../Types/StorageStoreState'
-import StorageVoucherEntity, { StorageVoucherItemEntity } from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
+import StorageVoucherEntity, {
+    StorageVoucherItemEntity,
+} from '@/src/Storage/Domain/Entities/StorageVoucherEntity'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import GetStorageVouchersUseCase from '@/src/Storage/Application/UseCases/GetStorageVouchersUseCase'
 import GetStorageVoucherByIdUseCase from '@/src/Storage/Application/UseCases/GetStorageVoucherByIdUseCase'
@@ -235,15 +237,17 @@ export class StorageStore implements StorageStoreState {
             })
         }
     }
-    
+
     // Send email notification when processing is completed
     async sendProcessCompletedEmail(id: string) {
         this.setIsProcessing(true)
         this.setError(null)
 
         try {
-            const result = await this.sendProcessCompletedEmailUseCase.execute(id)
-            
+            const result = await this.sendProcessCompletedEmailUseCase.execute(
+                id
+            )
+
             return result
         } catch (error) {
             console.error('Error sending process completed email:', error)
@@ -265,12 +269,18 @@ export class StorageStore implements StorageStoreState {
     }
 
     // Create or update a storage voucher item
-    async createOrUpdateStorageVoucherItem(data: any): Promise<StorageVoucherItemEntity | null> {
+    async createOrUpdateStorageVoucherItem(
+        data: any
+    ): Promise<StorageVoucherItemEntity | null> {
         try {
-            const item = await this.createOrUpdateStorageVoucherItemUseCase.execute(data)
+            const item =
+                await this.createOrUpdateStorageVoucherItemUseCase.execute(data)
             return item
         } catch (error) {
-            console.error('Error creating/updating storage voucher item:', error)
+            console.error(
+                'Error creating/updating storage voucher item:',
+                error
+            )
             this.setError(
                 error instanceof Error
                     ? error.message
@@ -281,12 +291,19 @@ export class StorageStore implements StorageStoreState {
     }
 
     // Update multiple storage voucher items
-    async updateStorageVoucherItems(items: any[]): Promise<(StorageVoucherItemEntity | null)[]> {
+    async updateStorageVoucherItems(
+        items: any[]
+    ): Promise<(StorageVoucherItemEntity | null)[]> {
         try {
-            const promises = items.map(item => this.createOrUpdateStorageVoucherItem(item))
+            const promises = items.map(item =>
+                this.createOrUpdateStorageVoucherItem(item)
+            )
             return await Promise.all(promises)
         } catch (error) {
-            console.error('Error updating multiple storage voucher items:', error)
+            console.error(
+                'Error updating multiple storage voucher items:',
+                error
+            )
             this.setError(
                 error instanceof Error
                     ? error.message

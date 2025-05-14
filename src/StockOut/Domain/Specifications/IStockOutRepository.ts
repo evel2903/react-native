@@ -11,13 +11,13 @@ export interface IStockOutRepository {
     }>
 
     getStockOutById: (id: string) => Promise<StockOutEntity>
-    
+
     updateStockOutStatus: (
         id: string,
         status: StockOutEntity['status'],
         stateId: string
     ) => Promise<StockOutEntity>
-    
+
     // Optional methods
     deleteStockOut?: (id: string) => Promise<boolean>
 }

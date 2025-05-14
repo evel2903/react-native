@@ -60,7 +60,7 @@ const StockOutListItem: React.FC<StockOutListItemProps> = ({
         if (item.priority === null || item.priority === undefined) {
             return null
         }
-        
+
         return (
             <Chip
                 style={{

@@ -74,18 +74,19 @@ const PickingListItem: React.FC<PickingListItemProps> = ({
 
     // Get progress color based on completion percentage
     const getProgressColor = (percentage: number) => {
-        if (percentage === 0) return '#f44336'; // Red for not started
-        if (percentage < 0.5) return '#ff9800'; // Orange for < 50%
-        if (percentage < 1) return '#2196f3'; // Blue for partial completion
-        return '#4caf50'; // Green for complete
-    };
+        if (percentage === 0) return '#f44336' // Red for not started
+        if (percentage < 0.5) return '#ff9800' // Orange for < 50%
+        if (percentage < 1) return '#2196f3' // Blue for partial completion
+        return '#4caf50' // Green for complete
+    }
 
     const statusDetails = getStatusDetails(item.status)
-    
+
     // Calculate percentage directly from API values
-    const totalItems = item.totalItemsQty || 0;
-    const pickedItems = item.totalItemsPicked || 0;
-    const percentage = totalItems > 0 ? Math.min(pickedItems / totalItems, 1) : 0;
+    const totalItems = item.totalItemsQty || 0
+    const pickedItems = item.totalItemsPicked || 0
+    const percentage =
+        totalItems > 0 ? Math.min(pickedItems / totalItems, 1) : 0
 
     return (
         <Card style={styles.card}>
@@ -117,7 +118,9 @@ const PickingListItem: React.FC<PickingListItemProps> = ({
                     Assigned to: {item.assignedUser || 'Not assigned'}
                 </Text>
                 <Text style={styles.infoText}>
-                    Requester: {item.requester} {item.requesterPhoneNumber && `(${item.requesterPhoneNumber})`}
+                    Requester: {item.requester}{' '}
+                    {item.requesterPhoneNumber &&
+                        `(${item.requesterPhoneNumber})`}
                 </Text>
                 {item.note && (
                     <Text style={styles.infoText}>Notes: {item.note}</Text>
@@ -153,7 +156,9 @@ const PickingListItem: React.FC<PickingListItemProps> = ({
                 {/* Progress section */}
                 <View style={styles.progressSection}>
                     <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Completion Status</Text>
+                        <Text style={styles.progressLabel}>
+                            Completion Status
+                        </Text>
                         <Text style={styles.progressPercentage}>
                             {Math.round(percentage * 100)}%
                         </Text>

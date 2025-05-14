@@ -8,9 +8,7 @@ import {
 import { AreaEntity } from '../../Domain/Entities/AreaEntity'
 
 @injectable()
-export class GetAreasUseCase
-    implements UseCase<void, Promise<AreaEntity[]>>
-{
+export class GetAreasUseCase implements UseCase<void, Promise<AreaEntity[]>> {
     constructor(
         @inject(IMasterDataRepositoryToken)
         private readonly masterDataRepository: IMasterDataRepository

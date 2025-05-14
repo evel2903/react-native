@@ -1,5 +1,8 @@
 import { Expose, Type } from 'class-transformer'
-import { PickingOrderProcessEntity, PickingOrderProcessItemEntity } from '../../Domain/Entities/PickingOrderProcessEntity'
+import {
+    PickingOrderProcessEntity,
+    PickingOrderProcessItemEntity,
+} from '../../Domain/Entities/PickingOrderProcessEntity'
 import PickingOrderProcessItemDto from './PickingOrderProcessItemDto'
 
 export default class PickingOrderProcessDto {
@@ -16,8 +19,10 @@ export default class PickingOrderProcessDto {
     toDomain(): PickingOrderProcessEntity {
         return {
             pickingOrderId: this.pickingOrderId,
-            items: Array.isArray(this.items) ? this.items.map(item => item.toDomain()) : [],
-            approvedIsValid: this.approvedIsValid
+            items: Array.isArray(this.items)
+                ? this.items.map(item => item.toDomain())
+                : [],
+            approvedIsValid: this.approvedIsValid,
         }
     }
 }

@@ -1,8 +1,13 @@
 import { injectable, inject } from 'inversiland'
 import { makeAutoObservable, runInAction } from 'mobx'
 import PickingStoreState from '../../Types/PickingStoreState'
-import PickingOrderEntity, { PickingOrderItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderEntity'
-import { PickingOrderProcessEntity, PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
+import PickingOrderEntity, {
+    PickingOrderItemEntity,
+} from '@/src/Picking/Domain/Entities/PickingOrderEntity'
+import {
+    PickingOrderProcessEntity,
+    PickingOrderProcessItemEntity,
+} from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 import { PriorityType } from '@/src/Common/Domain/Enums/Priority'
 import GetPickingOrdersUseCase from '@/src/Picking/Application/UseCases/GetPickingOrdersUseCase'
 import GetPickingOrderByIdUseCase from '@/src/Picking/Application/UseCases/GetPickingOrderByIdUseCase'
@@ -75,33 +80,41 @@ export class PickingStore implements PickingStoreState {
     // Check if all requested items have been fully picked
     get isProcessComplete(): boolean {
         if (!this.processItems.length) return false
-        
+
         return this.processItems.every(item => {
             const pendingValue = this.pendingUpdates.get(item.id)
-            const quantityPicked = pendingValue !== undefined ? pendingValue : item.quantityPicked
-            
-            return quantityPicked >= item.requestedQuantity || quantityPicked >= item.quantityCanPicked
+            const quantityPicked =
+                pendingValue !== undefined ? pendingValue : item.quantityPicked
+
+            return (
+                quantityPicked >= item.requestedQuantity ||
+                quantityPicked >= item.quantityCanPicked
+            )
         })
     }
 
     // Get overall picking progress percentage
     get processProgress(): number {
         if (!this.processItems.length) return 0
-        
+
         let requestedTotal = 0
         let pickedTotal = 0
-        
+
         this.processItems.forEach(item => {
             // Use the smallest value between requested and available
-            const targetQty = Math.min(item.requestedQuantity, item.quantityCanPicked)
+            const targetQty = Math.min(
+                item.requestedQuantity,
+                item.quantityCanPicked
+            )
             requestedTotal += targetQty
-            
+
             const pendingValue = this.pendingUpdates.get(item.id)
-            const quantityPicked = pendingValue !== undefined ? pendingValue : item.quantityPicked
-            
+            const quantityPicked =
+                pendingValue !== undefined ? pendingValue : item.quantityPicked
+
             pickedTotal += Math.min(quantityPicked, targetQty)
         })
-        
+
         return requestedTotal > 0 ? pickedTotal / requestedTotal : 0
     }
 
@@ -181,9 +194,7 @@ export class PickingStore implements PickingStoreState {
         this.setError(null)
 
         try {
-            const response = await this.getPickingOrdersUseCase.execute(
-                payload
-            )
+            const response = await this.getPickingOrdersUseCase.execute(payload)
 
             runInAction(() => {
                 this.setResults(response.results)
@@ -219,8 +230,9 @@ export class PickingStore implements PickingStoreState {
         this.setError(null)
 
         try {
-            const pickingOrder =
-                await this.getPickingOrderByIdUseCase.execute(id)
+            const pickingOrder = await this.getPickingOrderByIdUseCase.execute(
+                id
+            )
 
             runInAction(() => {
                 this.setSelectedPickingOrder(pickingOrder)
@@ -253,8 +265,7 @@ export class PickingStore implements PickingStoreState {
         this.setError(null)
 
         try {
-            const process =
-                await this.getPickingOrderProcessUseCase.execute(id)
+            const process = await this.getPickingOrderProcessUseCase.execute(id)
 
             runInAction(() => {
                 this.setPickingOrderProcess(process)
@@ -282,7 +293,10 @@ export class PickingStore implements PickingStoreState {
     }
 
     // Update picking order process item's picked quantity
-    async updateProcessItemPickedQuantity(itemId: string, quantity: number) {
+    async updateProcessItemPickedQuantity(
+        itemId: string,
+        quantity: number
+    ): Promise<boolean> {
         this.setIsProcessing(true)
         this.setError(null)
 
@@ -293,27 +307,39 @@ export class PickingStore implements PickingStoreState {
             })
 
             // Then, update on the server
-            const updatedItem = await this.updatePickingOrderProcessItemUseCase.execute({
-                id: itemId,
-                quantityPicked: quantity
-            })
+            const result =
+                await this.updatePickingOrderProcessItemUseCase.execute({
+                    id: itemId,
+                    quantityPicked: quantity,
+                })
 
-            runInAction(() => {
-                // Update the process item in the items array
-                const index = this.processItems.findIndex(item => item.id === itemId)
-                if (index !== -1) {
-                    this.processItems[index] = {
-                        ...this.processItems[index],
-                        quantityPicked: quantity,
-                        updatedQuantityPicked: quantity
+            // Consider any non-null response as success
+            if (result !== null && result !== undefined) {
+                runInAction(() => {
+                    // Update the process item in the items array
+                    const index = this.processItems.findIndex(
+                        item => item.id === itemId
+                    )
+                    if (index !== -1) {
+                        this.processItems[index] = {
+                            ...this.processItems[index],
+                            quantityPicked: quantity,
+                            updatedQuantityPicked: quantity,
+                        }
                     }
-                }
-                
-                // Remove from pending updates
-                this.pendingUpdates.delete(itemId)
-            })
 
-            return updatedItem
+                    // Remove from pending updates
+                    this.pendingUpdates.delete(itemId)
+                })
+
+                console.log(
+                    `Successfully updated item ${itemId} to quantity ${quantity}`
+                )
+                return true // Return success for any valid response
+            } else {
+                console.error(`No response for update of item ${itemId}`)
+                throw new Error(`Failed to update item ${itemId}`)
+            }
         } catch (error) {
             console.error(`Error updating process item ${itemId}:`, error)
 
@@ -323,9 +349,12 @@ export class PickingStore implements PickingStoreState {
                         ? error.message
                         : `Failed to update picked quantity for item ${itemId}`
                 )
+
+                // Remove from pending updates in case of error
+                this.pendingUpdates.delete(itemId)
             })
 
-            return null
+            return false // Return failure
         } finally {
             runInAction(() => {
                 this.setIsProcessing(false)
@@ -340,14 +369,17 @@ export class PickingStore implements PickingStoreState {
 
         try {
             // Save any pending updates first
-            const pendingPromises = Array.from(this.pendingUpdates.entries()).map(
-                ([itemId, quantity]) => this.updateProcessItemPickedQuantity(itemId, quantity)
+            const pendingPromises = Array.from(
+                this.pendingUpdates.entries()
+            ).map(([itemId, quantity]) =>
+                this.updateProcessItemPickedQuantity(itemId, quantity)
             )
 
             await Promise.all(pendingPromises)
 
             // Then complete the process
-            const result = await this.completePickingOrderProcessUseCase.execute(id)
+            const result =
+                await this.completePickingOrderProcessUseCase.execute(id)
 
             if (!result.success) {
                 throw new Error(result.message)
@@ -367,9 +399,10 @@ export class PickingStore implements PickingStoreState {
 
             return {
                 success: false,
-                message: error instanceof Error
-                    ? error.message
-                    : 'Failed to complete picking order process'
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to complete picking order process',
             }
         } finally {
             runInAction(() => {
@@ -379,9 +412,12 @@ export class PickingStore implements PickingStoreState {
     }
 
     // Create or update a picking order item
-    async createOrUpdatePickingOrderItem(data: any): Promise<PickingOrderItemEntity | null> {
+    async createOrUpdatePickingOrderItem(
+        data: any
+    ): Promise<PickingOrderItemEntity | null> {
         try {
-            const item = await this.createOrUpdatePickingOrderItemUseCase.execute(data)
+            const item =
+                await this.createOrUpdatePickingOrderItemUseCase.execute(data)
             return item
         } catch (error) {
             console.error('Error creating/updating picking order item:', error)
@@ -395,9 +431,13 @@ export class PickingStore implements PickingStoreState {
     }
 
     // Update multiple picking order items
-    async updatePickingOrderItems(items: any[]): Promise<(PickingOrderItemEntity | null)[]> {
+    async updatePickingOrderItems(
+        items: any[]
+    ): Promise<(PickingOrderItemEntity | null)[]> {
         try {
-            const promises = items.map(item => this.createOrUpdatePickingOrderItem(item))
+            const promises = items.map(item =>
+                this.createOrUpdatePickingOrderItem(item)
+            )
             return await Promise.all(promises)
         } catch (error) {
             console.error('Error updating multiple picking order items:', error)

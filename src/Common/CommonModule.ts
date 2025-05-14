@@ -28,13 +28,13 @@ import { GetShelfsUseCase } from './Application/UseCases/GetShelfsUseCase'
         GetSuppliersUseCase,
         GetGoodsUseCase,
         GetGoodsByCodeUseCase,
-        
+
         // New use cases
         GetWarehousesUseCase,
         GetAreasUseCase,
         GetRowsUseCase,
         GetShelfsUseCase,
-        
+
         {
             useClass: MasterDataStore,
             scope: 'Singleton',

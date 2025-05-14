@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, StyleSheet } from 'react-native'
 import {
     Surface,
@@ -6,13 +6,16 @@ import {
     Button,
     ProgressBar,
     TextInput,
+    Divider,
+    Chip,
+    Snackbar,
 } from 'react-native-paper'
 import { PickingOrderProcessItemEntity } from '@/src/Picking/Domain/Entities/PickingOrderProcessEntity'
 
 interface ProductItemProps {
     item: PickingOrderProcessItemEntity
     index: number
-    onUpdateQuantity: (id: string, quantity: number) => void
+    onUpdateQuantity: (id: string, quantity: number) => Promise<boolean>
     isPendingUpdate: boolean
     inputValue: string
     onInputChange: (value: string) => void
@@ -24,15 +27,30 @@ const ProductItem: React.FC<ProductItemProps> = ({
     onUpdateQuantity,
     isPendingUpdate,
     inputValue,
-    onInputChange
+    onInputChange,
 }) => {
+    // State for update notification
+    const [updateSuccess, setUpdateSuccess] = useState(false)
+    const [updateError, setUpdateError] = useState(false)
+    const [snackbarVisible, setSnackbarVisible] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState('')
+
     // Current quantity & progress calculation logic
-    const currentQuantity = item.updatedQuantityPicked !== undefined ? 
-        item.updatedQuantityPicked : item.quantityPicked
-  
+    const currentQuantity =
+        item.updatedQuantityPicked !== undefined
+            ? item.updatedQuantityPicked
+            : item.quantityPicked
+
     const maxPickable = Math.min(item.requestedQuantity, item.quantityCanPicked)
     const isFullyPicked = currentQuantity >= maxPickable
-    const progressPercentage = maxPickable > 0 ? Math.min(currentQuantity / maxPickable, 1) : 0
+    const progressPercentage =
+        maxPickable > 0 ? Math.min(currentQuantity / maxPickable, 1) : 0
+
+    // Reset success/error states when item changes
+    useEffect(() => {
+        setUpdateSuccess(false)
+        setUpdateError(false)
+    }, [item.id])
 
     // Progress color logic
     const getProgressColor = () => {
@@ -40,53 +58,88 @@ const ProductItem: React.FC<ProductItemProps> = ({
         if (progressPercentage < 1) return '#ff9800' // Orange for in progress
         return '#4caf50' // Green for complete
     }
-  
+
     // Handle update button click
-    const handleUpdate = () => {
+    const handleUpdate = async () => {
         if (!inputValue) return
-    
+
         const newQuantity = parseInt(inputValue, 10)
         if (isNaN(newQuantity)) return
-    
+
         const finalQuantity = Math.max(0, Math.min(newQuantity, maxPickable))
-    
+
         if (finalQuantity !== currentQuantity) {
-            onUpdateQuantity(item.id, finalQuantity)
+            try {
+                // Reset previous states
+                setUpdateSuccess(false)
+                setUpdateError(false)
+
+                console.log(
+                    `ProductItem: Updating item ${item.id} to quantity ${finalQuantity}`
+                )
+
+                // IMPORTANT: Use await here
+                const result = await onUpdateQuantity(item.id, finalQuantity)
+
+                console.log(`ProductItem: Update result: ${result}`)
+
+                // Show correct success/error message
+                if (result === true) {
+                    // Explicitly check for true
+                    setUpdateSuccess(true)
+                    setSnackbarMessage('Quantity updated successfully')
+                } else {
+                    setUpdateError(true)
+                    setSnackbarMessage('Failed to update quantity')
+                }
+
+                setSnackbarVisible(true)
+            } catch (error) {
+                console.error('Error in ProductItem.handleUpdate:', error)
+                setUpdateError(true)
+                setSnackbarMessage('Error updating quantity')
+                setSnackbarVisible(true)
+            }
         }
     }
 
     return (
-        <Surface 
-            style={styles.productItem}
+        <Surface
+            style={[
+                styles.productItem,
+                updateSuccess && styles.updateSuccessBorder,
+                updateError && styles.updateErrorBorder,
+            ]}
             elevation={1}
         >
-            <View style={styles.productHeader}>
-                <Text style={styles.productId}>Product {index + 1}</Text>
-                {isFullyPicked && (
-                    <Text style={[styles.completedText, { color: '#4caf50' }]}>
-                        Complete
+            {/* Goods Information Section */}
+            <View style={styles.goodsInfoSection}>
+                <View style={styles.goodsNameRow}>
+                    <Text style={styles.goodsName}>
+                        {item.goodsName || 'Unknown Product'}
                     </Text>
-                )}
+                    {isFullyPicked && (
+                        <Chip
+                            style={{ backgroundColor: '#4caf50' }}
+                            textStyle={styles.statusChip}
+                        >
+                            Complete
+                        </Chip>
+                    )}
+                </View>
+                <Text style={styles.goodsCode}>
+                    Code: {item.goodsCode || 'N/A'}
+                </Text>
             </View>
-      
-            <View style={styles.quantityRow}>
-                <Text style={styles.quantityLabel}>Requested:</Text>
-                <Text style={styles.quantityValue}>{item.requestedQuantity}</Text>
-            </View>
-            <View style={styles.quantityRow}>
-                <Text style={styles.quantityLabel}>Available:</Text>
-                <Text style={styles.quantityValue}>{item.quantityCanPicked}</Text>
-            </View>
-            <View style={styles.quantityRow}>
-                <Text style={styles.quantityLabel}>Picked:</Text>
-                <Text style={styles.quantityValue}>{currentQuantity}</Text>
-            </View>
-      
+
+            <Divider style={styles.divider} />
+
+            {/* Progress Section - Now the main quantity display */}
             <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
                     <Text style={styles.progressLabel}>Picking Progress</Text>
-                    <Text style={[styles.progressText, { color: getProgressColor() }]}>
-                        {Math.round(progressPercentage * 100)}%
+                    <Text style={styles.progressQuantity}>
+                        {currentQuantity}/{maxPickable}
                     </Text>
                 </View>
                 <ProgressBar
@@ -94,8 +147,21 @@ const ProductItem: React.FC<ProductItemProps> = ({
                     color={getProgressColor()}
                     style={styles.progressBar}
                 />
+                <View style={styles.progressFooter}>
+                    <Text style={styles.quantityLabels}>
+                        Available: {item.quantityCanPicked}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.progressPercentage,
+                            { color: getProgressColor() },
+                        ]}
+                    >
+                        {Math.round(progressPercentage * 100)}%
+                    </Text>
+                </View>
             </View>
-      
+
             <View style={styles.quantityInputContainer}>
                 <TextInput
                     mode="outlined"
@@ -112,14 +178,31 @@ const ProductItem: React.FC<ProductItemProps> = ({
                     onPress={handleUpdate}
                     disabled={isPendingUpdate}
                     style={styles.updateButton}
+                    loading={isPendingUpdate}
                 >
                     Update
                 </Button>
             </View>
-      
+
             {isPendingUpdate && (
                 <Text style={styles.pendingText}>Updating...</Text>
             )}
+
+            {/* Update notification */}
+            <Snackbar
+                visible={snackbarVisible}
+                onDismiss={() => setSnackbarVisible(false)}
+                duration={2000}
+                style={
+                    updateSuccess
+                        ? styles.successSnackbar
+                        : updateError
+                        ? styles.errorSnackbar
+                        : undefined
+                }
+            >
+                {snackbarMessage}
+            </Snackbar>
         </Surface>
     )
 }
@@ -129,34 +212,43 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 8,
         marginBottom: 12,
+        borderLeftWidth: 3,
+        borderLeftColor: 'transparent',
     },
-    productHeader: {
+    updateSuccessBorder: {
+        borderLeftColor: '#4caf50', // Green for success
+    },
+    updateErrorBorder: {
+        borderLeftColor: '#f44336', // Red for error
+    },
+    // Goods information styles
+    goodsInfoSection: {
+        marginBottom: 12,
+    },
+    goodsNameRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
-    },
-    productId: {
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    completedText: {
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    quantityRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
         marginBottom: 4,
     },
-    quantityLabel: {
+    goodsName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        flex: 1,
+    },
+    goodsCode: {
+        fontSize: 14,
         color: '#666',
     },
-    quantityValue: {
-        fontWeight: 'bold',
+    statusChip: {
+        color: 'white',
+        fontSize: 12,
+    },
+    divider: {
+        marginBottom: 12,
     },
     progressSection: {
-        marginVertical: 8,
+        marginVertical: 12,
     },
     progressHeader: {
         flexDirection: 'row',
@@ -165,16 +257,30 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     progressLabel: {
-        fontSize: 12,
-        color: '#757575',
-    },
-    progressText: {
         fontSize: 14,
+        fontWeight: '500',
+    },
+    progressQuantity: {
+        fontSize: 16,
         fontWeight: 'bold',
     },
     progressBar: {
         height: 8,
         borderRadius: 4,
+        marginVertical: 6,
+    },
+    progressFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    quantityLabels: {
+        fontSize: 12,
+        color: '#666',
+    },
+    progressPercentage: {
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     quantityInputContainer: {
         flexDirection: 'row',
@@ -195,6 +301,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         textAlign: 'center',
         marginTop: 8,
+    },
+    successSnackbar: {
+        backgroundColor: '#4caf50', // Green background for success
+    },
+    errorSnackbar: {
+        backgroundColor: '#f44336', // Red background for error
     },
 })
 

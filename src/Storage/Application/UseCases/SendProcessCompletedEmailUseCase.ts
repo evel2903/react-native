@@ -7,14 +7,17 @@ import { UseCase } from '@/src/Core/Application/UseCase'
 
 @injectable()
 export default class SendProcessCompletedEmailUseCase
-    implements UseCase<string, Promise<{ statusCode: number; message: string }>>
+    implements
+        UseCase<string, Promise<{ statusCode: number; message: string }>>
 {
     constructor(
         @inject(IStorageRepositoryToken)
         private readonly storageRepository: IStorageRepository
     ) {}
 
-    public execute(id: string): Promise<{ statusCode: number; message: string }> {
+    public execute(
+        id: string
+    ): Promise<{ statusCode: number; message: string }> {
         return this.storageRepository.sendProcessCompletedEmail(id)
     }
 }

@@ -1,11 +1,6 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
-import {
-    Surface,
-    Text,
-    Button,
-    ProgressBar,
-} from 'react-native-paper'
+import { Surface, Text, Button, ProgressBar } from 'react-native-paper'
 import { GroupedPickingItems } from './types'
 
 interface LocationCardProps {
@@ -13,9 +8,9 @@ interface LocationCardProps {
     onViewProducts: (location: GroupedPickingItems) => void
 }
 
-const LocationCard: React.FC<LocationCardProps> = ({ 
-    location, 
-    onViewProducts 
+const LocationCard: React.FC<LocationCardProps> = ({
+    location,
+    onViewProducts,
 }) => {
     // Progress color logic
     const getProgressColor = (progress: number) => {
@@ -23,6 +18,10 @@ const LocationCard: React.FC<LocationCardProps> = ({
         if (progress < 1) return '#ff9800' // Orange for in progress
         return '#4caf50' // Green for complete
     }
+
+    // Get a sample product from the location for display
+    const sampleProduct =
+        location.items && location.items.length > 0 ? location.items[0] : null
 
     return (
         <Surface style={styles.locationCard} elevation={1}>
@@ -39,13 +38,33 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     </Text>
                 </View>
             </View>
-            
+
+            {/* Display product information if available */}
+            {sampleProduct && sampleProduct.goodsName && (
+                <View style={styles.productInfoSection}>
+                    <Text style={styles.productInfoText}>
+                        {sampleProduct.goodsName}
+                    </Text>
+                    {sampleProduct.goodsCode && (
+                        <Text style={styles.productCodeText}>
+                            Code: {sampleProduct.goodsCode}
+                        </Text>
+                    )}
+                </View>
+            )}
+
             <View style={styles.locationSummary}>
                 <View style={styles.progressHeader}>
                     <Text style={styles.summaryText}>
-                        {location.items.length} product{location.items.length !== 1 ? 's' : ''}
+                        {location.items.length} product
+                        {location.items.length !== 1 ? 's' : ''}
                     </Text>
-                    <Text style={[styles.percentageText, { color: getProgressColor(location.progress) }]}>
+                    <Text
+                        style={[
+                            styles.percentageText,
+                            { color: getProgressColor(location.progress) },
+                        ]}
+                    >
                         {Math.round(location.progress * 100)}%
                     </Text>
                 </View>
@@ -55,9 +74,9 @@ const LocationCard: React.FC<LocationCardProps> = ({
                     style={styles.summaryProgressBar}
                 />
             </View>
-            
-            <Button 
-                mode="contained" 
+
+            <Button
+                mode="contained"
                 onPress={() => onViewProducts(location)}
                 style={styles.viewProductsButton}
             >
@@ -94,6 +113,21 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         marginTop: 2,
+    },
+    // New styles for product information
+    productInfoSection: {
+        marginTop: 8,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+    },
+    productInfoText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    productCodeText: {
+        fontSize: 12,
+        color: '#666',
     },
     progressHeader: {
         flexDirection: 'row',

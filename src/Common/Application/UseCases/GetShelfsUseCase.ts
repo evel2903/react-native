@@ -8,9 +8,7 @@ import {
 import { ShelfEntity } from '../../Domain/Entities/ShelfEntity'
 
 @injectable()
-export class GetShelfsUseCase
-    implements UseCase<void, Promise<ShelfEntity[]>>
-{
+export class GetShelfsUseCase implements UseCase<void, Promise<ShelfEntity[]>> {
     constructor(
         @inject(IMasterDataRepositoryToken)
         private readonly masterDataRepository: IMasterDataRepository

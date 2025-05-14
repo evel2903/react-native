@@ -8,9 +8,9 @@ export interface GroupedPickingItems {
     shelfName: string
     level: number
     position: number
-    locationKey: string  // unique identifier for the location
+    locationKey: string // unique identifier for the location
     items: PickingOrderProcessItemEntity[]
-    progress: number     // overall picking progress for this location
+    progress: number // overall picking progress for this location
 }
 
 // Common interface for location details

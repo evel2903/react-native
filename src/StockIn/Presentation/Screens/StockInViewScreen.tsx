@@ -86,18 +86,24 @@ const ReadOnlyGoodsItem = ({ item }: any) => (
             <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
                     <Text style={styles.labelText}>Expiry Date</Text>
-                    <Text style={styles.valueText}>{formatDate(item.expiryDate || '')}</Text>
+                    <Text style={styles.valueText}>
+                        {formatDate(item.expiryDate || '')}
+                    </Text>
                 </View>
             </View>
 
             <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
                     <Text style={styles.labelText}>Quantity</Text>
-                    <Text style={styles.valueText}>{(item.quantity || 0).toString()}</Text>
+                    <Text style={styles.valueText}>
+                        {(item.quantity || 0).toString()}
+                    </Text>
                 </View>
                 <View style={styles.infoItem}>
                     <Text style={styles.labelText}>Cost</Text>
-                    <Text style={styles.valueText}>{formatCurrency(item.price || 0)}</Text>
+                    <Text style={styles.valueText}>
+                        {formatCurrency(item.price || 0)}
+                    </Text>
                 </View>
             </View>
 
@@ -185,16 +191,22 @@ const StockInViewScreen = observer(() => {
                     <View style={styles.codeContainer}>
                         <View>
                             <Text style={styles.labelText}>Code</Text>
-                            <Text style={styles.valueText}>{stockInData.code || '-'}</Text>
+                            <Text style={styles.valueText}>
+                                {stockInData.code || '-'}
+                            </Text>
                         </View>
                         <View style={styles.priorityChipWrapper}>
                             <Chip
                                 style={{
-                                    backgroundColor: getPriorityColor(stockInData.priority as any),
+                                    backgroundColor: getPriorityColor(
+                                        stockInData.priority as any
+                                    ),
                                 }}
                                 textStyle={styles.priorityChipText}
                             >
-                                {getPriorityDisplayName(stockInData.priority as any)}
+                                {getPriorityDisplayName(
+                                    stockInData.priority as any
+                                )}
                             </Chip>
                         </View>
                     </View>
@@ -214,7 +226,9 @@ const StockInViewScreen = observer(() => {
                     </View>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Lot Number</Text>
-                        <Text style={styles.valueText}>{stockInData.lotNumber || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {stockInData.lotNumber || '-'}
+                        </Text>
                     </View>
                 </View>
 
@@ -223,7 +237,9 @@ const StockInViewScreen = observer(() => {
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Stock In Date</Text>
                         <Text style={styles.valueText}>
-                            {stockInData.inDate ? formatDate(stockInData.inDate) : '-'}
+                            {stockInData.inDate
+                                ? formatDate(stockInData.inDate)
+                                : '-'}
                         </Text>
                     </View>
                     <View style={styles.infoColumn}>
@@ -238,11 +254,15 @@ const StockInViewScreen = observer(() => {
                 <View style={styles.infoRow}>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Created By</Text>
-                        <Text style={styles.valueText}>{stockInData.createdBy || '-'}</Text>
+                        <Text style={styles.valueText}>
+                            {stockInData.createdBy || '-'}
+                        </Text>
                     </View>
                     <View style={styles.infoColumn}>
                         <Text style={styles.labelText}>Approved By</Text>
-                        <Text style={styles.valueText}>{stockInData.approvedBy || 'Pending approval'}</Text>
+                        <Text style={styles.valueText}>
+                            {stockInData.approvedBy || 'Pending approval'}
+                        </Text>
                     </View>
                 </View>
 
@@ -258,7 +278,9 @@ const StockInViewScreen = observer(() => {
                 {stockInData.notes && (
                     <View style={styles.infoSection}>
                         <Text style={styles.labelText}>Notes</Text>
-                        <Text style={styles.notesText}>{stockInData.notes}</Text>
+                        <Text style={styles.notesText}>
+                            {stockInData.notes}
+                        </Text>
                     </View>
                 )}
             </>
@@ -269,7 +291,7 @@ const StockInViewScreen = observer(() => {
     const getAccordionBackgroundColor = () => {
         const stockInData = stockInStore.selectedStockIn
         if (!stockInData) return '#e8f5e9' // Default light green
-        
+
         switch (stockInData.priority) {
             case PRIORITY.High:
                 return '#ffebee' // Light red
@@ -313,7 +335,10 @@ const StockInViewScreen = observer(() => {
                             <Surface
                                 style={[
                                     styles.accordionContainer,
-                                    { backgroundColor: getAccordionBackgroundColor() }
+                                    {
+                                        backgroundColor:
+                                            getAccordionBackgroundColor(),
+                                    },
                                 ]}
                                 elevation={1}
                             >

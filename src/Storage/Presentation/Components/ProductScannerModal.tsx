@@ -30,7 +30,7 @@ const ProductScannerModal: React.FC<ProductScannerModalProps> = ({
     // Get camera permissions when modal becomes visible
     useEffect(() => {
         if (visible) {
-            (async () => {
+            ;(async () => {
                 setLoading(true)
                 const { status } = await Camera.requestCameraPermissionsAsync()
                 setHasPermission(status === 'granted')
@@ -41,7 +41,13 @@ const ProductScannerModal: React.FC<ProductScannerModalProps> = ({
     }, [visible])
 
     // Handle barcode scan
-    const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    const handleBarCodeScanned = ({
+        type,
+        data,
+    }: {
+        type: string
+        data: string
+    }) => {
         if (scanned) return
 
         setScanned(true)
@@ -66,11 +72,7 @@ const ProductScannerModal: React.FC<ProductScannerModalProps> = ({
             >
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>Scan Product Code</Text>
-                    <IconButton
-                        icon="close"
-                        size={20}
-                        onPress={onClose}
-                    />
+                    <IconButton icon="close" size={20} onPress={onClose} />
                 </View>
 
                 <View style={styles.cameraContainer}>
@@ -103,7 +105,9 @@ const ProductScannerModal: React.FC<ProductScannerModalProps> = ({
                     ) : (
                         <View style={styles.cameraWrapper}>
                             <CameraView
-                                onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                                onBarcodeScanned={
+                                    scanned ? undefined : handleBarCodeScanned
+                                }
                                 barcodeScannerSettings={{
                                     barcodeTypes: [
                                         'qr',
@@ -117,7 +121,7 @@ const ProductScannerModal: React.FC<ProductScannerModalProps> = ({
                                 }}
                                 style={[
                                     styles.camera,
-                                    { height: scannerSize, width: scannerSize }
+                                    { height: scannerSize, width: scannerSize },
                                 ]}
                             />
 
