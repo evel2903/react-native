@@ -39,7 +39,7 @@ import {
     getPriorityColor,
 } from '@/src/Common/Domain/Enums/Priority'
 import CenteredAccordion from '../Components/CenteredAccordion'
-import ProductScannerModal from '@/src/Storage/Presentation/Components/ProductScannerModal'
+import ProductScannerModal from '../Components/ProductScannerModal'
 import PickingLocationManager from '../Components/PickingLocationManager'
 
 type PickingProcessScreenRouteProp = RouteProp<
