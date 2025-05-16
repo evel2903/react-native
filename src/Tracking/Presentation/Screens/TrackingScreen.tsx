@@ -25,8 +25,8 @@ const TrackingScreen = () => {
   const [trackingType, setTrackingType] = useState('');
 
   const trackingTypeOptions = [
+    { label: 'Position', value: 'POSITION' },
     { label: 'Goods', value: 'GOODS' },
-    { label: 'Location', value: 'LOCATION' },
   ];
 
   const handleGoBack = () => {
@@ -67,8 +67,8 @@ const TrackingScreen = () => {
                         trackingType
                           ? trackingTypeOptions.find(
                               t => t.value === trackingType
-                            )?.label || 'Goods'
-                          : 'Goods'
+                            )?.label || 'Position'
+                          : 'Position'
                       }
                       mode="outlined"
                       label={'Type'}
@@ -113,6 +113,7 @@ const TrackingScreen = () => {
               buttonColor="transparent"
               textColor="#6200ee"
               onPress={handleScan}
+              icon="qrcode-scan"
             >
               Scan
             </Button>
@@ -150,10 +151,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scanButton: {
-    marginTop: 8,
-    height: 56,
     justifyContent: 'center',
-    borderRadius: 28,
     borderColor: '#e0e0e0',
   },
   resultsContainer: {
