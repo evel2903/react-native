@@ -7,6 +7,7 @@ import { StockInModule } from './StockIn/StockInModule'
 import { CommonModule } from './Common/CommonModule'
 import { StockOutModule } from './StockOut/StockOutModule'
 import { PickingModule } from './Picking/PickingModule'
+import { TrackingModule } from './Tracking/TrackingModule'
 
 @module({
     imports: [
@@ -17,6 +18,7 @@ import { PickingModule } from './Picking/PickingModule'
         StorageModule,
         PickingModule,
         StockOutModule,
+        TrackingModule
     ],
 })
 export default class AppModule {}

@@ -21,6 +21,7 @@ import StockOutViewScreen from '@/src/StockOut/Presentation/Screens/StockOutView
 import PickingScreen from '@/src/Picking/Presentation/Screens/PickingScreen'
 import PickingProcessScreen from '@/src/Picking/Presentation/Screens/PickingProcessScreen'
 import PickingViewScreen from '@/src/Picking/Presentation/Screens/PickingViewScreen'
+import TrackingScreen from '@/src/Tracking/Presentation/Screens/TrackingScreen'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
@@ -66,6 +67,7 @@ const RootNavigator = observer(() => {
             />
             <Stack.Screen name="StockOut" component={StockOutScreen} />
             <Stack.Screen name="StockOutView" component={StockOutViewScreen} />
+            <Stack.Screen name="Tracking" component={TrackingScreen} />
             <Stack.Screen name="NotFound" component={NotFoundScreen} />
         </Stack.Navigator>
     )

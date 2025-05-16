@@ -32,6 +32,12 @@ const HomeScreen = observer(() => {
 
     const menuItems = [
         {
+            title: 'Tracking',
+            icon: 'map-marker',
+            description: i18n.t('Tracking description'),
+            onPress: () => navigation.navigate('Tracking'),
+        },
+        {
             title: i18n.t('home.menuItems.stockIn'),
             icon: 'arrow-collapse',
             description: i18n.t('home.menuItems.stockInDescription'),

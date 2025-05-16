@@ -27,6 +27,7 @@ export type RootStackParamList = {
     PickingProcess: { id: string }
     StockOut: undefined
     StockOutView: { id: string } // Added StockOutView route
+    Tracking: undefined,
     NotFound: undefined
 }
 
