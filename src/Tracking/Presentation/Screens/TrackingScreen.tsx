@@ -73,27 +73,29 @@ const TrackingScreen = observer(() => {
     <Card style={styles.tableCard}>
       <Card.Title title="Goods at this Location" />
       <Card.Content>
-        <DataTable>
-          <DataTable.Header>
-            <DataTable.Title>Code</DataTable.Title>
-            <DataTable.Title>Name</DataTable.Title>
-            <DataTable.Title numeric>Quantity</DataTable.Title>
-            <DataTable.Title numeric>Locked</DataTable.Title>
-            <DataTable.Title numeric>Available</DataTable.Title>
-          </DataTable.Header>
+        <ScrollView horizontal>
+          <DataTable>
+            <DataTable.Header>
+              <DataTable.Title style={styles.codeColumn}>Code</DataTable.Title>
+              <DataTable.Title style={styles.nameColumn}>Name</DataTable.Title>
+              <DataTable.Title numeric style={styles.numericColumn}>Quantity</DataTable.Title>
+              <DataTable.Title numeric style={styles.numericColumn}>Locked</DataTable.Title>
+              <DataTable.Title numeric style={styles.numericColumn}>Available</DataTable.Title>
+            </DataTable.Header>
 
-          <ScrollView style={styles.tableScrollView}>
-            {trackingStore.locationTrackingData.map((item, index) => (
-              <DataTable.Row key={index}>
-                <DataTable.Cell>{item.goodsCode}</DataTable.Cell>
-                <DataTable.Cell>{item.goodsName}</DataTable.Cell>
-                <DataTable.Cell numeric>{item.quantity}</DataTable.Cell>
-                <DataTable.Cell numeric>{item.lockQuantity}</DataTable.Cell>
-                <DataTable.Cell numeric>{item.availableQuantity}</DataTable.Cell>
-              </DataTable.Row>
-            ))}
-          </ScrollView>
-        </DataTable>
+            <ScrollView style={styles.tableScrollView}>
+              {trackingStore.locationTrackingData.map((item, index) => (
+                <DataTable.Row key={index}>
+                  <DataTable.Cell style={styles.codeColumn}>{item.goodsCode}</DataTable.Cell>
+                  <DataTable.Cell style={styles.nameColumn}>{item.goodsName}</DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.numericColumn}>{item.quantity}</DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.numericColumn}>{item.lockQuantity}</DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.numericColumn}>{item.availableQuantity}</DataTable.Cell>
+                </DataTable.Row>
+              ))}
+            </ScrollView>
+          </DataTable>
+        </ScrollView>
       </Card.Content>
     </Card>
   );
@@ -102,27 +104,33 @@ const TrackingScreen = observer(() => {
     <Card style={styles.tableCard}>
       <Card.Title title="Locations with this Goods" />
       <Card.Content>
-        <DataTable>
-          <DataTable.Header>
-            <DataTable.Title>Warehouse</DataTable.Title>
-            <DataTable.Title>Area</DataTable.Title>
-            <DataTable.Title>Row</DataTable.Title>
-            <DataTable.Title>Shelf</DataTable.Title>
-            <DataTable.Title numeric>Qty</DataTable.Title>
-          </DataTable.Header>
+        <ScrollView horizontal>
+          <DataTable>
+            <DataTable.Header>
+              <DataTable.Title style={styles.warehouseColumn}>Warehouse</DataTable.Title>
+              <DataTable.Title style={styles.areaColumn}>Area</DataTable.Title>
+              <DataTable.Title style={styles.rowColumn}>Row</DataTable.Title>
+              <DataTable.Title style={styles.shelfColumn}>Shelf</DataTable.Title>
+              <DataTable.Title numeric style={styles.numericColumn}>Qty</DataTable.Title>
+              <DataTable.Title numeric style={styles.numericColumn}>Locked</DataTable.Title>
+              <DataTable.Title numeric style={styles.numericColumn}>Available</DataTable.Title>
+            </DataTable.Header>
 
-          <ScrollView style={styles.tableScrollView}>
-            {trackingStore.goodsTrackingData.map((item, index) => (
-              <DataTable.Row key={index}>
-                <DataTable.Cell>{item.warehouseName}</DataTable.Cell>
-                <DataTable.Cell>{item.areaName}</DataTable.Cell>
-                <DataTable.Cell>{item.rowName}</DataTable.Cell>
-                <DataTable.Cell>{`${item.shelfName} (${item.level}/${item.position})`}</DataTable.Cell>
-                <DataTable.Cell numeric>{item.quantity}</DataTable.Cell>
-              </DataTable.Row>
-            ))}
-          </ScrollView>
-        </DataTable>
+            <ScrollView style={styles.tableScrollView}>
+              {trackingStore.goodsTrackingData.map((item, index) => (
+                <DataTable.Row key={index}>
+                  <DataTable.Cell style={styles.warehouseColumn}>{item.warehouseName}</DataTable.Cell>
+                  <DataTable.Cell style={styles.areaColumn}>{item.areaName}</DataTable.Cell>
+                  <DataTable.Cell style={styles.rowColumn}>{item.rowName}</DataTable.Cell>
+                  <DataTable.Cell style={styles.shelfColumn}>{`${item.shelfName} (${item.level}/${item.position})`}</DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.numericColumn}>{item.quantity}</DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.numericColumn}>{item.lockQuantity}</DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.numericColumn}>{item.availableQuantity}</DataTable.Cell>
+                </DataTable.Row>
+              ))}
+            </ScrollView>
+          </DataTable>
+        </ScrollView>
       </Card.Content>
     </Card>
   );
@@ -322,6 +330,28 @@ const styles = StyleSheet.create({
     borderColor: '#f0f0f0',
     borderRadius: 8,
     padding: 16,
+  },
+  // Column styles for horizontal scrolling tables
+  codeColumn: {
+    width: 130,
+  },
+  nameColumn: {
+    width: 200,
+  },
+  numericColumn: {
+    width: 90,
+  },
+  warehouseColumn: {
+    width: 120,
+  },
+  areaColumn: {
+    width: 150,
+  },
+  rowColumn: {
+    width: 150,
+  },
+  shelfColumn: {
+    width: 160,
   }
 });
 
