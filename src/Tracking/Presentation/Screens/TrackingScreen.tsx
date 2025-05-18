@@ -76,21 +76,34 @@ const TrackingScreen = observer(() => {
         <ScrollView horizontal>
           <DataTable>
             <DataTable.Header>
-              <DataTable.Title style={styles.codeColumn}>Code</DataTable.Title>
-              <DataTable.Title style={styles.nameColumn}>Name</DataTable.Title>
-              <DataTable.Title numeric style={styles.numericColumn}>Quantity</DataTable.Title>
-              <DataTable.Title numeric style={styles.numericColumn}>Locked</DataTable.Title>
-              <DataTable.Title numeric style={styles.numericColumn}>Available</DataTable.Title>
+              <DataTable.Title style={styles.infoColumn}>Goods Information</DataTable.Title>
+              <DataTable.Title numeric style={styles.quantityColumn}>Quantity</DataTable.Title>
+              <DataTable.Title numeric style={styles.availableColumn}>Available</DataTable.Title>
             </DataTable.Header>
 
             <ScrollView style={styles.tableScrollView}>
               {trackingStore.locationTrackingData.map((item, index) => (
                 <DataTable.Row key={index}>
-                  <DataTable.Cell style={styles.codeColumn}>{item.goodsCode}</DataTable.Cell>
-                  <DataTable.Cell style={styles.nameColumn}>{item.goodsName}</DataTable.Cell>
-                  <DataTable.Cell numeric style={styles.numericColumn}>{item.quantity}</DataTable.Cell>
-                  <DataTable.Cell numeric style={styles.numericColumn}>{item.lockQuantity}</DataTable.Cell>
-                  <DataTable.Cell numeric style={styles.numericColumn}>{item.availableQuantity}</DataTable.Cell>
+                  <DataTable.Cell style={styles.infoColumn}>
+                    <View style={styles.cellContent}>
+                      <Text style={styles.codeBold}>{item.goodsCode}</Text>
+                      <Text style={styles.lineSpacing}>{item.goodsName}</Text>
+                    </View>
+                  </DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.quantityColumn}>
+                    <View style={styles.cellContent}>
+                      <Text style={styles.lineSpacing}>Total:</Text>
+                      <Text style={styles.valueText}>{item.quantity}</Text>
+                      <Text style={styles.lineSpacing}>Locked:</Text>
+                      <Text style={styles.valueText}>{item.lockQuantity}</Text>
+                    </View>
+                  </DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.availableColumn}>
+                    <View style={styles.cellContent}>
+                      <Text style={styles.lineSpacing}>Available:</Text>
+                      <Text style={styles.valueText}>{item.availableQuantity}</Text>
+                    </View>
+                  </DataTable.Cell>
                 </DataTable.Row>
               ))}
             </ScrollView>
@@ -107,25 +120,41 @@ const TrackingScreen = observer(() => {
         <ScrollView horizontal>
           <DataTable>
             <DataTable.Header>
-              <DataTable.Title style={styles.warehouseColumn}>Warehouse</DataTable.Title>
-              <DataTable.Title style={styles.areaColumn}>Area</DataTable.Title>
-              <DataTable.Title style={styles.rowColumn}>Row</DataTable.Title>
-              <DataTable.Title style={styles.shelfColumn}>Shelf</DataTable.Title>
-              <DataTable.Title numeric style={styles.numericColumn}>Qty</DataTable.Title>
-              <DataTable.Title numeric style={styles.numericColumn}>Locked</DataTable.Title>
-              <DataTable.Title numeric style={styles.numericColumn}>Available</DataTable.Title>
+              <DataTable.Title style={styles.infoColumn}>Location Information</DataTable.Title>
+              <DataTable.Title numeric style={styles.quantityColumn}>Quantity</DataTable.Title>
+              <DataTable.Title numeric style={styles.availableColumn}>Available</DataTable.Title>
             </DataTable.Header>
 
             <ScrollView style={styles.tableScrollView}>
               {trackingStore.goodsTrackingData.map((item, index) => (
                 <DataTable.Row key={index}>
-                  <DataTable.Cell style={styles.warehouseColumn}>{item.warehouseName}</DataTable.Cell>
-                  <DataTable.Cell style={styles.areaColumn}>{item.areaName}</DataTable.Cell>
-                  <DataTable.Cell style={styles.rowColumn}>{item.rowName}</DataTable.Cell>
-                  <DataTable.Cell style={styles.shelfColumn}>{`${item.shelfName} (${item.level}/${item.position})`}</DataTable.Cell>
-                  <DataTable.Cell numeric style={styles.numericColumn}>{item.quantity}</DataTable.Cell>
-                  <DataTable.Cell numeric style={styles.numericColumn}>{item.lockQuantity}</DataTable.Cell>
-                  <DataTable.Cell numeric style={styles.numericColumn}>{item.availableQuantity}</DataTable.Cell>
+                  <DataTable.Cell style={styles.infoColumn}>
+                    <View style={styles.cellContent}>
+                      <Text style={styles.locationBold}>{item.warehouseName}</Text>
+                      <Text style={styles.lineSpacing}>Area:</Text>
+                      <Text style={styles.valueText}>{item.areaName}</Text>
+                      <Text style={styles.lineSpacing}>Row:</Text>
+                      <Text style={styles.valueText}>{item.rowName}</Text>
+                      <Text style={styles.lineSpacing}>Shelf:</Text>
+                      <Text style={styles.valueText}>{item.shelfName}</Text>
+                      <Text style={styles.lineSpacing}>Position:</Text>
+                      <Text style={styles.valueText}>Level {item.level}, Pos {item.position}</Text>
+                    </View>
+                  </DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.quantityColumn}>
+                    <View style={styles.cellContent}>
+                      <Text style={styles.lineSpacing}>Total:</Text>
+                      <Text style={styles.valueText}>{item.quantity}</Text>
+                      <Text style={styles.lineSpacing}>Locked:</Text>
+                      <Text style={styles.valueText}>{item.lockQuantity}</Text>
+                    </View>
+                  </DataTable.Cell>
+                  <DataTable.Cell numeric style={styles.availableColumn}>
+                    <View style={styles.cellContent}>
+                      <Text style={styles.lineSpacing}>Available:</Text>
+                      <Text style={styles.valueText}>{item.availableQuantity}</Text>
+                    </View>
+                  </DataTable.Cell>
                 </DataTable.Row>
               ))}
             </ScrollView>
@@ -331,27 +360,36 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
   },
-  // Column styles for horizontal scrolling tables
-  codeColumn: {
-    width: 130,
-  },
-  nameColumn: {
+  // New column styles for simplified 3-column layout
+  infoColumn: {
     width: 200,
+    paddingVertical: 8,
   },
-  numericColumn: {
-    width: 90,
-  },
-  warehouseColumn: {
+  quantityColumn: {
     width: 120,
+    paddingVertical: 8,
   },
-  areaColumn: {
-    width: 150,
+  availableColumn: {
+    width: 100,
+    paddingVertical: 8,
   },
-  rowColumn: {
-    width: 150,
+  codeBold: {
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
-  shelfColumn: {
-    width: 160,
+  locationBold: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  cellContent: {
+    paddingVertical: 4,
+  },
+  lineSpacing: {
+    marginTop: 6,
+    fontWeight: '500',
+  },
+  valueText: {
+    marginBottom: 6,
   }
 });
 
