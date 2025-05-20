@@ -33,12 +33,12 @@ const TrackingScreen = observer(() => {
     const [code, setCode] = useState('')
     const [trackingTypeMenuVisible, setTrackingTypeMenuVisible] =
         useState(false)
-    const [trackingType, setTrackingType] = useState('POSITION')
+    const [trackingType, setTrackingType] = useState('position')
     const [snackbarVisible, setSnackbarVisible] = useState(false)
 
     const trackingTypeOptions = [
-        { label: 'Position', value: 'POSITION' },
-        { label: 'Goods', value: 'GOODS' },
+        { label: 'Position', value: 'position' },
+        { label: 'Goods', value: 'goods' },
     ]
 
     useEffect(() => {
