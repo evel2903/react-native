@@ -23,6 +23,7 @@ import { observer } from 'mobx-react'
 import { useTrackingStore } from '../Stores/TrackingStore/UseTrackingStore'
 import { withProviders } from '@/src/Core/Presentation/Utils/WithProviders'
 import { TrackingStoreProvider } from '../Stores/TrackingStore/TrackingStoreProvider'
+import ProductScannerModal from './ProductScannerModal'
 
 const TrackingScreen = observer(() => {
     const navigation = useNavigation<RootScreenNavigationProp<'Tracking'>>()
@@ -35,6 +36,7 @@ const TrackingScreen = observer(() => {
         useState(false)
     const [trackingType, setTrackingType] = useState('position')
     const [snackbarVisible, setSnackbarVisible] = useState(false)
+    const [scannerVisible, setScannerVisible] = useState(false)
 
     const trackingTypeOptions = [
         { label: 'Position', value: 'position' },
@@ -57,15 +59,62 @@ const TrackingScreen = observer(() => {
         navigation.navigate('Home')
     }
 
-    const handleScan = async () => {
+    const handleOpenScanner = () => {
+        setScannerVisible(true)
+    }
+
+    const handleCloseScanner = () => {
+        setScannerVisible(false)
+    }
+
+    const handleCodeScanned = (scannedCode: string) => {
+        try {
+            // Parse the scanned QR code data (JSON format)
+            const parsedData = JSON.parse(scannedCode)
+            
+            if (!parsedData.code) {
+                trackingStore.setError('Invalid QR code format: missing code field')
+                handleCloseScanner()
+                return
+            }
+
+            // Set code based on scanning type
+            if (parsedData.type === 'position') {
+                // Format for position tracking: SHELF_CODE/LEVEL/POSITION
+                const formattedCode = `${parsedData.code}/${parsedData.level}/${parsedData.position}`
+                setCode(formattedCode)
+                setTrackingType('position')
+                
+                // Immediately process the tracking
+                trackingStore.trackByLocation(formattedCode)
+            } else if (parsedData.type === 'goods') {
+                // Set goods code directly
+                setCode(parsedData.code)
+                setTrackingType('goods')
+                
+                // Immediately process the tracking
+                trackingStore.trackByGoods(parsedData.code)
+            } else {
+                trackingStore.setError('Unknown tracking type in QR code')
+            }
+            
+            handleCloseScanner()
+        } catch (error) {
+            // Handle parsing errors
+            trackingStore.setError('Invalid QR code format. Please try again.')
+            handleCloseScanner()
+        }
+    }
+
+    const handleManualScan = async () => {
         if (!code.trim()) {
             trackingStore.setError('Please enter a code')
             return
         }
 
-        if (trackingType === 'POSITION') {
+        if (trackingType === 'position') {
             await trackingStore.trackByLocation(code)
-        } else if (trackingType === 'GOODS') {
+        } else if (trackingType === 'goods') {
             await trackingStore.trackByGoods(code)
         }
     }
@@ -319,7 +368,7 @@ const TrackingScreen = observer(() => {
         return (
             <View style={styles.emptyContainer}>
                 <Text>
-                    Enter a code and press Scan to view tracking information
+                    Enter a code and press Scan or use the QR scanner to view tracking information
                 </Text>
             </View>
         )
@@ -352,13 +401,9 @@ const TrackingScreen = observer(() => {
                                         <TextInput
                                             dense
                                             value={
-                                                trackingType
-                                                    ? trackingTypeOptions.find(
-                                                          t =>
-                                                              t.value ===
-                                                              trackingType
-                                                      )?.label || 'Position'
-                                                    : 'Position'
+                                                trackingTypeOptions.find(
+                                                    t => t.value === trackingType
+                                                )?.label || 'Position'
                                             }
                                             mode="outlined"
                                             label={'Type'}
@@ -401,7 +446,7 @@ const TrackingScreen = observer(() => {
                                 onChangeText={setCode}
                                 mode="outlined"
                                 placeholder={
-                                    trackingType === 'POSITION'
+                                    trackingType === 'position'
                                         ? 'SHELF_CODE/LEVEL/POSITION'
                                         : 'GOODS_CODE'
                                 }
@@ -409,18 +454,30 @@ const TrackingScreen = observer(() => {
                             />
                         </View>
 
-                        <Button
-                            mode="outlined"
-                            style={styles.scanButton}
-                            buttonColor="transparent"
-                            textColor="#6200ee"
-                            onPress={handleScan}
-                            icon="qrcode-scan"
-                            loading={trackingStore.isLoading}
-                            disabled={trackingStore.isLoading}
-                        >
-                            Scan
-                        </Button>
+                        <View style={styles.buttonRow}>
+                            <Button
+                                mode="outlined"
+                                style={styles.actionButton}
+                                buttonColor="transparent"
+                                textColor="#6200ee"
+                                onPress={handleManualScan}
+                                loading={trackingStore.isLoading}
+                                disabled={trackingStore.isLoading}
+                            >
+                                Search
+                            </Button>
+                            
+                            <Button
+                                mode="contained"
+                                style={styles.actionButton}
+                                icon="qrcode-scan"
+                                onPress={handleOpenScanner}
+                                loading={trackingStore.isLoading}
+                                disabled={trackingStore.isLoading}
+                            >
+                                Scan QR
+                            </Button>
+                        </View>
                     </View>
 
                     <View style={styles.resultsContainer}>
@@ -428,6 +485,13 @@ const TrackingScreen = observer(() => {
                     </View>
                 </View>
             </SafeAreaView>
+
+            {/* Product Scanner Modal */}
+            <ProductScannerModal
+                visible={scannerVisible}
+                onClose={handleCloseScanner}
+                onCodeScanned={handleCodeScanned}
+            />
 
             <Snackbar
                 visible={snackbarVisible}
@@ -463,12 +527,17 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         gap: 12,
     },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    actionButton: {
+        flex: 1,
+        justifyContent: 'center',
+    },
     codeInput: {
         flex: 1,
-    },
-    scanButton: {
-        justifyContent: 'center',
-        borderColor: '#e0e0e0',
     },
     resultsContainer: {
         flex: 1,
@@ -504,7 +573,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 16,
     },
-    // New column styles for simplified 3-column layout
+    // Column styles for simplified 3-column layout
     infoColumn: {
         width: 200,
         paddingVertical: 8,
