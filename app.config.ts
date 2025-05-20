@@ -46,6 +46,11 @@ const appConfig: ExpoConfig = {
         'expo-barcode-scanner',
         'expo-camera',
     ],
+    // extra: {
+    //   eas: {
+    //     projectId: "0947540c-0c53-42b7-ae91-af2b4fab7e77"
+    //   }
+    // }
 }
 
 export default appConfig
