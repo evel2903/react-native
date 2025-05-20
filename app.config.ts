@@ -43,7 +43,6 @@ const appConfig: ExpoConfig = {
         ],
         'expo-localization',
         'expo-tracking-transparency',
-        'expo-web-browser',
         'expo-barcode-scanner',
         'expo-camera',
     ],
