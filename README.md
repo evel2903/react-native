@@ -113,6 +113,21 @@ yarn ios
 expo eject
 ```
 
+## Build Android
+
+```
+yarn apk
+```
+or
+
+```
+yarn prebuild
+
+yarn build-bundle
+
+yarn build-apk
+```
+
 <hr>
 
 ## Support the project
