@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scanButton: {
-                paddingVertical: 6,
+        paddingVertical: 6,
         borderRadius: 4,
     },
     searchResultsInfo: {

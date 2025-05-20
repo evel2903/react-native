@@ -1,23 +1,23 @@
 // src/Tracking/Infrastructure/Models/LocationTrackingDto.ts
-import { Expose } from 'class-transformer';
-import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto';
-import { LocationTrackingEntity } from '../../Domain/Entities/LocationTrackingEntity';
+import { Expose } from 'class-transformer'
+import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
+import { LocationTrackingEntity } from '../../Domain/Entities/LocationTrackingEntity'
 
 export class LocationTrackingDto extends ResponseDto<LocationTrackingEntity> {
     @Expose()
-    goodsCode!: string;
+    goodsCode!: string
 
     @Expose()
-    goodsName!: string;
+    goodsName!: string
 
     @Expose()
-    quantity!: string;
+    quantity!: string
 
     @Expose()
-    lockQuantity!: string;
+    lockQuantity!: string
 
     @Expose()
-    availableQuantity!: string;
+    availableQuantity!: string
 
     toDomain(): LocationTrackingEntity {
         return {
@@ -26,6 +26,6 @@ export class LocationTrackingDto extends ResponseDto<LocationTrackingEntity> {
             quantity: this.quantity,
             lockQuantity: this.lockQuantity,
             availableQuantity: this.availableQuantity,
-        };
+        }
     }
 }

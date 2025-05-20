@@ -113,28 +113,34 @@ const PickingProcessScreen = observer(() => {
     }
 
     const handleCompleteProcess = async () => {
-        setIsProcessing(true);
+        setIsProcessing(true)
         try {
             if (pickingId) {
-                const emailResult = await pickingStore.sendProcessCompletedEmail(pickingId);
+                const emailResult =
+                    await pickingStore.sendProcessCompletedEmail(pickingId)
 
-                    if (emailResult && emailResult.statusCode === 200) {
-                        showSnackbar(emailResult.message || 'Process completed and email notification sent successfully');
-                    } else {
-                        showSnackbar('Process completed successfully, but failed to send email notification');
-                    }
+                if (emailResult && emailResult.statusCode === 200) {
+                    showSnackbar(
+                        emailResult.message ||
+                            'Process completed and email notification sent successfully'
+                    )
+                } else {
+                    showSnackbar(
+                        'Process completed successfully, but failed to send email notification'
+                    )
+                }
 
-                    // Navigate back to picking list after successful processing
-                    setTimeout(() => {
-                        navigation.navigate('Picking');
-                    }, 1500);
+                // Navigate back to picking list after successful processing
+                setTimeout(() => {
+                    navigation.navigate('Picking')
+                }, 1500)
             }
         } catch (error) {
-            console.error('Error processing picking order:', error);
-            showSnackbar('Error processing picking order');
+            console.error('Error processing picking order:', error)
+            showSnackbar('Error processing picking order')
         } finally {
-            setIsProcessing(false);
-            setConfirmDialogVisible(false);
+            setIsProcessing(false)
+            setConfirmDialogVisible(false)
         }
     }
 

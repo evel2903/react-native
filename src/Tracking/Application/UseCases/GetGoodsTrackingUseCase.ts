@@ -1,11 +1,11 @@
 // src/Tracking/Application/UseCases/GetGoodsTrackingUseCase.ts
-import { injectable, inject } from 'inversiland';
-import { UseCase } from '@/src/Core/Application/UseCase';
+import { injectable, inject } from 'inversiland'
+import { UseCase } from '@/src/Core/Application/UseCase'
 import {
     ITrackingRepository,
     ITrackingRepositoryToken,
-} from '../../Domain/Specifications/ITrackingRepository';
-import { GoodsTrackingEntity } from '../../Domain/Entities/GoodsTrackingEntity';
+} from '../../Domain/Specifications/ITrackingRepository'
+import { GoodsTrackingEntity } from '../../Domain/Entities/GoodsTrackingEntity'
 
 @injectable()
 export class GetGoodsTrackingUseCase
@@ -17,6 +17,6 @@ export class GetGoodsTrackingUseCase
     ) {}
 
     public execute(goodsCode: string): Promise<GoodsTrackingEntity[]> {
-        return this.trackingRepository.getTrackingByGoods(goodsCode);
+        return this.trackingRepository.getTrackingByGoods(goodsCode)
     }
 }

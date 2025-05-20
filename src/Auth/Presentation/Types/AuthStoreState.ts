@@ -5,4 +5,5 @@ export default interface AuthStoreState {
     user: UserEntity | null
     isAuthenticated: boolean
     error: string | null
+    apiUrl: string | null
 }

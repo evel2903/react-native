@@ -18,7 +18,7 @@ import { TrackingModule } from './Tracking/TrackingModule'
         StorageModule,
         PickingModule,
         StockOutModule,
-        TrackingModule
+        TrackingModule,
     ],
 })
 export default class AppModule {}

@@ -1,35 +1,35 @@
 // src/Tracking/Infrastructure/Models/GoodsTrackingDto.ts
-import { Expose } from 'class-transformer';
-import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto';
-import { GoodsTrackingEntity } from '../../Domain/Entities/GoodsTrackingEntity';
+import { Expose } from 'class-transformer'
+import ResponseDto from '@/src/Core/Infrastructure/Models/ResponseDto'
+import { GoodsTrackingEntity } from '../../Domain/Entities/GoodsTrackingEntity'
 
 export class GoodsTrackingDto extends ResponseDto<GoodsTrackingEntity> {
     @Expose()
-    warehouseName!: string;
+    warehouseName!: string
 
     @Expose()
-    areaName!: string;
+    areaName!: string
 
     @Expose()
-    rowName!: string;
+    rowName!: string
 
     @Expose()
-    shelfName!: string;
+    shelfName!: string
 
     @Expose()
-    level!: number;
+    level!: number
 
     @Expose()
-    position!: number;
+    position!: number
 
     @Expose()
-    quantity!: string;
+    quantity!: string
 
     @Expose()
-    lockQuantity!: string;
+    lockQuantity!: string
 
     @Expose()
-    availableQuantity!: string;
+    availableQuantity!: string
 
     toDomain(): GoodsTrackingEntity {
         return {
@@ -42,6 +42,6 @@ export class GoodsTrackingDto extends ResponseDto<GoodsTrackingEntity> {
             quantity: this.quantity,
             lockQuantity: this.lockQuantity,
             availableQuantity: this.availableQuantity,
-        };
+        }
     }
 }

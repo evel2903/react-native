@@ -1,23 +1,26 @@
 import axios, { AxiosRequestConfig } from 'axios'
 import { inject, injectable } from 'inversiland'
 import IHttpClient from '../../Domain/Specifications/IHttpClient'
-import Env, { EnvToken } from '@/src/Core/Domain/Entities/Env'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const ACCESS_TOKEN_KEY = 'accessToken'
 const REFRESH_TOKEN_KEY = 'refreshToken'
+const API_URL_STORAGE_KEY = 'apiUrl'
 
 @injectable()
 class HttpClient implements IHttpClient {
     private axios: typeof axios
+    private baseUrl: string | null = null
 
-    constructor(@inject(EnvToken) private readonly env: Env) {
+    constructor() {
         this.axios = axios
 
-        axios.interceptors.request.use(async requestConfig => {
-            // Use the API URL from env
-            requestConfig.baseURL = env.apiUrl
+        // Initialize axios with interceptors
+        this.setupInterceptors()
+    }
 
+    private setupInterceptors() {
+        axios.interceptors.request.use(async requestConfig => {
             // Add auth token if available
             try {
                 const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY)
@@ -25,8 +28,22 @@ class HttpClient implements IHttpClient {
                     requestConfig.headers = requestConfig.headers || {}
                     requestConfig.headers.Authorization = `Bearer ${token}`
                 }
+
+                // Add baseUrl if available
+                if (this.baseUrl) {
+                    requestConfig.baseURL = this.baseUrl
+                } else {
+                    // Try to load from AsyncStorage if not set yet
+                    const savedBaseUrl = await AsyncStorage.getItem(
+                        API_URL_STORAGE_KEY
+                    )
+                    if (savedBaseUrl) {
+                        this.baseUrl = savedBaseUrl
+                        requestConfig.baseURL = savedBaseUrl
+                    }
+                }
             } catch (error) {
-                console.error('Error retrieving token:', error)
+                console.error('Error in request interceptor:', error)
             }
 
             return requestConfig
@@ -44,9 +61,9 @@ class HttpClient implements IHttpClient {
                         const refreshToken = await AsyncStorage.getItem(
                             REFRESH_TOKEN_KEY
                         )
-                        if (refreshToken) {
+                        if (refreshToken && this.baseUrl) {
                             const response = await axios.post(
-                                `${env.apiUrl}/api/auth/refresh-token`,
+                                `${this.baseUrl}/api/auth/refresh-token`,
                                 { refreshToken }
                             )
 
@@ -73,14 +90,19 @@ class HttpClient implements IHttpClient {
                         await AsyncStorage.removeItem(ACCESS_TOKEN_KEY)
                         await AsyncStorage.removeItem(REFRESH_TOKEN_KEY)
 
-                        // TODO: Add logic to navigate to login screen
-                        // This would typically be handled by your auth store
+                        // Token refresh failed or refresh token expired
+                        // This would typically be handled by your auth store to redirect to login
                     }
                 }
             }
 
             return Promise.reject(err)
         })
+    }
+
+    public setBaseUrl(url: string): void {
+        this.baseUrl = url
+        // No need to save to AsyncStorage here as this is handled by the AuthStore
     }
 
     public get<ResponseType>(url: string, config?: AxiosRequestConfig) {

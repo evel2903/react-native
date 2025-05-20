@@ -1,11 +1,11 @@
-const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
+const { getDefaultConfig } = require('expo/metro-config')
+const path = require('path')
 
-const config = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname)
 
 // Add path resolution configuration for @/ aliases
 config.resolver.extraNodeModules = {
-  '@': path.resolve(__dirname),
-};
+    '@': path.resolve(__dirname),
+}
 
-module.exports = config;
+module.exports = config

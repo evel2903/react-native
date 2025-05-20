@@ -1,6 +1,9 @@
 import { injectable, inject } from 'inversiland'
 import { UseCase } from '@/src/Core/Application/UseCase'
-import { IPickingRepository, IPickingRepositoryToken } from '../../Domain/Specifications/IPickingRepository';
+import {
+    IPickingRepository,
+    IPickingRepositoryToken,
+} from '../../Domain/Specifications/IPickingRepository'
 
 @injectable()
 export default class SendProcessCompletedEmailUseCase

@@ -484,7 +484,7 @@ export class PickingStore implements PickingStoreState {
             this.getPickingOrders()
         }
     }
-     async sendProcessCompletedEmail(id: string) {
+    async sendProcessCompletedEmail(id: string) {
         this.setIsProcessing(true)
         this.setError(null)
 

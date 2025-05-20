@@ -11,6 +11,7 @@ import IHttpClient, {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const USER_DATA_KEY = 'userData'
+const API_URL_STORAGE_KEY = 'apiUrl'
 
 @injectable()
 export class AuthStore implements AuthStoreState {
@@ -18,6 +19,7 @@ export class AuthStore implements AuthStoreState {
     user: UserEntity | null = null
     isAuthenticated = false
     error: string | null = null
+    apiUrl: string | null = null
 
     constructor(
         @inject(LoginUseCase) private loginUseCase: LoginUseCase,
@@ -25,7 +27,7 @@ export class AuthStore implements AuthStoreState {
         @inject(IHttpClientToken) private httpClient: IHttpClient
     ) {
         makeAutoObservable(this)
-        // Try to restore user session on startup
+        // Try to restore user session and API URL on startup
         this.restoreSession()
     }
 
@@ -45,12 +47,24 @@ export class AuthStore implements AuthStoreState {
         }
     }
 
+    setApiUrl(url: string) {
+        this.apiUrl = url
+        // Update the HTTP client with the new API URL
+        this.httpClient.setBaseUrl(url)
+    }
+
     setError(error: string | null) {
         this.error = error
     }
 
     async restoreSession() {
         try {
+            // Check if we have an API URL stored
+            const savedApiUrl = await AsyncStorage.getItem(API_URL_STORAGE_KEY)
+            if (savedApiUrl) {
+                this.setApiUrl(savedApiUrl)
+            }
+
             // Check if we have user data stored
             const userData = await AsyncStorage.getItem(USER_DATA_KEY)
             if (userData) {
@@ -80,6 +94,11 @@ export class AuthStore implements AuthStoreState {
 
         if (!password || password.length < 1) {
             this.setError('Password is required')
+            return false
+        }
+
+        if (!this.apiUrl) {
+            this.setError('API URL is required')
             return false
         }
 
